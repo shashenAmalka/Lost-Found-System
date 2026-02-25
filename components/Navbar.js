@@ -113,7 +113,7 @@ export default function Navbar() {
                                             style={{ zIndex: 100 }}>
                                             {!isAdmin && (
                                                 <>
-                                                    <Link href="/dashboard" onClick={() => setDropdownOpen(false)}
+                                                    <Link href="/user-dashboard" onClick={() => setDropdownOpen(false)}
                                                         className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors">
                                                         <LayoutDashboard size={14} /> Dashboard
                                                     </Link>
@@ -161,7 +161,7 @@ export default function Navbar() {
                             </>
                         ) : (
                             <>
-                                {!isAdmin && <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="btn-glass w-full justify-center">Dashboard</Link>}
+                                {!isAdmin && <Link href="/user-dashboard" onClick={() => setMobileOpen(false)} className="btn-glass w-full justify-center">Dashboard</Link>}
                                 <button onClick={() => { logout(); setMobileOpen(false) }} className="btn-glass-danger w-full justify-center">Logout</button>
                             </>
                         )}

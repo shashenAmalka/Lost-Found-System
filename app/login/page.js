@@ -21,7 +21,7 @@ export default function LoginPage() {
         try {
             const user = await login(campusId, password)
             if (user.role === 'admin') router.push('/admin/dashboard')
-            else router.push('/dashboard')
+            else router.push('/user-dashboard')
         } catch (err) {
             setError(err.message || 'Login failed')
         } finally {

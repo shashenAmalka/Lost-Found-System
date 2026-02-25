@@ -1,4 +1,4 @@
-import SidebarNav from '@/components/dashboard/SidebarNav'
+import SidebarNav from '@/components/user-dashboard/SidebarNav'
 
 export const metadata = {
     title: 'Dashboard - Campus Find',

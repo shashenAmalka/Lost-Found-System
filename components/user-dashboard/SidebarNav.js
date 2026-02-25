@@ -9,7 +9,7 @@ export default function SidebarNav() {
     const { user, logout } = useAuth();
 
     const navItems = [
-        { name: 'Dashboard', href: '/dashboard', icon: Home },
+        { name: 'Dashboard', href: '/user-dashboard', icon: Home },
         { name: 'Browse Items', href: '/browse', icon: Search },
         { name: 'Report Lost', href: '/report-lost', icon: PlusCircle },
         { name: 'Notifications', href: '/notifications', icon: Bell, badge: 3 },

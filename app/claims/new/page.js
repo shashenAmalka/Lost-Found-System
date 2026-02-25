@@ -51,7 +51,7 @@ export default function NewClaimPage() {
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || 'Failed to submit claim')
             setAiResult(data.aiResult)
-            setTimeout(() => router.push('/dashboard'), 3000)
+            setTimeout(() => router.push('/user-dashboard'), 3000)
         } catch (err) {
             setError(err.message)
         } finally {

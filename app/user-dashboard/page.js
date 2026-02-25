@@ -2,10 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import WelcomeBanner from '@/components/dashboard/WelcomeBanner';
-import StatusStepper from '@/components/dashboard/StatusStepper';
-import MatchCard from '@/components/dashboard/MatchCard';
-import UpdatesPanel from '@/components/dashboard/UpdatesPanel';
+import WelcomeBanner from '@/components/user-dashboard/WelcomeBanner';
+import StatusStepper from '@/components/user-dashboard/StatusStepper';
+import MatchCard from '@/components/user-dashboard/MatchCard';
+import UpdatesPanel from '@/components/user-dashboard/UpdatesPanel';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 

@@ -49,7 +49,7 @@ export default function ClaimDetailPage() {
         <div className="page-bg min-h-screen"><Navbar />
             <div className="max-w-md mx-auto pt-32 px-4 text-center">
                 <div className="glass-card p-12"><div className="text-5xl mb-4">😕</div><h2 className="text-white font-bold mb-2">Claim Not Found</h2>
-                    <Link href="/dashboard" className="btn-glass-primary mt-4">Back to Dashboard</Link>
+                    <Link href="/user-dashboard" className="btn-glass-primary mt-4">Back to Dashboard</Link>
                 </div>
             </div>
         </div>
@@ -58,7 +58,7 @@ export default function ClaimDetailPage() {
     return (
         <div className="page-bg min-h-screen"><Navbar />
             <div className="max-w-3xl mx-auto px-4 pt-24 pb-16">
-                <Link href="/dashboard" className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-6 transition-colors">
+                <Link href="/user-dashboard" className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-6 transition-colors">
                     <ArrowLeft size={16} /> Back to Dashboard
                 </Link>
 
