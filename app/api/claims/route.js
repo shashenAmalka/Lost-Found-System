@@ -5,6 +5,7 @@ import connectDB from '@/lib/mongodb'
 import ClaimRequest from '@/models/ClaimRequest'
 import LostItem from '@/models/LostItem'
 import FoundItem from '@/models/FoundItem'
+import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
 import { computeMatchScore } from '@/lib/aiEngine'
 
@@ -93,6 +94,25 @@ export async function POST(request) {
                 { status: 'AI Matched', note: `AI Match Score: ${aiResult.matchScore}%`, updatedBy: 'AI Engine' },
             ],
         })
+
+        // Log to Audit Feed
+        await AuditLog.create({
+            adminName: 'System',
+            action: 'NEW_CLAIM',
+            targetType: 'ClaimRequest',
+            targetId: claim._id,
+            details: `User ${decoded.name || decoded.email} submitted a claim for ${foundItem.title}. AI Match: ${aiResult.matchScore}%.`,
+        })
+
+        if (aiResult.matchScore >= 90) {
+            await AuditLog.create({
+                adminName: 'AI Engine',
+                action: 'HIGH_MATCH_VERIFIED',
+                targetType: 'ClaimRequest',
+                targetId: claim._id,
+                details: `AI confirmed a near-perfect ${aiResult.matchScore}% match for Claim #${claim._id.toString().slice(-5).toUpperCase()}.`,
+            })
+        }
 
         // Update found item status
         await FoundItem.findByIdAndUpdate(foundItemId, { status: 'under_review' })

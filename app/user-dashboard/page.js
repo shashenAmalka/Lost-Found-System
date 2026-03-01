@@ -10,7 +10,7 @@ import UpdatesPanel from '@/components/user-dashboard/UpdatesPanel';
 export default function UserDashboard() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
-    const { myLost, myClaims, loading } = useDashboardData(user);
+    const { myLost, myClaims, notifications, matches, loading } = useDashboardData(user);
 
     if (authLoading) return <div className="min-h-screen" style={{ backgroundColor: '#0B0F19' }} />;
     if (!user) { router.push('/login'); return null; }
@@ -33,13 +33,13 @@ export default function UserDashboard() {
 
                     <ActiveClaimSection latestClaim={latestClaim} />
 
-                    <PotentialMatchesSection matches={user.matches || []} />
+                    <PotentialMatchesSection matches={matches} />
                 </div>
 
                 {/* Right Column / Updates Panel */}
                 <aside className="relative animate-slide-up" style={{ animationDelay: '0.3s' }}>
                     <div className="sticky top-10">
-                        <UpdatesPanel />
+                        <UpdatesPanel updates={notifications} />
                     </div>
                 </aside>
 

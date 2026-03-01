@@ -7,6 +7,7 @@ import LostItem from '@/models/LostItem'
 import FoundItem from '@/models/FoundItem'
 import User from '@/models/User'
 import AuditLog from '@/models/AuditLog'
+import Notification from '@/models/Notification'
 import { verifyToken } from '@/lib/auth'
 
 export async function GET(request) {
@@ -66,6 +67,15 @@ export async function PATCH(request) {
                     await User.findByIdAndUpdate(foundDoc.submittedBy, { trustedFinderBadge: true })
                 }
             }
+            // Notify User
+            await Notification.create({
+                userId: claim.claimantId,
+                type: 'system_update',
+                title: 'Claim Approved! 🎉',
+                message: `Your claim for "${foundDoc?.title || 'item'}" has been approved. You can now arrange for pickup.`,
+                lostItemId: claim.lostItemId,
+                foundItemId: claim.foundItemId,
+            })
             logAction = 'APPROVE_CLAIM'
         } else if (action === 'reject') {
             claim.status = 'rejected'
@@ -83,11 +93,30 @@ export async function PATCH(request) {
                     await user.save()
                 }
             }
+            // Notify User
+            await Notification.create({
+                userId: claim.claimantId,
+                type: 'important_alert',
+                title: 'Claim Rejected',
+                message: `Your claim for an item was reviewed and unfortunately rejected. Note: ${adminNote || 'No additional details provided.'}`,
+                lostItemId: claim.lostItemId,
+                foundItemId: claim.foundItemId,
+            })
             logAction = 'REJECT_CLAIM'
         } else if (action === 'request_info') {
             claim.status = 'admin_review'
             claim.adminNote = adminNote || 'Additional information requested'
             claim.trackingHistory.push({ status: 'Admin Review', note: adminNote || 'More information requested', updatedBy: decoded.name })
+
+            // Notify User
+            await Notification.create({
+                userId: claim.claimantId,
+                type: 'action_required',
+                title: 'Action Required: Claim Review',
+                message: `Admin has requested more information regarding your claim. Please check the dashboard.`,
+                lostItemId: claim.lostItemId,
+                foundItemId: claim.foundItemId,
+            })
             logAction = 'REQUEST_INFO'
         }
 

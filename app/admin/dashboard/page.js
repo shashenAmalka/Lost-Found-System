@@ -13,16 +13,40 @@ export default function AdminCommandCenter() {
     const { user, loading: authLoading, isAdmin, logout } = useAuth()
     const router = useRouter()
     const [stats, setStats] = useState(null)
+    const [activities, setActivities] = useState([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         if (!user) return
         fetch('/api/admin/stats', { method: 'POST', credentials: 'include' })
             .then(r => r.json())
-            .then(d => setStats(d.stats))
+            .then(d => {
+                setStats(d.stats)
+                setActivities(d.recentActivities || [])
+            })
             .catch(() => { })
             .finally(() => setLoading(false))
     }, [user])
+
+    function timeAgo(dateStr) {
+        if (!dateStr) return 'Recently'
+        const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000)
+        if (seconds < 60) return 'Just now'
+        const minutes = Math.floor(seconds / 60)
+        if (minutes < 60) return `${minutes}m ago`
+        const hours = Math.floor(minutes / 60)
+        if (hours < 24) return `${hours}h ago`
+        const days = Math.floor(hours / 24)
+        return `${days}d ago`
+    }
+
+    function getActivityStyle(action) {
+        if (action === 'HIGH_MATCH_VERIFIED') return { label: 'High Match Verified', color: '#F06414', bg: 'rgba(255, 255, 255, 0.05)', border: 'rgba(255,255,255,0.05)' }
+        if (action === 'NEW_SUBMISSION') return { label: 'New Submission', color: '#FFFFFF', bg: 'rgba(255, 255, 255, 0.05)', border: 'rgba(255,255,255,0.05)' }
+        if (action === 'SECURITY_ALERT' || action === 'RESTRICT_USER') return { label: 'Security Alert', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)' }
+        if (action === 'APPROVE_CLAIM') return { label: 'Claim Reunited', color: '#D4AF37', bg: 'rgba(255, 255, 255, 0.05)', border: 'rgba(255,255,255,0.05)' }
+        return { label: action.replace('_', ' '), color: '#FFFFFF', bg: 'rgba(255, 255, 255, 0.05)', border: 'rgba(255,255,255,0.05)' }
+    }
 
     if (authLoading) return <div className="min-h-screen" style={{ backgroundColor: '#0B0F19' }} />
     if (!user || !isAdmin) { router.push('/login'); return null }
@@ -191,47 +215,29 @@ export default function AdminCommandCenter() {
                             <Clock size={16} className="text-[#D4AF37] animate-pulse" /> Live Activity Feed
                         </h2>
 
-                        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-                            {/* Standard Feed Items */}
-                            <div className="p-4 rounded-xl border bg-white/5 hover:bg-white/10 transition-colors" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-bold text-[#F06414] uppercase tracking-wider">High Match Verified</span>
-                                    <span className="text-[10px] font-medium text-white/40">2 mins ago</span>
+                        <div className="flex-1 overflow-y-auto space-y-4 pr-2" style={{ scrollbarWidth: 'thin' }}>
+                            {activities.length > 0 ? (
+                                activities.map((activity, i) => {
+                                    const style = getActivityStyle(activity.action)
+                                    return (
+                                        <div key={i} className="p-4 rounded-xl border transition-colors hover:brightness-110"
+                                            style={{ background: style.bg, borderColor: style.border }}>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: style.color }}>{style.label}</span>
+                                                <span className="text-[10px] font-medium text-white/40">{timeAgo(activity.createdAt)}</span>
+                                            </div>
+                                            <p className="text-xs font-medium leading-relaxed" style={{ color: activity.action.includes('SECURITY') ? '#ef4444' : 'rgba(255,255,255,0.8)' }}>
+                                                {activity.details}
+                                            </p>
+                                        </div>
+                                    )
+                                })
+                            ) : (
+                                <div className="py-12 text-center">
+                                    <Activity size={32} className="mx-auto mb-4 opacity-20" />
+                                    <p className="text-xs text-white/40">No recent activity found</p>
                                 </div>
-                                <p className="text-xs text-white/80 font-medium leading-relaxed">
-                                    AI confirmed a <strong className="text-white">98% match</strong> between 'MacBook Pro Space Gray' and Claim #B8F2A.
-                                </p>
-                            </div>
-
-                            <div className="p-4 rounded-xl border bg-white/5 hover:bg-white/10 transition-colors" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">New Submission</span>
-                                    <span className="text-[10px] font-medium text-white/40">14 mins ago</span>
-                                </div>
-                                <p className="text-xs text-white/80 font-medium leading-relaxed">
-                                    User IT23844292 reported finding a set of Campus Keys near the Science Block.
-                                </p>
-                            </div>
-
-                            <div className="p-4 rounded-xl border bg-[#ef4444]/10 hover:bg-[#ef4444]/20 transition-colors" style={{ borderColor: 'rgba(239,68,68,0.3)' }}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-bold text-[#ef4444] uppercase tracking-wider">Security Alert</span>
-                                    <span className="text-[10px] font-medium text-[#ef4444]/60">1 hour ago</span>
-                                </div>
-                                <p className="text-xs text-[#ef4444] font-medium leading-relaxed">
-                                    Suspicious repeated claiming patterns detected from Student ID IT12345678. Account temporarily flagged for review.
-                                </p>
-                            </div>
-
-                            <div className="p-4 rounded-xl border bg-white/5 hover:bg-white/10 transition-colors" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-wider">Claim Reunited</span>
-                                    <span className="text-[10px] font-medium text-white/40">3 hours ago</span>
-                                </div>
-                                <p className="text-xs text-white/80 font-medium leading-relaxed">
-                                    Apple AirPods Pro returned successfully to verified owner. Case closed.
-                                </p>
-                            </div>
+                            )}
                         </div>
 
                         <button className="w-full mt-4 py-2 text-xs font-bold uppercase tracking-widest border-t border-white/10 text-white/40 hover:text-white transition-colors">
