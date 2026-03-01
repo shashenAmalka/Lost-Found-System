@@ -52,6 +52,7 @@ export default function useDashboardData(user) {
                         imageUrl: typeof found === 'object' ? found.photoUrl : '',
                         notificationId: n._id,
                         lostItemId: typeof n.lostItemId === 'object' ? n.lostItemId?._id : n.lostItemId,
+                        submittedBy: typeof found === 'object' ? found.submittedBy : null,
                     };
                 });
             setMatches(aiMatches);

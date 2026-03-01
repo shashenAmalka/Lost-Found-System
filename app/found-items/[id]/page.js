@@ -55,12 +55,19 @@ export default function FoundItemDetailPage() {
                             )}
                         </div>
 
-                        {/* Claim button */}
+                        {/* Claim button — only visible to other users, not the poster */}
                         {user && item.status === 'unclaimed' && (
-                            <Link href={`/claims/new?foundItemId=${item._id}`}
-                                className="btn-glass-primary w-full justify-center py-3 mt-4 text-sm font-semibold">
-                                <Shield size={16} /> Claim This Item
-                            </Link>
+                            item.submittedBy?.toString() === user.id ? (
+                                <div className="mt-4 p-3 rounded-xl text-xs text-center font-medium"
+                                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,246,250,0.4)' }}>
+                                    You reported this item — you cannot claim it.
+                                </div>
+                            ) : (
+                                <Link href={`/claims/new?foundItemId=${item._id}`}
+                                    className="btn-glass-primary w-full justify-center py-3 mt-4 text-sm font-semibold">
+                                    <Shield size={16} /> Claim This Item
+                                </Link>
+                            )
                         )}
                     </div>
 

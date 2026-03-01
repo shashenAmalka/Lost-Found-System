@@ -17,6 +17,8 @@ export default function FoundItemsPage() {
     const [pages, setPages] = useState(1)
     const [total, setTotal] = useState(0)
 
+    const handleDeleted = (deletedId) => setItems(prev => prev.filter(i => i._id !== deletedId))
+
     const fetchItems = useCallback(async () => {
         setLoading(true)
         const p = new URLSearchParams({ page, ...filters })
@@ -82,7 +84,7 @@ export default function FoundItemsPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                        {items.map(item => <ItemCard key={item._id} item={item} type="found" />)}
+                        {items.map(item => <ItemCard key={item._id} item={item} type="found" onDeleted={handleDeleted} />)}
                     </div>
                 )}
 

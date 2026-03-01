@@ -3,8 +3,10 @@ import { MapPin, CalendarClock, Tag, FileText, X, Send, Loader2, Sparkles, Shiel
 import Link from 'next/link'
 import { useState } from 'react'
 import ImageUpload from '@/components/forms/ImageUpload'
+import { useAuth } from '@/context/AuthContext'
 
-export default function MatchCard({ id, imageUrl, matchScore, timeAgo, title, location, category, lostItemId }) {
+export default function MatchCard({ id, imageUrl, matchScore, timeAgo, title, location, category, lostItemId, submittedBy }) {
+    const { user } = useAuth()
     const [showClaim, setShowClaim] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [success, setSuccess] = useState(false)
@@ -17,6 +19,10 @@ export default function MatchCard({ id, imageUrl, matchScore, timeAgo, title, lo
         proofUrl: '',
         pickupPreference: 'Campus Lost & Found Office',
     })
+
+    // Prevent the person who posted the found item from claiming it
+    const isFoundItemPoster = user && submittedBy && user.id === submittedBy?.toString()
+    const canClaim = !!lostItemId && !isFoundItemPoster
 
     const handleClaim = async () => {
         if (!form.ownershipExplanation.trim()) {

@@ -47,11 +47,12 @@ export async function GET(request) {
             const isOwner = decoded && item.submittedBy?.toString() === decoded.id
             const isAdminUser = decoded && decoded.role === 'admin'
             if (isOwner || isAdminUser) return item
-            // Public view: only basic info, hide detailed description/keywords/brand
-            const { description, keywords, color, brand, condition, submittedByEmail, submittedBy, ...publicItem } = item
+            // Public view: hide description + location to prevent fake claims
+            const { description, locationFound, keywords, color, brand, condition, submittedByEmail, submittedBy, ...publicItem } = item
             return {
                 ...publicItem,
-                description: item.description?.substring(0, 50) + (item.description?.length > 50 ? '...' : ''),
+                description: null,
+                locationFound: null,
                 isPrivate: true,
             }
         })

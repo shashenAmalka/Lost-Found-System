@@ -68,6 +68,13 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Items not found' }, { status: 404 })
         }
 
+        // Block the person who posted the found item from claiming it
+        if (foundItem.submittedBy?.toString() === decoded.id) {
+            return NextResponse.json({
+                error: 'You cannot claim an item that you reported as found.',
+            }, { status: 403 })
+        }
+
         // Run AI matching (MiniLM-L6-v2 semantic engine)
         const aiResult = await computeMatchScore(lostItem, foundItem, {
             ownershipExplanation, hiddenDetails, exactColorBrand
