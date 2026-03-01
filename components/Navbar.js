@@ -23,7 +23,7 @@ export default function Navbar() {
 
     const userLinks = [
         { href: '/', label: 'Home', icon: GraduationCap },
-        { href: '/user-dashboard', label: 'User Dashboard', icon: LayoutDashboard }, // Added dashboard link
+       // { href: '/user-dashboard', label: 'User Dashboard', icon: LayoutDashboard }, // Added dashboard link
         { href: '/lost-items', label: 'Lost Items', icon: Search },
         { href: '/found-items', label: 'Found Items', icon: Package },
     ]

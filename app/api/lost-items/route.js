@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import LostItem from '@/models/LostItem'
@@ -54,7 +56,7 @@ export async function POST(request) {
         await connectDB()
         const body = await request.json()
         const { title, category, description, keywords, color, brand, uniqueIdentifier,
-            dateLost, timeRange, possibleLocation, imageUrl, contactPreference } = body
+            dateLost, timeRange, possibleLocation, imageUrl, contactPreference, categoryFields } = body
 
         if (!title || !category || !description || !dateLost || !possibleLocation) {
             return NextResponse.json({ error: 'Required fields missing' }, { status: 400 })
@@ -70,6 +72,7 @@ export async function POST(request) {
             postedBy: decoded.id,
             postedByName: decoded.name || '',
             postedByEmail: decoded.email || '',
+            categoryFields: categoryFields || {},
         })
 
         return NextResponse.json({ item }, { status: 201 })

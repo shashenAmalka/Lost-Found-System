@@ -10,9 +10,9 @@ export default function SidebarNav() {
 
     const navItems = [
         { name: 'Dashboard', href: '/user-dashboard', icon: Home },
-        { name: 'My Claims', href: '/claims', icon: Search },
+        { name: 'My Claims', href: '/user-dashboard/claims', icon: Search },
         { name: 'Potential Matches', href: '/matches', icon: Star },
-        { name: 'Settings', href: '/settings', icon: Settings },
+        { name: 'Settings', href: '/user-dashboard/settings', icon: Settings },
     ];
 
     return (
@@ -27,13 +27,14 @@ export default function SidebarNav() {
             <div>
                 {/* Logo Area */}
                 <div className="p-6 pb-8 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-[1rem] flex items-center justify-center text-white shrink-0 shadow-lg"
-                        style={{ background: 'linear-gradient(135deg, #1A1A64 0%, #F06414 100%)', boxShadow: '0 8px 16px rgba(240, 100, 20, 0.3)' }}>
-                        <Search size={24} strokeWidth={2.5} className="drop-shadow-md" />
+                    <div className="w-12 h-12 rounded-[1rem] flex items-center justify-center text-2xl shrink-0 shadow-lg"
+                        style={{ background: 'linear-gradient(135deg, #F06414 0%, #D4AF37 100%)', boxShadow: '0 8px 16px rgba(240, 100, 20, 0.4)' }}>
+                        🎓
                     </div>
-                    <span className="font-bold text-xl leading-tight text-white tracking-wide">
-                        Smart<br />Campus
-                    </span>
+                    <div className="flex flex-col leading-none">
+                        <span className="text-white font-bold text-lg tracking-tight">Smart Campus</span>
+                        <span className="text-white/70 text-xs font-medium tracking-wider mt-1">LOST & FOUND</span>
+                    </div>
                 </div>
 
                 {/* Navigation Links */}

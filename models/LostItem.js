@@ -30,6 +30,8 @@ const LostItemSchema = new mongoose.Schema({
     postedByName: { type: String, default: '' },
     postedByEmail: { type: String, default: '' },
     views: { type: Number, default: 0 },
+    // Flexible category-specific fields (e.g. serialNumber for Electronics, ISBN for Books)
+    categoryFields: { type: mongoose.Schema.Types.Mixed, default: {} },
 }, { timestamps: true })
 
 // Text index for search

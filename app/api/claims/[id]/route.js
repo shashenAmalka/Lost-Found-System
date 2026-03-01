@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import ClaimRequest from '@/models/ClaimRequest'
@@ -19,6 +21,15 @@ export async function GET(request, { params }) {
         if (claim.claimantId._id.toString() !== decoded.id && decoded.role !== 'admin') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
+
+        // Strip AI-internal fields for non-admin users
+        if (decoded.role !== 'admin') {
+            delete claim.aiMatchScore
+            delete claim.aiRiskScore
+            delete claim.aiBreakdown
+            delete claim.aiSuggestedDecision
+        }
+
         return NextResponse.json({ claim })
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 })

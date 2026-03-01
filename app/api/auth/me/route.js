@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
@@ -25,6 +27,8 @@ export async function GET(request) {
                 status: user.status,
                 warningCount: user.warningCount,
                 department: user.department,
+                studentId: user.studentId,
+                phone: user.phone,
                 trustedFinderBadge: user.trustedFinderBadge,
             }
         })
