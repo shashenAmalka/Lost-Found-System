@@ -7,6 +7,8 @@ import {
     Search, Bell, Menu, X, LogOut, User, LayoutDashboard,
     MapPin, Package, Shield, GraduationCap, ChevronDown
 } from 'lucide-react'
+import NotificationBell from '@/components/NotificationBell'
+import NotificationToast from '@/components/NotificationToast'
 
 export default function Navbar() {
     const { user, loading, logout, isAdmin } = useAuth()
@@ -23,7 +25,7 @@ export default function Navbar() {
 
     const userLinks = [
         { href: '/', label: 'Home', icon: GraduationCap },
-       // { href: '/user-dashboard', label: 'User Dashboard', icon: LayoutDashboard }, // Added dashboard link
+        // { href: '/user-dashboard', label: 'User Dashboard', icon: LayoutDashboard }, // Added dashboard link
         { href: '/lost-items', label: 'Lost Items', icon: Search },
         { href: '/found-items', label: 'Found Items', icon: Package },
     ]
@@ -97,9 +99,13 @@ export default function Navbar() {
                         {!loading && user && (
                             <>
                                 {!isAdmin && (
-                                    <Link href="/lost-items/new" className="text-sm px-4 py-2 rounded-xl text-white font-semibold transition-all shadow-sm" style={{ background: '#F06414' }}>
-                                        + Report Item
-                                    </Link>
+                                    <>
+                                        <NotificationBell />
+                                        <NotificationToast />
+                                        <Link href="/lost-items/new" className="text-sm px-4 py-2 rounded-xl text-white font-semibold transition-all shadow-sm" style={{ background: '#F06414' }}>
+                                            + Report Item
+                                        </Link>
+                                    </>
                                 )}
                                 {/* User dropdown */}
                                 <div className="relative">
@@ -124,7 +130,7 @@ export default function Navbar() {
                                                         className="flex items-center gap-2 px-4 py-2.5 text-sm text-white/90 hover:text-white hover:bg-white/10 transition-colors">
                                                         <LayoutDashboard size={14} /> Dashboard
                                                     </Link>
-                                                    
+
                                                 </>
                                             )}
                                             <div className="border-t border-white/10 my-1" />

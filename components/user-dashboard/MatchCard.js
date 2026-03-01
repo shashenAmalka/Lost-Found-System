@@ -57,7 +57,7 @@ export default function MatchCard({ id, imageUrl, matchScore, timeAgo, title, lo
                     </span>
 
                     <Link
-                        href={`/matches/${id}`}
+                        href={`/found-items/${id}`}
                         className="px-5 py-2 rounded-xl text-sm font-bold transition-all relative overflow-hidden border group/btn flex items-center justify-center shrink-0"
                         style={{
                             background: 'rgba(26, 26, 100, 0.2)',

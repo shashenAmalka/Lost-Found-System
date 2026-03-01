@@ -13,22 +13,25 @@ export default function AdminAuditPage() {
 
     useEffect(() => {
         if (!user) return
-        fetch('/api/admin/stats', { method: 'POST', credentials: 'include' })
+        fetch('/api/admin/stats', { method: 'GET', credentials: 'include' })
             .then(r => r.json())
-            .then(d => setLogs(d.stats?.auditLogs || []))
+            .then(d => setLogs(d.logs || []))
             .catch(() => { })
             .finally(() => setLoading(false))
     }, [user])
 
-    if (authLoading) return <div className="page-bg min-h-screen"><Navbar /></div>
+    if (authLoading) return <div className="min-h-screen" style={{ backgroundColor: '#0B0F19' }}><Navbar /></div>
     if (!user || !isAdmin) { router.push('/login'); return null }
 
     const actionColors = {
-        approve_claim: { bg: 'rgba(16,185,129,0.15)', color: '#6ee7b7', icon: '✅' },
-        reject_claim: { bg: 'rgba(239,68,68,0.15)', color: '#fca5a5', icon: '❌' },
-        warn_user: { bg: 'rgba(245,158,11,0.15)', color: '#fcd34d', icon: '⚠️' },
-        restrict_user: { bg: 'rgba(239,68,68,0.15)', color: '#fca5a5', icon: '🚫' },
-        unrestrict_user: { bg: 'rgba(16,185,129,0.15)', color: '#6ee7b7', icon: '🔓' },
+        APPROVE_CLAIM: { bg: 'rgba(16,185,129,0.15)', color: '#6ee7b7', icon: '✅' },
+        REJECT_CLAIM: { bg: 'rgba(239,68,68,0.15)', color: '#fca5a5', icon: '❌' },
+        WARN_USER: { bg: 'rgba(245,158,11,0.15)', color: '#fcd34d', icon: '⚠️' },
+        RESTRICT_USER: { bg: 'rgba(239,68,68,0.15)', color: '#fca5a5', icon: '🚫' },
+        UNRESTRICT_USER: { bg: 'rgba(16,185,129,0.15)', color: '#6ee7b7', icon: '🔓' },
+        NEW_SUBMISSION: { bg: 'rgba(99,102,241,0.15)', color: '#a5b4fc', icon: '📝' },
+        NEW_CLAIM: { bg: 'rgba(99,102,241,0.15)', color: '#a5b4fc', icon: '📥' },
+        HIGH_MATCH_VERIFIED: { bg: 'rgba(212,175,55,0.15)', color: '#D4AF37', icon: '✨' },
         default: { bg: 'rgba(99,102,241,0.15)', color: '#a5b4fc', icon: '📋' },
     }
 
@@ -47,7 +50,7 @@ export default function AdminAuditPage() {
                 ) : (
                     <div className="space-y-3">
                         {logs.map((log, i) => {
-                            const style = actionColors[log.actionType] || actionColors.default
+                            const style = actionColors[log.action] || actionColors.default
                             return (
                                 <div key={log._id || i} className="glass-card p-4 flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg"
@@ -55,8 +58,8 @@ export default function AdminAuditPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className="text-white text-sm font-semibold">{log.adminName || 'Admin'}</span>
-                                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: style.bg, color: style.color }}>
-                                                {log.actionType?.replace(/_/g, ' ') || 'action'}
+                                            <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: style.bg, color: style.color }}>
+                                                {log.action?.replace(/_/g, ' ') || 'ACTION'}
                                             </span>
                                         </div>
                                         <p className="text-white/50 text-xs mt-0.5 truncate">{log.details || 'No details'}</p>

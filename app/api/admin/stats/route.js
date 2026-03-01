@@ -23,7 +23,6 @@ export async function GET(request) {
     }
 }
 
-// Admin stats
 export async function POST(request) {
     try {
         const token = request.cookies.get('auth_token')?.value
@@ -41,7 +40,15 @@ export async function POST(request) {
             User.countDocuments({ status: 'restricted' }),
         ])
 
-        return NextResponse.json({ totalLost, totalFound, totalClaims, pendingClaims, resolvedClaims, totalUsers, restrictedUsers })
+        const recentActivities = await AuditLog.find({})
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .lean()
+
+        return NextResponse.json({
+            stats: { totalLost, totalFound, totalClaims, pendingClaims, resolvedClaims, totalUsers, restrictedUsers },
+            recentActivities
+        })
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }

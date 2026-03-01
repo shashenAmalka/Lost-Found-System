@@ -3,7 +3,11 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import LostItem from '@/models/LostItem'
+import FoundItem from '@/models/FoundItem'
+import Notification from '@/models/Notification'
+import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
+import { computeMatchScore } from '@/lib/aiEngine'
 
 export async function GET(request) {
     try {
@@ -75,7 +79,64 @@ export async function POST(request) {
             categoryFields: categoryFields || {},
         })
 
-        return NextResponse.json({ item }, { status: 201 })
+        // Log to Audit Feed
+        await AuditLog.create({
+            adminName: 'System',
+            action: 'NEW_SUBMISSION',
+            targetType: 'LostItem',
+            targetId: item._id,
+            details: `User ${decoded.name || decoded.email} reported a lost ${item.title} near ${item.possibleLocation}.`,
+        })
+
+        // === AI Auto-Scan: Find matching found items ===
+        let matches = []
+        try {
+            const unclaimedFound = await FoundItem.find({ status: 'unclaimed' }).lean()
+            const MATCH_THRESHOLD = 40
+
+            for (const foundItem of unclaimedFound) {
+                const result = await computeMatchScore(item.toObject(), foundItem, {})
+                if (result.matchScore >= MATCH_THRESHOLD) {
+                    matches.push({
+                        foundItem,
+                        matchScore: result.matchScore,
+                        breakdown: result.breakdown,
+                    })
+
+                    // Create notification for the user
+                    await Notification.create({
+                        userId: decoded.id,
+                        type: 'ai_match',
+                        title: 'AI Match Found!',
+                        message: `Your "${item.title}" has a ${result.matchScore}% match with "${foundItem.title}" found at ${foundItem.locationFound}`,
+                        lostItemId: item._id,
+                        foundItemId: foundItem._id,
+                        matchScore: result.matchScore,
+                    })
+
+                    // Log high matches to Audit Feed
+                    if (result.matchScore >= 70) {
+                        await AuditLog.create({
+                            adminName: 'AI Engine',
+                            action: 'HIGH_MATCH_VERIFIED',
+                            targetType: 'ClaimRequest',
+                            targetId: item._id,
+                            details: `AI confirmed a ${result.matchScore}% match between '${item.title}' and '${foundItem.title}'.`,
+                        })
+                    }
+                }
+            }
+
+            // Update lost item status if strong match found
+            if (matches.some(m => m.matchScore >= 60)) {
+                await LostItem.findByIdAndUpdate(item._id, { status: 'matched' })
+            }
+        } catch (scanErr) {
+            console.error('[AI Scan Error]', scanErr)
+            // Don't fail the request if scanning fails
+        }
+
+        return NextResponse.json({ item, matches }, { status: 201 })
     } catch (err) {
         console.error(err)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })

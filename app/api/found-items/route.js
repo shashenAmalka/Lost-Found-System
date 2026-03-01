@@ -3,7 +3,11 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import FoundItem from '@/models/FoundItem'
+import LostItem from '@/models/LostItem'
+import Notification from '@/models/Notification'
+import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
+import { computeMatchScore } from '@/lib/aiEngine'
 
 export async function GET(request) {
     try {
@@ -71,6 +75,55 @@ export async function POST(request) {
             submittedByName: decoded.name || '',
             submittedByEmail: decoded.email || '',
         })
+
+        // Log to Audit Feed
+        await AuditLog.create({
+            adminName: 'System',
+            action: 'NEW_SUBMISSION',
+            targetType: 'FoundItem',
+            targetId: item._id,
+            details: `User ${decoded.name || decoded.email} reported finding a ${item.title} at ${item.locationFound}.`,
+        })
+
+        // === AI Reverse-Scan: Notify owners of matching lost items ===
+        try {
+            const pendingLost = await LostItem.find({ status: 'pending' }).lean()
+            const MATCH_THRESHOLD = 40
+
+            for (const lostItem of pendingLost) {
+                const result = await computeMatchScore(lostItem, item.toObject(), {})
+                if (result.matchScore >= MATCH_THRESHOLD) {
+                    // Create notification for the lost item owner
+                    await Notification.create({
+                        userId: lostItem.postedBy,
+                        type: 'ai_match',
+                        title: 'AI Match Found!',
+                        message: `A found item "${item.title}" has a ${result.matchScore}% match with your lost "${lostItem.title}"`,
+                        lostItemId: lostItem._id,
+                        foundItemId: item._id,
+                        matchScore: result.matchScore,
+                    })
+
+                    // Log high matches to Audit Feed
+                    if (result.matchScore >= 70) {
+                        await AuditLog.create({
+                            adminName: 'AI Engine',
+                            action: 'HIGH_MATCH_VERIFIED',
+                            targetType: 'ClaimRequest',
+                            targetId: item._id,
+                            details: `AI confirmed a ${result.matchScore}% match between '${lostItem.title}' and '${item.title}'.`,
+                        })
+                    }
+
+                    // Update lost item status if strong match
+                    if (result.matchScore >= 60) {
+                        await LostItem.findByIdAndUpdate(lostItem._id, { status: 'matched' })
+                    }
+                }
+            }
+        } catch (scanErr) {
+            console.error('[AI Reverse-Scan Error]', scanErr)
+        }
 
         return NextResponse.json({ item }, { status: 201 })
     } catch (err) {
