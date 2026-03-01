@@ -6,14 +6,17 @@ import Link from 'next/link'
 import {
     LayoutDashboard, FileText, ShieldAlert, Activity,
     ArrowUpRight, AlertTriangle, ShieldCheck, Clock,
-    Search, LogOut
+    Search, LogOut, ChevronDown
 } from 'lucide-react'
+import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function AdminCommandCenter() {
     const { user, loading: authLoading, isAdmin, logout } = useAuth()
     const router = useRouter()
     const [stats, setStats] = useState(null)
     const [activities, setActivities] = useState([])
+    const [trajectoryData, setTrajectoryData] = useState([])
+    const [timeRange, setTimeRange] = useState(30)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -27,6 +30,14 @@ export default function AdminCommandCenter() {
             .catch(() => { })
             .finally(() => setLoading(false))
     }, [user])
+
+    useEffect(() => {
+        if (!user) return
+        fetch(`/api/admin/analytics/trajectory?range=${timeRange}`, { credentials: 'include' })
+            .then(r => r.json())
+            .then(d => setTrajectoryData(d.trajectory || []))
+            .catch(() => { })
+    }, [user, timeRange])
 
     function timeAgo(dateStr) {
         if (!dateStr) return 'Recently'
@@ -162,41 +173,58 @@ export default function AdminCommandCenter() {
                             <h2 className="text-lg font-bold text-white tracking-wide flex items-center gap-2">
                                 <Activity size={18} className="text-[#1A1A64] drop-shadow-[0_0_8px_rgba(26,26,100,1)]" /> Lost vs. Found Trajectory
                             </h2>
-                            <span className="text-xs font-semibold px-3 py-1 bg-white/5 rounded text-white/60">Last 30 Days</span>
+                            <div className="relative">
+                                <select
+                                    className="appearance-none text-xs font-bold px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/80 transition-colors cursor-pointer outline-none border border-white/10"
+                                    value={timeRange}
+                                    onChange={(e) => setTimeRange(Number(e.target.value))}>
+                                    <option value={7} className="bg-[#0B0F19] text-white">Last 7 Days</option>
+                                    <option value={30} className="bg-[#0B0F19] text-white">Last 30 Days</option>
+                                    <option value={90} className="bg-[#0B0F19] text-white">Last 90 Days</option>
+                                </select>
+                                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+                            </div>
                         </div>
 
-                        <div className="flex-1 min-h-[300px] w-full relative flex items-end justify-between px-2 pb-8 pt-10"
-                            style={{ background: 'linear-gradient(to top, rgba(255,255,255,0.01) 0%, transparent 100%)' }}>
-                            {/* Abstract Chart Representation Visual */}
-                            <div className="absolute bottom-8 left-0 w-full h-[200px] pointer-events-none">
-                                <svg width="100%" height="100%" viewBox="0 0 800 200" preserveAspectRatio="none">
-                                    <path d="M0,200 L0,150 C100,100 200,180 300,120 C400,60 500,140 600,90 C700,40 800,80 800,80 L800,200 Z"
-                                        fill="url(#gradient-blue)" stroke="#1A1A64" strokeWidth="3" className="drop-shadow-[0_0_10px_rgba(26,26,100,0.8)]" />
-                                    <path d="M0,200 L0,100 C150,140 250,60 350,110 C450,160 550,50 650,100 C750,150 800,30 800,30 L800,200 Z"
-                                        fill="url(#gradient-orange)" stroke="#F06414" strokeWidth="3" className="drop-shadow-[0_0_10px_rgba(240,100,20,0.8)]" />
+                        <div className="flex-1 min-h-[300px] w-full relative pt-2">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={trajectoryData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
                                     <defs>
-                                        <linearGradient id="gradient-blue" x1="0" x2="0" y1="0" y2="1">
-                                            <stop offset="0%" stopColor="rgba(26,26,100,0.4)" />
-                                            <stop offset="100%" stopColor="transparent" />
+                                        <linearGradient id="colorLost" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#1A1A64" stopOpacity={0.5} />
+                                            <stop offset="95%" stopColor="#1A1A64" stopOpacity={0} />
                                         </linearGradient>
-                                        <linearGradient id="gradient-orange" x1="0" x2="0" y1="0" y2="1">
-                                            <stop offset="0%" stopColor="rgba(240,100,20,0.3)" />
-                                            <stop offset="100%" stopColor="transparent" />
+                                        <linearGradient id="colorFound" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#F06414" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="#F06414" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                </svg>
-                            </div>
-
-                            {/* Grid Lines */}
-                            {[1, 2, 3, 4, 5].map(i => (
-                                <div key={i} className="absolute left-0 w-full border-t border-white/5" style={{ bottom: `${i * 20}%` }} />
-                            ))}
-                            <div className="w-full flex justify-between text-[10px] uppercase font-bold text-white/30 absolute bottom-0 left-0 px-4">
-                                <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
-                            </div>
+                                    <XAxis
+                                        dataKey="date"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 700 }}
+                                        dy={10}
+                                        minTickGap={30}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            background: 'rgba(11,15,25,0.9)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: '12px',
+                                            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                                            backdropFilter: 'blur(10px)'
+                                        }}
+                                        itemStyle={{ fontSize: '13px', fontWeight: 600 }}
+                                        labelStyle={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: 700, marginBottom: '4px' }}
+                                    />
+                                    <Area type="monotone" dataKey="lost" name="Lost Items" stroke="#1A1A64" strokeWidth={3} fill="url(#colorLost)" activeDot={{ r: 6, fill: '#1A1A64', stroke: '#fff', strokeWidth: 2 }} animationDuration={1500} />
+                                    <Area type="monotone" dataKey="found" name="Found Items" stroke="#F06414" strokeWidth={3} fill="url(#colorFound)" activeDot={{ r: 6, fill: '#F06414', stroke: '#fff', strokeWidth: 2 }} animationDuration={1500} />
+                                </AreaChart>
+                            </ResponsiveContainer>
                         </div>
 
-                        <div className="flex gap-6 mt-8 justify-center">
+                        <div className="flex gap-6 mt-6 justify-center">
                             <div className="flex items-center gap-2">
                                 <span className="w-3 h-3 rounded-full bg-[#1A1A64] shadow-[0_0_8px_rgba(26,26,100,0.8)]" />
                                 <span className="text-xs font-semibold text-white/70">Lost Items Reported</span>
