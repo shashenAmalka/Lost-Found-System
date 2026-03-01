@@ -30,9 +30,10 @@ export default function useDashboardData(user) {
 
             // Build matches array from ai_match notifications (with populated foundItemId)
             // Deduplicate by foundItemId to prevent duplicate match cards
+            const CLAIM_THRESHOLD = 75; // Only show matches ≥ 75% to users
             const seenFoundIds = new Set();
             const aiMatches = allNotifs
-                .filter(n => n.type === 'ai_match' && n.foundItemId)
+                .filter(n => n.type === 'ai_match' && n.foundItemId && (n.matchScore || 0) >= CLAIM_THRESHOLD)
                 .filter(n => {
                     const fid = typeof n.foundItemId === 'object' ? n.foundItemId._id : n.foundItemId;
                     if (seenFoundIds.has(String(fid))) return false;

@@ -20,14 +20,56 @@ export async function GET(request) {
         await connectDB()
         const { searchParams } = new URL(request.url)
         const status = searchParams.get('status') || ''
+        const sortBy = searchParams.get('sort') || 'score' // default: by AI score
         const filter = status ? { status } : {}
+
+        // Sort: 'score' = highest AI match first, 'date' = newest first
+        const sortOrder = sortBy === 'date' ? { createdAt: -1 } : { aiMatchScore: -1, createdAt: -1 }
+
         const claims = await ClaimRequest.find(filter)
-            .populate('lostItemId', 'title category possibleLocation dateLost')
-            .populate('foundItemId', 'title category locationFound dateFound')
-            .populate('claimantId', 'name email campusId warningCount status')
-            .sort({ createdAt: -1 })
+            .populate('lostItemId', 'title category possibleLocation dateLost imageUrl')
+            .populate('foundItemId', 'title category locationFound dateFound photoUrl')
+            .populate('claimantId', 'name email campusId warningCount status trustedFinderBadge trustedFinderCount createdAt')
+            .sort(sortOrder)
             .lean()
-        return NextResponse.json({ claims })
+
+        // Enrich with conflict detection: count active claims per foundItemId
+        const foundItemClaimCounts = {}
+        claims.forEach(c => {
+            const fid = c.foundItemId?._id?.toString()
+            if (fid && !['rejected', 'withdrawn', 'completed'].includes(c.status)) {
+                foundItemClaimCounts[fid] = (foundItemClaimCounts[fid] || 0) + 1
+            }
+        })
+
+        // Attach conflict flag and claimant history
+        const enrichedClaims = await Promise.all(claims.map(async (c) => {
+            const fid = c.foundItemId?._id?.toString()
+            const hasConflict = fid && foundItemClaimCounts[fid] > 1
+
+            // Get claimant history
+            let claimantHistory = null
+            if (c.claimantId?._id) {
+                const [totalClaims, approvedClaims, rejectedClaims] = await Promise.all([
+                    ClaimRequest.countDocuments({ claimantId: c.claimantId._id }),
+                    ClaimRequest.countDocuments({ claimantId: c.claimantId._id, status: 'approved' }),
+                    ClaimRequest.countDocuments({ claimantId: c.claimantId._id, status: 'rejected' }),
+                ])
+                claimantHistory = {
+                    totalClaims,
+                    approvedClaims,
+                    rejectedClaims,
+                    warningCount: c.claimantId.warningCount || 0,
+                    accountStatus: c.claimantId.status || 'active',
+                    trustedFinder: c.claimantId.trustedFinderBadge || false,
+                    memberSince: c.claimantId.createdAt,
+                }
+            }
+
+            return { ...c, hasConflict, conflictCount: foundItemClaimCounts[fid] || 1, claimantHistory }
+        }))
+
+        return NextResponse.json({ claims: enrichedClaims })
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }

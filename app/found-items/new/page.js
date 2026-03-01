@@ -3,8 +3,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { useAuth } from '@/context/AuthContext'
-import { Send, ArrowLeft, ImagePlus } from 'lucide-react'
+import { Send, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import ImageUpload from '@/components/forms/ImageUpload'
 
 const CATEGORIES = ['Electronics', 'Books', 'Clothing', 'Keys', 'ID Card', 'Bag', 'Jewelry', 'Sports', 'Other']
 const CONDITIONS = ['Excellent', 'Good', 'Fair', 'Poor']
@@ -129,11 +130,11 @@ export default function NewFoundItemPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs text-white/60 uppercase tracking-wide">Photo URL (optional)</label>
-                            <div className="flex gap-3">
-                                <input className="glass-input flex-1" placeholder="Paste image URL..." value={form.photoUrl} onChange={change('photoUrl')} />
-                                <div className="btn-glass px-3 py-2 shrink-0"><ImagePlus size={16} /></div>
-                            </div>
+                            <label className="text-xs text-white/60 uppercase tracking-wide">Actual Photo (optional)</label>
+                            <ImageUpload
+                                value={form.photoUrl}
+                                onChange={(url) => setForm(f => ({ ...f, photoUrl: url }))}
+                            />
                         </div>
 
                         {error && (

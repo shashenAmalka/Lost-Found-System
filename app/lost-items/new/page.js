@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import CategoryFields from '@/components/forms/CategoryFields'
 import { useAuth } from '@/context/AuthContext'
-import { Send, ArrowLeft, ImagePlus, Sparkles, AlertCircle } from 'lucide-react'
+import { Send, ArrowLeft, Sparkles, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import ImageUpload from '@/components/forms/ImageUpload'
 
 const CATEGORIES = ['Electronics', 'Books', 'Clothing', 'Keys', 'ID Card', 'Bag', 'Jewelry', 'Sports', 'Other']
 const TIME_RANGES = ['Morning (6AM-12PM)', 'Afternoon (12PM-5PM)', 'Evening (5PM-9PM)', 'Night (9PM-6AM)', 'Not Sure']
@@ -223,11 +224,11 @@ export default function NewLostItemPage() {
 
                             {/* Image URL */}
                             <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide">Image URL (optional)</label>
-                                <div className="flex gap-3">
-                                    <input className="glass-input flex-1" placeholder="Paste image URL..." value={form.imageUrl} onChange={change('imageUrl')} />
-                                    <div className="btn-glass px-3 py-2 shrink-0"><ImagePlus size={16} /></div>
-                                </div>
+                                <label className="text-xs text-white/60 uppercase tracking-wide">Actual Photo (optional)</label>
+                                <ImageUpload
+                                    value={form.imageUrl}
+                                    onChange={(url) => setForm(f => ({ ...f, imageUrl: url }))}
+                                />
                             </div>
 
                             {/* Contact Preference */}

@@ -24,7 +24,7 @@ export default function MatchCard({ id, imageUrl, matchScore, timeAgo, title, lo
                 {/* Gradient Overlay for Readability */}
                 <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(11, 15, 25, 1) 0%, transparent 60%)' }} />
 
-                {/* AI Match Glow Badge */}
+                {/* AI Match Badge — no percentage shown to users */}
                 <div className="absolute top-4 right-4 px-3 py-1.5 rounded-lg text-sm font-black tracking-wider border backdrop-blur-xl shadow-lg transform group-hover:scale-105 transition-transform"
                     style={{
                         background: 'rgba(212, 175, 55, 0.1)',
@@ -32,7 +32,7 @@ export default function MatchCard({ id, imageUrl, matchScore, timeAgo, title, lo
                         borderColor: 'rgba(212, 175, 55, 0.4)',
                         boxShadow: '0 0 20px rgba(212, 175, 55, 0.2)'
                     }}>
-                    {matchScore}% Match
+                    ✨ AI Match
                 </div>
 
                 {/* Time Ago Label */}

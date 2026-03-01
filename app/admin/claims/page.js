@@ -6,7 +6,8 @@ import Link from 'next/link'
 import {
     LayoutDashboard, FileText, ShieldAlert, Activity,
     Shield, Check, X, MessageCircle, ChevronDown, ChevronUp,
-    Filter, Clock, LogOut, AlertTriangle, ChevronRight, Sparkles
+    Filter, Clock, LogOut, AlertTriangle, ChevronRight, Sparkles,
+    ArrowUpDown, User as UserIcon, History, Trophy, Send, ClipboardCheck
 } from 'lucide-react'
 
 function StatusPill({ status }) {
@@ -37,16 +38,31 @@ export default function AdminClaimsPage() {
     const [actionLoading, setActionLoading] = useState(null)
     const [adminNote, setAdminNote] = useState('')
     const [successMsg, setSuccessMsg] = useState('')
+    const [sortBy, setSortBy] = useState('score')
+    const [verifyClaimId, setVerifyClaimId] = useState(null)
+    const [verifyQuestions, setVerifyQuestions] = useState([])
+    const [sendingForm, setSendingForm] = useState(false)
+
+    const TEMPLATE_QUESTIONS = [
+        'Describe at least 3 unique identifying marks or features of this item that are not visible in photos.',
+        'Where and when exactly did you lose this item? Include the building, floor, and approximate time.',
+        'What was inside the item or attached to it? (e.g., contents of a bag, keychain on keys)',
+        'Can you provide proof of purchase, serial number, or any ownership documentation?',
+        'Describe the exact condition of the item (scratches, dents, wear marks).',
+    ]
 
     useEffect(() => {
         if (!user) return
-        const qs = filter ? `?status=${filter}` : ''
-        fetch(`/api/admin/claims${qs}`, { credentials: 'include' })
+        setLoading(true)
+        const qs = new URLSearchParams()
+        if (filter) qs.set('status', filter)
+        qs.set('sort', sortBy)
+        fetch(`/api/admin/claims?${qs}`, { credentials: 'include' })
             .then(r => r.json())
             .then(d => setClaims(d.claims || []))
             .catch(() => { })
             .finally(() => setLoading(false))
-    }, [user, filter])
+    }, [user, filter, sortBy])
 
     const handleAction = async (claimId, action) => {
         setActionLoading(claimId)
@@ -150,8 +166,21 @@ export default function AdminClaimsPage() {
                         </p>
                     </div>
 
-                    {/* Filter */}
-                    <div className="flex items-center gap-3">
+                    {/* Filter & Sort */}
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border" style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.08)' }}>
+                            <ArrowUpDown size={14} style={{ color: 'rgba(245,246,250,0.4)' }} />
+                            <button onClick={() => setSortBy('score')}
+                                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${sortBy === 'score' ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+                                style={sortBy === 'score' ? { background: 'rgba(212,175,55,0.2)', border: '1px solid rgba(212,175,55,0.3)' } : { border: '1px solid transparent' }}>
+                                AI Score
+                            </button>
+                            <button onClick={() => setSortBy('date')}
+                                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${sortBy === 'date' ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+                                style={sortBy === 'date' ? { background: 'rgba(96,165,250,0.2)', border: '1px solid rgba(96,165,250,0.3)' } : { border: '1px solid transparent' }}>
+                                Date
+                            </button>
+                        </div>
                         <Filter size={14} style={{ color: 'rgba(245,246,250,0.4)' }} />
                         <select
                             className="px-4 py-2.5 rounded-xl text-sm font-semibold border outline-none"
@@ -252,6 +281,60 @@ export default function AdminClaimsPage() {
                                     <div className="border-t px-5 pb-6 pt-5 space-y-5"
                                         style={{ borderTopColor: 'rgba(255,255,255,0.06)' }}>
 
+                                        {/* 🚨 Conflict Alert */}
+                                        {c.hasConflict && (
+                                            <div className="rounded-2xl p-4 border flex items-start gap-3"
+                                                style={{ background: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.25)' }}>
+                                                <AlertTriangle size={18} className="shrink-0 mt-0.5" style={{ color: '#ef4444' }} />
+                                                <div>
+                                                    <p className="text-sm font-bold text-red-400">⚠ Conflict Alert: {c.conflictCount} claims for this item</p>
+                                                    <p className="text-xs mt-1" style={{ color: 'rgba(245,246,250,0.5)' }}>
+                                                        Multiple users have claimed this found item. Consider sending verification forms to confirm the true owner.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* User History Panel */}
+                                        {c.claimantHistory && (
+                                            <div className="rounded-2xl p-5 border"
+                                                style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)' }}>
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <UserIcon size={14} style={{ color: '#D4AF37' }} />
+                                                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(245,246,250,0.5)' }}>Claimant History</span>
+                                                    {c.claimantHistory.trustedFinder && (
+                                                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-full border" style={{ color: '#D4AF37', background: 'rgba(212,175,55,0.1)', borderColor: 'rgba(212,175,55,0.3)' }}>
+                                                            <Trophy size={8} className="inline mr-1" />TRUSTED FINDER
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                    <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                                        <p className="text-lg font-black text-white">{c.claimantHistory.totalClaims}</p>
+                                                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(245,246,250,0.4)' }}>Total Claims</p>
+                                                    </div>
+                                                    <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(74,222,128,0.05)' }}>
+                                                        <p className="text-lg font-black" style={{ color: '#4ade80' }}>{c.claimantHistory.approvedClaims}</p>
+                                                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(245,246,250,0.4)' }}>Approved</p>
+                                                    </div>
+                                                    <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(239,68,68,0.05)' }}>
+                                                        <p className="text-lg font-black" style={{ color: '#ef4444' }}>{c.claimantHistory.rejectedClaims}</p>
+                                                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(245,246,250,0.4)' }}>Rejected</p>
+                                                    </div>
+                                                    <div className="text-center p-3 rounded-xl" style={{ background: c.claimantHistory.warningCount > 0 ? 'rgba(249,115,22,0.08)' : 'rgba(255,255,255,0.03)' }}>
+                                                        <p className="text-lg font-black" style={{ color: c.claimantHistory.warningCount > 0 ? '#f97316' : 'white' }}>{c.claimantHistory.warningCount}/3</p>
+                                                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'rgba(245,246,250,0.4)' }}>Warnings</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4 mt-3 text-xs" style={{ color: 'rgba(245,246,250,0.4)' }}>
+                                                    <span className="flex items-center gap-1"><History size={10} /> Member since {new Date(c.claimantHistory.memberSince).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</span>
+                                                    {c.claimantHistory.accountStatus === 'restricted' && (
+                                                        <span className="text-red-400 font-bold uppercase tracking-wider">⛔ RESTRICTED ACCOUNT</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* AI Score Bar */}
                                         {c.aiMatchScore != null && (
                                             <div className="rounded-2xl p-5 border"
@@ -325,7 +408,66 @@ export default function AdminClaimsPage() {
                                                         style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(245,246,250,0.7)', border: '1px solid rgba(255,255,255,0.08)' }}>
                                                         <MessageCircle size={14} /> Request More Info
                                                     </button>
+                                                    {c.hasConflict && (
+                                                        <button onClick={() => { setVerifyClaimId(c._id); setVerifyQuestions([]) }}
+                                                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90"
+                                                            style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.3)' }}>
+                                                            <ClipboardCheck size={14} /> Send Verification Form
+                                                        </button>
+                                                    )}
                                                 </div>
+
+                                                {/* Verification Form Builder */}
+                                                {verifyClaimId === c._id && (
+                                                    <div className="mt-4 rounded-2xl p-5 border space-y-4"
+                                                        style={{ background: 'rgba(168,85,247,0.05)', borderColor: 'rgba(168,85,247,0.2)' }}>
+                                                        <div className="flex items-center gap-2">
+                                                            <ClipboardCheck size={16} style={{ color: '#a855f7' }} />
+                                                            <span className="text-sm font-bold text-white">Select Verification Questions</span>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            {TEMPLATE_QUESTIONS.map((q, i) => (
+                                                                <label key={i} className="flex items-start gap-3 cursor-pointer p-3 rounded-xl transition-colors hover:bg-white/5">
+                                                                    <input type="checkbox" className="mt-1 accent-purple-500"
+                                                                        checked={verifyQuestions.includes(q)}
+                                                                        onChange={(e) => {
+                                                                            if (e.target.checked) setVerifyQuestions(prev => [...prev, q])
+                                                                            else setVerifyQuestions(prev => prev.filter(x => x !== q))
+                                                                        }} />
+                                                                    <span className="text-sm" style={{ color: 'rgba(245,246,250,0.7)' }}>{q}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                        <div className="flex gap-3">
+                                                            <button disabled={verifyQuestions.length === 0 || sendingForm}
+                                                                onClick={async () => {
+                                                                    setSendingForm(true)
+                                                                    try {
+                                                                        const res = await fetch('/api/admin/verification-forms', {
+                                                                            method: 'POST',
+                                                                            headers: { 'Content-Type': 'application/json' },
+                                                                            body: JSON.stringify({ claimId: c._id, questions: verifyQuestions }),
+                                                                            credentials: 'include'
+                                                                        })
+                                                                        const data = await res.json()
+                                                                        if (!res.ok) throw new Error(data.error)
+                                                                        setSuccessMsg('Verification form sent successfully!')
+                                                                        setVerifyClaimId(null)
+                                                                        setTimeout(() => setSuccessMsg(''), 4000)
+                                                                    } catch (err) { alert(err.message) }
+                                                                    finally { setSendingForm(false) }
+                                                                }}
+                                                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 disabled:opacity-50"
+                                                                style={{ background: 'rgba(168,85,247,0.2)', color: '#a855f7', border: '1px solid rgba(168,85,247,0.35)' }}>
+                                                                <Send size={14} /> {sendingForm ? 'Sending...' : `Send Form (${verifyQuestions.length} questions)`}
+                                                            </button>
+                                                            <button onClick={() => setVerifyClaimId(null)}
+                                                                className="px-4 py-2.5 rounded-xl text-sm font-bold text-white/50 hover:text-white transition-colors">
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
