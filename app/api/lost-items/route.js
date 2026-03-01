@@ -103,16 +103,24 @@ export async function POST(request) {
                         breakdown: result.breakdown,
                     })
 
-                    // Create notification for the user
-                    await Notification.create({
+                    // Create notification for the user (deduplicate)
+                    const existingNotif = await Notification.findOne({
                         userId: decoded.id,
                         type: 'ai_match',
-                        title: 'AI Match Found!',
-                        message: `Your "${item.title}" has a ${result.matchScore}% match with "${foundItem.title}" found at ${foundItem.locationFound}`,
                         lostItemId: item._id,
                         foundItemId: foundItem._id,
-                        matchScore: result.matchScore,
                     })
+                    if (!existingNotif) {
+                        await Notification.create({
+                            userId: decoded.id,
+                            type: 'ai_match',
+                            title: 'AI Match Found!',
+                            message: `Your "${item.title}" has a ${result.matchScore}% match with "${foundItem.title}" found at ${foundItem.locationFound}`,
+                            lostItemId: item._id,
+                            foundItemId: foundItem._id,
+                            matchScore: result.matchScore,
+                        })
+                    }
 
                     // Log high matches to Audit Feed
                     if (result.matchScore >= 70) {

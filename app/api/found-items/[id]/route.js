@@ -11,7 +11,26 @@ export async function GET(request, { params }) {
         const item = await FoundItem.findById(params.id).lean()
         if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
         await FoundItem.findByIdAndUpdate(params.id, { $inc: { views: 1 } })
-        return NextResponse.json({ item })
+
+        // Privacy: check if requester is owner or admin
+        const token = request.cookies.get('auth_token')?.value
+        const decoded = token ? verifyToken(token) : null
+        const isOwner = decoded && item.submittedBy?.toString() === decoded.id
+        const isAdmin = decoded && decoded.role === 'admin'
+
+        if (isOwner || isAdmin) {
+            return NextResponse.json({ item })
+        }
+
+        // Public view: hide sensitive details to prevent fake claims
+        const { keywords, color, brand, condition, submittedByEmail, submittedBy, ...publicItem } = item
+        return NextResponse.json({
+            item: {
+                ...publicItem,
+                description: item.description?.substring(0, 80) + (item.description?.length > 80 ? '... [Details hidden for security]' : ''),
+                isPrivate: true,
+            }
+        })
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }

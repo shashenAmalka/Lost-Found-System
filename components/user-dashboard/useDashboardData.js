@@ -29,8 +29,16 @@ export default function useDashboardData(user) {
             setNotifications(allNotifs);
 
             // Build matches array from ai_match notifications (with populated foundItemId)
+            // Deduplicate by foundItemId to prevent duplicate match cards
+            const seenFoundIds = new Set();
             const aiMatches = allNotifs
                 .filter(n => n.type === 'ai_match' && n.foundItemId)
+                .filter(n => {
+                    const fid = typeof n.foundItemId === 'object' ? n.foundItemId._id : n.foundItemId;
+                    if (seenFoundIds.has(String(fid))) return false;
+                    seenFoundIds.add(String(fid));
+                    return true;
+                })
                 .map(n => {
                     const found = n.foundItemId;
                     return {

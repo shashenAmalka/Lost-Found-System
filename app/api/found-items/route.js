@@ -36,11 +36,25 @@ export async function GET(request) {
         }
 
         const total = await FoundItem.countDocuments(filter)
-        const items = await FoundItem.find(filter)
+        const rawItems = await FoundItem.find(filter)
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit)
             .lean()
+
+        // Privacy: strip sensitive fields for non-owner, non-admin users
+        const items = rawItems.map(item => {
+            const isOwner = decoded && item.submittedBy?.toString() === decoded.id
+            const isAdminUser = decoded && decoded.role === 'admin'
+            if (isOwner || isAdminUser) return item
+            // Public view: only basic info, hide detailed description/keywords/brand
+            const { description, keywords, color, brand, condition, submittedByEmail, submittedBy, ...publicItem } = item
+            return {
+                ...publicItem,
+                description: item.description?.substring(0, 50) + (item.description?.length > 50 ? '...' : ''),
+                isPrivate: true,
+            }
+        })
 
         return NextResponse.json({ items, total, page, pages: Math.ceil(total / limit) })
     } catch (err) {
@@ -93,16 +107,24 @@ export async function POST(request) {
             for (const lostItem of pendingLost) {
                 const result = await computeMatchScore(lostItem, item.toObject(), {})
                 if (result.matchScore >= MATCH_THRESHOLD) {
-                    // Create notification for the lost item owner
-                    await Notification.create({
+                    // Create notification for the lost item owner (deduplicate)
+                    const existingNotif = await Notification.findOne({
                         userId: lostItem.postedBy,
                         type: 'ai_match',
-                        title: 'AI Match Found!',
-                        message: `A found item "${item.title}" has a ${result.matchScore}% match with your lost "${lostItem.title}"`,
                         lostItemId: lostItem._id,
                         foundItemId: item._id,
-                        matchScore: result.matchScore,
                     })
+                    if (!existingNotif) {
+                        await Notification.create({
+                            userId: lostItem.postedBy,
+                            type: 'ai_match',
+                            title: 'AI Match Found!',
+                            message: `A found item "${item.title}" has a ${result.matchScore}% match with your lost "${lostItem.title}"`,
+                            lostItemId: lostItem._id,
+                            foundItemId: item._id,
+                            matchScore: result.matchScore,
+                        })
+                    }
 
                     // Log high matches to Audit Feed
                     if (result.matchScore >= 70) {
