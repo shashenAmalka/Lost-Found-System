@@ -103,6 +103,9 @@ export async function POST(request) {
             const MATCH_THRESHOLD = 75
 
             for (const foundItem of unclaimedFound) {
+                // Do not match against items the user submitted themselves
+                if (foundItem.submittedBy?.toString() === decoded.id) continue;
+
                 const result = await computeMatchScore(item.toObject(), foundItem, {})
                 if (result.matchScore >= MATCH_THRESHOLD) {
                     matches.push({

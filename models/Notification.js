@@ -4,7 +4,7 @@ const NotificationSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     type: {
         type: String,
-        enum: ['ai_match', 'claim_update', 'system'],
+        enum: ['ai_match', 'claim_update', 'system', 'warning', 'restriction', 'appeal_approved', 'appeal_rejected', 'unrestricted'],
         default: 'ai_match',
     },
     title: { type: String, required: true },

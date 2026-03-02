@@ -5,6 +5,7 @@ import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
 import UserWarning from '@/models/UserWarning'
 import UserAppeal from '@/models/UserAppeal'
+import Notification from '@/models/Notification'
 import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
 
@@ -66,6 +67,11 @@ export async function PATCH(request) {
                 user.restrictedAt = new Date()
                 logAction = 'RESTRICT_LIMITED'
                 details = `User ${user.name} restricted to LIMITED. Reason: ${user.restrictionReason}`
+                await Notification.create({
+                    userId, type: 'restriction',
+                    title: '🛡️ Account Restricted',
+                    message: `Your account has been restricted: ${user.restrictionReason}. You cannot post items or submit claims. Submit an appeal from your dashboard.`,
+                })
                 break
 
             case 'restrict_full':
@@ -75,6 +81,11 @@ export async function PATCH(request) {
                 user.restrictedAt = new Date()
                 logAction = 'RESTRICT_FULL'
                 details = `User ${user.name} fully restricted (login blocked). Reason: ${user.restrictionReason}`
+                await Notification.create({
+                    userId, type: 'restriction',
+                    title: '🔒 Account Fully Restricted',
+                    message: `Your account has been fully restricted: ${user.restrictionReason}. Login access has been revoked.`,
+                })
                 break
 
             case 'unrestrict':
@@ -87,6 +98,11 @@ export async function PATCH(request) {
                 await UserWarning.updateMany({ userId, status: 'ACTIVE' }, { status: 'REVOKED' })
                 logAction = 'UNRESTRICT_USER'
                 details = `User ${user.name} unrestricted. All warnings revoked.`
+                await Notification.create({
+                    userId, type: 'unrestricted',
+                    title: '✅ Restriction Lifted',
+                    message: 'Your account restriction has been lifted and all warnings have been revoked. You can now use the platform normally.',
+                })
                 break
 
             case 'reduce_warning':

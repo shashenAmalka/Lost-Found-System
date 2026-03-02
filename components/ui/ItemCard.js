@@ -64,7 +64,8 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
     const apiBase = type === 'lost' ? '/api/lost-items' : '/api/found-items'
 
     // 10-minute ownership check
-    const isOwner = user && item.submittedBy?.toString() === user.id
+    const ownerId = item.submittedBy?.toString() || item.postedBy?.toString()
+    const isOwner = user && ownerId === user.id
     const withinWindow = isOwner && item.createdAt
         ? (Date.now() - new Date(item.createdAt).getTime()) < 10 * 60 * 1000
         : false
@@ -84,7 +85,25 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
     }
 
     return (
-        <div className="glass-card-hover rounded-2xl overflow-hidden group h-full flex flex-col relative">
+        <div className={`glass-card-hover rounded-2xl overflow-hidden group h-full flex flex-col relative`}
+            style={isOwner ? {
+                border: '1.5px solid rgba(212,175,55,0.35)',
+                boxShadow: '0 0 20px rgba(212,175,55,0.08), inset 0 0 30px rgba(212,175,55,0.03)',
+            } : {}}>
+
+            {/* "Your Post" badge for owner */}
+            {isOwner && (
+                <div className="absolute top-3 right-3 z-20 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                    style={{
+                        background: 'rgba(212,175,55,0.2)',
+                        color: '#D4AF37',
+                        border: '1px solid rgba(212,175,55,0.4)',
+                        backdropFilter: 'blur(8px)',
+                    }}>
+                    ✦ Your Post
+                </div>
+            )}
+
             {/* Image */}
             <Link href={href}>
                 <div className="relative h-44 overflow-hidden"
@@ -98,7 +117,7 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
                         </div>
                     )}
                     {/* Badges */}
-                    <div className="absolute top-3 right-3"><StatusBadge status={item.status} /></div>
+                    <div className={isOwner ? "absolute bottom-3 right-3" : "absolute top-3 right-3"}><StatusBadge status={item.status} /></div>
                     <div className="absolute top-3 left-3">
                         <span className="badge text-xs"
                             style={{

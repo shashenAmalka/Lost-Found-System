@@ -5,6 +5,7 @@ import connectDB from '@/lib/mongodb'
 import UserAppeal from '@/models/UserAppeal'
 import User from '@/models/User'
 import UserWarning from '@/models/UserWarning'
+import Notification from '@/models/Notification'
 import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
 
@@ -80,6 +81,23 @@ export async function PATCH(request) {
                     { status: 'REVOKED' }
                 )
             }
+        }
+
+        // Notify user about appeal decision
+        if (decision === 'approve') {
+            await Notification.create({
+                userId: appeal.userId,
+                type: 'appeal_approved',
+                title: '🎉 Appeal Approved',
+                message: `Your appeal has been approved! Your account restrictions have been lifted and all warnings revoked.${adminResponse ? ` Admin note: "${adminResponse}"` : ''}`,
+            })
+        } else {
+            await Notification.create({
+                userId: appeal.userId,
+                type: 'appeal_rejected',
+                title: 'Appeal Rejected',
+                message: `Your appeal has been reviewed and was not approved.${adminResponse ? ` Reason: "${adminResponse}"` : ' Please contact support for further assistance.'}`,
+            })
         }
 
         // Audit log

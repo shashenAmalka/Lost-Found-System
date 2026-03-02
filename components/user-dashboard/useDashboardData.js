@@ -37,6 +37,11 @@ export default function useDashboardData(user) {
                 .filter(n => {
                     const fid = typeof n.foundItemId === 'object' ? n.foundItemId._id : n.foundItemId;
                     if (seenFoundIds.has(String(fid))) return false;
+
+                    // Do not show matches that the user themselves submitted
+                    const submittedBy = typeof n.foundItemId === 'object' ? n.foundItemId.submittedBy : null;
+                    if (submittedBy && submittedBy.toString() === user.id) return false;
+
                     seenFoundIds.add(String(fid));
                     return true;
                 })

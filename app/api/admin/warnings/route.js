@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import UserWarning from '@/models/UserWarning'
 import User from '@/models/User'
+import Notification from '@/models/Notification'
 import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
 
@@ -89,6 +90,24 @@ export async function POST(request) {
 
         await user.save()
 
+        // Notify user about the warning
+        await Notification.create({
+            userId,
+            type: 'warning',
+            title: '⚠️ Warning Issued',
+            message: `You received a ${(severity || 'MEDIUM').toLowerCase()} severity warning: "${reason}". Active warnings: ${activeWarnings}/3.`,
+        })
+
+        // If auto-restricted, also notify about restriction
+        if (activeWarnings >= 3 && user.restrictionLevel === 'LIMITED') {
+            await Notification.create({
+                userId,
+                type: 'restriction',
+                title: '🛡️ Account Restricted',
+                message: `Your account has been restricted due to ${activeWarnings} active warnings. You cannot post items or submit claims. You may submit an appeal from your dashboard.`,
+            })
+        }
+
         // Audit log
         await AuditLog.create({
             adminName: decoded.name || 'Admin',
@@ -139,6 +158,14 @@ export async function PATCH(request) {
                 user.restrictionLevel = 'NONE'
                 user.restrictionReason = ''
                 user.restrictedAt = null
+
+                // Notify user restriction lifted
+                await Notification.create({
+                    userId: warning.userId,
+                    type: 'unrestricted',
+                    title: '✅ Restriction Lifted',
+                    message: 'Your account restriction has been lifted. You can now post items and submit claims again.',
+                })
             }
             await user.save()
         }
