@@ -1,5 +1,5 @@
 'use client';
-import { Bell, CheckCircle2, Sparkles, AlertCircle, Clock } from 'lucide-react';
+import { Bell, CheckCircle2, Sparkles, AlertCircle, Clock, AlertTriangle, ShieldAlert, ShieldOff, XCircle, Unlock } from 'lucide-react';
 import Link from 'next/link';
 
 function timeAgo(dateStr) {
@@ -17,6 +17,11 @@ function timeAgo(dateStr) {
 function getUpdateIcon(type) {
     if (type === 'ai_match') return { icon: Sparkles, color: '#D4AF37', bg: 'rgba(212, 175, 55, 0.08)', border: 'rgba(212, 175, 55, 0.2)' };
     if (type === 'claim_update') return { icon: CheckCircle2, color: '#4ade80', bg: 'rgba(26, 26, 100, 0.2)', border: 'rgba(26, 26, 100, 0.5)' };
+    if (type === 'warning') return { icon: AlertTriangle, color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.3)' };
+    if (type === 'restriction') return { icon: ShieldAlert, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.3)' };
+    if (type === 'appeal_approved') return { icon: CheckCircle2, color: '#4ade80', bg: 'rgba(74, 222, 128, 0.1)', border: 'rgba(74, 222, 128, 0.3)' };
+    if (type === 'appeal_rejected') return { icon: XCircle, color: '#f87171', bg: 'rgba(239, 68, 68, 0.08)', border: 'rgba(239, 68, 68, 0.25)' };
+    if (type === 'unrestricted') return { icon: Unlock, color: '#4ade80', bg: 'rgba(74, 222, 128, 0.08)', border: 'rgba(74, 222, 128, 0.25)' };
     return { icon: AlertCircle, color: '#F06414', bg: 'rgba(240, 100, 20, 0.1)', border: 'rgba(240, 100, 20, 0.4)' };
 }
 
@@ -45,15 +50,13 @@ export default function UpdatesPanel({ updates = [] }) {
 
                 <div className="space-y-6">
                     {updates.length > 0 ? (
-                        updates.slice(0, 5).map((update) => {
+                        updates.slice(0, 8).map((update) => {
                             const { icon: Icon, color, bg, border } = getUpdateIcon(update.type);
                             const foundId = update.foundItemId?._id || update.foundItemId;
-                            return (
-                                <Link
-                                    key={update._id}
-                                    href={foundId ? `/found-items/${foundId}` : '#'}
-                                    className="flex gap-4 group cursor-pointer p-3 -mx-3 rounded-2xl hover:bg-white/5 transition-colors"
-                                >
+                            const isNavigable = !!foundId;
+
+                            const content = (
+                                <>
                                     <div className="mt-1 shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 border"
                                         style={{ background: bg, borderColor: border, color, boxShadow: `0 0 15px ${bg}` }}>
                                         <Icon size={18} strokeWidth={2.5} />
@@ -85,7 +88,19 @@ export default function UpdatesPanel({ updates = [] }) {
                                         <div className="shrink-0 w-2 h-2 rounded-full mt-2"
                                             style={{ background: '#F06414', boxShadow: '0 0 8px rgba(240, 100, 20, 0.5)' }} />
                                     )}
+                                </>
+                            );
+
+                            return isNavigable ? (
+                                <Link key={update._id} href={`/found-items/${foundId}`}
+                                    className="flex gap-4 group cursor-pointer p-3 -mx-3 rounded-2xl hover:bg-white/5 transition-colors">
+                                    {content}
                                 </Link>
+                            ) : (
+                                <div key={update._id}
+                                    className="flex gap-4 group p-3 -mx-3 rounded-2xl hover:bg-white/5 transition-colors">
+                                    {content}
+                                </div>
                             );
                         })
                     ) : (

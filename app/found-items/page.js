@@ -40,7 +40,7 @@ export default function FoundItemsPage() {
     return (
         <div className="page-bg min-h-screen">
             <Navbar />
-            <div className="orb w-72 h-72 top-0 right-0 opacity-15" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.5) 0%, transparent 70%)' }} />
+            <div className="orb w-72 h-72 top-0 right-0 opacity-15" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.5) 0%, transparent 70%)' }} />
 
             <div className="max-w-7xl mx-auto px-4 pt-24 pb-16">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -49,7 +49,8 @@ export default function FoundItemsPage() {
                         <p className="text-white/50 text-sm mt-1">{total} item{total !== 1 ? 's' : ''} turned in</p>
                     </div>
                     {user && (
-                        <Link href="/found-items/new" className="btn-glass-success">
+                        <Link href="/found-items/new" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105"
+                            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8941e 100%)', color: '#0a0a1a' }}>
                             <Plus size={16} /> Report Found Item
                         </Link>
                     )}

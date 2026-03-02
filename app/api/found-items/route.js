@@ -114,6 +114,9 @@ export async function POST(request) {
             const MATCH_THRESHOLD = 75
 
             for (const lostItem of pendingLost) {
+                // Do not match against items the user submitted themselves
+                if (lostItem.postedBy?.toString() === decoded.id) continue;
+
                 const result = await computeMatchScore(lostItem, item.toObject(), {})
                 if (result.matchScore >= MATCH_THRESHOLD) {
                     // Create notification for the lost item owner (deduplicate)

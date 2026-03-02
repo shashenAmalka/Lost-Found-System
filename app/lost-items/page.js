@@ -40,7 +40,7 @@ export default function LostItemsPage() {
     return (
         <div className="page-bg min-h-screen">
             <Navbar />
-            <div className="orb w-72 h-72 top-0 left-0 opacity-15" style={{ background: 'radial-gradient(circle, rgba(239,68,68,0.5) 0%, transparent 70%)' }} />
+            <div className="orb w-72 h-72 top-0 left-0 opacity-15" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.5) 0%, transparent 70%)' }} />
 
             <div className="max-w-7xl mx-auto px-4 pt-24 pb-16">
                 {/* Header */}
@@ -50,7 +50,8 @@ export default function LostItemsPage() {
                         <p className="text-white/50 text-sm mt-1">{total} item{total !== 1 ? 's' : ''} reported</p>
                     </div>
                     {user && (
-                        <Link href="/lost-items/new" className="btn-glass-danger">
+                        <Link href="/lost-items/new" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105"
+                            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8941e 100%)', color: '#0a0a1a' }}>
                             <Plus size={16} /> Report Lost Item
                         </Link>
                     )}
