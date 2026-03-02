@@ -25,10 +25,14 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Invalid Campus ID or password' }, { status: 401 })
         }
 
-        if (user.status === 'restricted') {
+        // Tiered restriction check
+        const level = user.restrictionLevel || 'NONE'
+
+        if (level === 'FULL' || (user.status === 'restricted' && level !== 'LIMITED')) {
             return NextResponse.json({
-                error: 'Your account has been restricted. Please contact the admin.',
+                error: 'Your account has been fully restricted. You cannot log in. Please contact the admin.',
                 restricted: true,
+                restrictionLevel: 'FULL',
             }, { status: 403 })
         }
 
@@ -49,6 +53,8 @@ export async function POST(request) {
                 campusId: user.campusId,
                 status: user.status,
                 warningCount: user.warningCount,
+                restrictionLevel: level,
+                restrictionReason: user.restrictionReason || '',
                 trustedFinderBadge: user.trustedFinderBadge,
             }
         })

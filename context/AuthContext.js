@@ -47,10 +47,19 @@ export function AuthProvider({ children }) {
     }
 
     const isAdmin = user?.role === 'admin'
-    const isRestricted = user?.status === 'restricted'
+    const restrictionLevel = user?.restrictionLevel || 'NONE'
+    const isRestricted = user?.status === 'restricted' || user?.status === 'limited'
+    const isLimited = restrictionLevel === 'LIMITED'
+    const isFull = restrictionLevel === 'FULL'
+    const canAct = !isRestricted // Can post/claim/edit
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, isAdmin, isRestricted, fetchMe }}>
+        <AuthContext.Provider value={{
+            user, loading, login, logout, fetchMe,
+            isAdmin, isRestricted, isLimited, isFull, canAct,
+            restrictionLevel,
+            restrictionReason: user?.restrictionReason || '',
+        }}>
             {children}
         </AuthContext.Provider>
     )

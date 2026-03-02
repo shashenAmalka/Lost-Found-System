@@ -5,6 +5,7 @@ import connectDB from '@/lib/mongodb'
 import ClaimRequest from '@/models/ClaimRequest'
 import LostItem from '@/models/LostItem'
 import FoundItem from '@/models/FoundItem'
+import User from '@/models/User'
 import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
 import { computeMatchScore } from '@/lib/aiEngine'
@@ -42,6 +43,13 @@ export async function POST(request) {
         if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         await connectDB()
+
+        // Block restricted users from claiming
+        const claimant = await User.findById(decoded.id).select('restrictionLevel status').lean()
+        if (claimant && (claimant.restrictionLevel === 'LIMITED' || claimant.restrictionLevel === 'FULL' || claimant.status === 'restricted' || claimant.status === 'limited')) {
+            return NextResponse.json({ error: 'Your account is restricted. You cannot submit claims.' }, { status: 403 })
+        }
+
         const body = await request.json()
         const { lostItemId, foundItemId, ownershipExplanation, hiddenDetails,
             exactColorBrand, dateLost, proofUrl, pickupPreference } = body

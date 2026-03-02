@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import LostItem from '@/models/LostItem'
 import FoundItem from '@/models/FoundItem'
+import User from '@/models/User'
 import Notification from '@/models/Notification'
 import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
@@ -58,6 +59,13 @@ export async function POST(request) {
         if (!decoded) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
 
         await connectDB()
+
+        // Block restricted users from posting
+        const poster = await User.findById(decoded.id).select('restrictionLevel status').lean()
+        if (poster && (poster.restrictionLevel === 'LIMITED' || poster.restrictionLevel === 'FULL' || poster.status === 'restricted' || poster.status === 'limited')) {
+            return NextResponse.json({ error: 'Your account is restricted. You cannot post items.' }, { status: 403 })
+        }
+
         const body = await request.json()
         const { title, category, description, keywords, color, brand, uniqueIdentifier,
             dateLost, timeRange, possibleLocation, imageUrl, contactPreference, categoryFields } = body
