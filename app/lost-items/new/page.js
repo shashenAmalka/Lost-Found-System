@@ -32,9 +32,15 @@ export default function NewLostItemPage() {
 
     const change = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
+    const today = new Date().toISOString().split('T')[0]
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
+        if (form.dateLost > today) {
+            setError('Date Lost cannot be a future date.')
+            return
+        }
         setLoading(true)
         try {
             const res = await fetch('/api/lost-items', {
@@ -183,7 +189,7 @@ export default function NewLostItemPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
                                     <label className={labelClass}>Date Lost <span className="text-red-500">*</span></label>
-                                    <input type="date" className={inputClass} value={form.dateLost} onChange={change('dateLost')} required />
+                                    <input type="date" className={inputClass} value={form.dateLost} onChange={change('dateLost')} max={today} required />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Approximate Time</label>

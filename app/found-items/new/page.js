@@ -23,9 +23,15 @@ export default function NewFoundItemPage() {
 
     const change = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
 
+    const today = new Date().toISOString().split('T')[0]
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
+        if (form.dateFound > today) {
+            setError('Date Found cannot be a future date.')
+            return
+        }
         setLoading(true)
         try {
             const res = await fetch('/api/found-items', {
@@ -123,7 +129,7 @@ export default function NewFoundItemPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label className={labelClass}>Date Found <span className="text-red-500">*</span></label>
-                                <input type="date" className={inputClass} value={form.dateFound} onChange={change('dateFound')} required />
+                                <input type="date" className={inputClass} value={form.dateFound} onChange={change('dateFound')} max={today} required />
                             </div>
                             <div>
                                 <label className={labelClass}>Location Found <span className="text-red-500">*</span></label>
