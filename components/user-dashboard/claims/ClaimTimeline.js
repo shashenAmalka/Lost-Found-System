@@ -46,12 +46,8 @@ export default function ClaimTimeline({ claim }) {
     });
 
     return (
-        <div className="p-6 rounded-[20px]"
-            style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-            }}>
-            <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-6" style={{ color: 'rgba(245,246,250,0.5)' }}>
+        <div className="p-6 rounded-[20px] bg-white border border-gray-200 shadow-sm">
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-6 text-[#3E4A56]">
                 Claim Lifecycle
             </h3>
 
@@ -63,29 +59,29 @@ export default function ClaimTimeline({ claim }) {
                     const isDecisionStep = idx === 3;
 
                     // Color logic
-                    let dotColor = 'rgba(255,255,255,0.1)';
-                    let lineColor = 'rgba(255,255,255,0.06)';
-                    let textColor = 'rgba(245,246,250,0.3)';
-                    let iconColor = 'rgba(245,246,250,0.2)';
+                    let dotColor = '#E5E7EB'; // gray-200
+                    let lineColor = '#F3F4F6'; // gray-100
+                    let textColor = '#9CA3AF'; // gray-400
+                    let iconColor = '#D1D5DB'; // gray-300
 
                     if (isCompleted) {
-                        dotColor = '#22c55e';
-                        lineColor = '#22c55e';
-                        textColor = 'rgba(245,246,250,0.7)';
-                        iconColor = '#22c55e';
+                        dotColor = '#10B981'; // green-500
+                        lineColor = '#10B981';
+                        textColor = '#111827'; // gray-900
+                        iconColor = '#10B981';
                     } else if (isCurrent) {
                         if (rejected && isDecisionStep) {
-                            dotColor = '#ef4444';
-                            textColor = '#ef4444';
-                            iconColor = '#ef4444';
+                            dotColor = '#EF4444'; // red-500
+                            textColor = '#EF4444';
+                            iconColor = '#EF4444';
                         } else if (withdrawn) {
-                            dotColor = '#6b7280';
-                            textColor = '#6b7280';
-                            iconColor = '#6b7280';
+                            dotColor = '#6B7280'; // gray-500
+                            textColor = '#6B7280';
+                            iconColor = '#6B7280';
                         } else {
-                            dotColor = '#F06414';
-                            textColor = '#F06414';
-                            iconColor = '#F06414';
+                            dotColor = '#F0A500'; // SLIIT Gold
+                            textColor = '#F0A500';
+                            iconColor = '#F0A500';
                         }
                     }
 
@@ -99,13 +95,13 @@ export default function ClaimTimeline({ claim }) {
                             {/* Connector line */}
                             {idx > 0 && (
                                 <div className="absolute top-4 right-1/2 w-full h-0.5 -z-10"
-                                    style={{ background: isCompleted ? lineColor : 'rgba(255,255,255,0.06)', left: '-50%' }} />
+                                    style={{ background: isCompleted ? lineColor : '#E5E7EB', left: '-50%' }} />
                             )}
 
                             {/* Circle */}
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 transition-all duration-500 ${isCurrent ? 'ring-2 ring-offset-2 ring-offset-transparent' : ''}`}
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 transition-all duration-500 ${isCurrent ? 'ring-2 ring-offset-2 ring-white' : ''}`}
                                 style={{
-                                    background: isCompleted || isCurrent ? `${dotColor}20` : 'rgba(255,255,255,0.04)',
+                                    background: isCompleted || isCurrent ? `${dotColor}20` : '#F9FAFB',
                                     border: `2px solid ${dotColor}`,
                                     boxShadow: isCurrent ? `0 0 16px ${dotColor}40` : 'none',
                                     ringColor: isCurrent ? `${dotColor}40` : 'transparent',
@@ -114,7 +110,7 @@ export default function ClaimTimeline({ claim }) {
                             </div>
 
                             {/* Label */}
-                            <span className="text-[10px] font-semibold text-center leading-tight" style={{ color: textColor }}>
+                            <span className="text-[10px] font-bold tracking-wider text-center leading-tight uppercase" style={{ color: textColor }}>
                                 {rejected && isDecisionStep ? 'Rejected' : withdrawn && idx === 0 ? 'Withdrawn' : step.label}
                             </span>
                         </div>

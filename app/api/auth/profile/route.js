@@ -5,6 +5,30 @@ import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
 import { verifyToken } from '@/lib/auth'
 
+/**
+ * Validate phone format (10 digits)
+ */
+function validatePhone(phone) {
+    if (!phone) return true; // Optional field
+    return /^\d{10}$/.test(phone.replace(/\D/g, ''));
+}
+
+/**
+ * Validate email format
+ */
+function validateEmail(email) {
+    if (!email || !email.trim()) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+/**
+ * Validate name
+ */
+function validateName(name) {
+    if (!name || !name.trim()) return false;
+    return name.trim().length >= 2;
+}
+
 export async function PUT(request) {
     try {
         const token = request.cookies.get('auth_token')?.value
@@ -14,11 +38,20 @@ export async function PUT(request) {
         if (!decoded) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
 
         const body = await request.json()
-        const { name, email, department, studentId, phone } = body
+        const { name, email, phone } = body
 
         // Validation
-        if (!name?.trim()) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-        if (!email?.trim()) return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+        if (!validateName(name)) {
+            return NextResponse.json({ error: 'Full name is required and must be at least 2 characters' }, { status: 400 })
+        }
+
+        if (!validateEmail(email)) {
+            return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
+        }
+
+        if (phone && !validatePhone(phone)) {
+            return NextResponse.json({ error: 'Phone number must be exactly 10 digits' }, { status: 400 })
+        }
 
         await connectDB()
 
@@ -26,14 +59,14 @@ export async function PUT(request) {
         const existingEmail = await User.findOne({ email: email.trim(), _id: { $ne: decoded.id } })
         if (existingEmail) return NextResponse.json({ error: 'Email is already in use' }, { status: 409 })
 
+        // Update only allowed fields - faculty and studentId are read-only
         const updatedUser = await User.findByIdAndUpdate(
             decoded.id,
             {
                 name: name.trim(),
                 email: email.trim(),
-                department: department?.trim() || '',
-                studentId: studentId?.trim() || '',
-                phone: phone?.trim() || '',
+                phone: phone ? phone.replace(/\D/g, '') : '',
+                // faculty and studentId are intentionally NOT updated - they are read-only after registration
             },
             { new: true, runValidators: true }
         ).select('-password')
@@ -47,16 +80,17 @@ export async function PUT(request) {
                 name: updatedUser.name,
                 email: updatedUser.email,
                 role: updatedUser.role,
-                campusId: updatedUser.campusId,
+                studentId: updatedUser.studentId,
                 status: updatedUser.status,
                 warningCount: updatedUser.warningCount,
+                faculty: updatedUser.faculty,
                 department: updatedUser.department,
-                studentId: updatedUser.studentId,
                 phone: updatedUser.phone,
                 trustedFinderBadge: updatedUser.trustedFinderBadge,
             }
         })
     } catch (err) {
+        console.error('Profile update error:', err)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }
 }

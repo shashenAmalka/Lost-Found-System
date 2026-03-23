@@ -32,7 +32,7 @@ export default function UserDashboard() {
             .catch(() => { });
     }, [user, isRestricted]);
 
-    if (authLoading) return <div className="min-h-screen" style={{ backgroundColor: '#0B0F19' }} />;
+    if (authLoading) return <div className="min-h-screen" style={{ backgroundColor: '#F4F5F7' }} />;
     if (!user) { router.push('/login'); return null; }
 
     const activeClaimsCount = myClaims.filter(c => c.status !== 'rejected').length;

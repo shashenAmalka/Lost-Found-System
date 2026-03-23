@@ -16,19 +16,19 @@ function timeAgo(dateStr) {
 
 function getUpdateIcon(type) {
     const map = {
-        ai_match: { icon: Sparkles, color: '#D4AF37', bg: 'rgba(212, 175, 55, 0.08)', border: 'rgba(212, 175, 55, 0.2)' },
-        claim_update: { icon: CheckCircle2, color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', border: 'rgba(96,165,250,0.25)' },
-        claim_approved: { icon: CheckCircle2, color: '#4ade80', bg: 'rgba(74, 222, 128, 0.1)', border: 'rgba(74, 222, 128, 0.3)' },
-        claim_rejected: { icon: XCircle, color: '#f87171', bg: 'rgba(239, 68, 68, 0.08)', border: 'rgba(239, 68, 68, 0.25)' },
-        claim_info_requested: { icon: MailQuestion, color: '#fb923c', bg: 'rgba(249, 115, 22, 0.1)', border: 'rgba(249, 115, 22, 0.25)' },
-        warning: { icon: AlertTriangle, color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.3)' },
-        restriction: { icon: ShieldAlert, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.3)' },
-        appeal_approved: { icon: CheckCircle2, color: '#4ade80', bg: 'rgba(74, 222, 128, 0.1)', border: 'rgba(74, 222, 128, 0.3)' },
-        appeal_rejected: { icon: XCircle, color: '#f87171', bg: 'rgba(239, 68, 68, 0.08)', border: 'rgba(239, 68, 68, 0.25)' },
-        unrestricted: { icon: Unlock, color: '#4ade80', bg: 'rgba(74, 222, 128, 0.08)', border: 'rgba(74, 222, 128, 0.25)' },
-        system: { icon: Info, color: '#818cf8', bg: 'rgba(99,102,241,0.1)', border: 'rgba(99,102,241,0.25)' },
+        ai_match: { icon: Sparkles, color: '#F0A500', bg: '#FFFBEB', border: '#FDE68A' },
+        claim_update: { icon: CheckCircle2, color: '#008489', bg: '#E0F2FE', border: '#BAE6FD' },
+        claim_approved: { icon: CheckCircle2, color: '#16A34A', bg: '#DCFCE7', border: '#BBF7D0' },
+        claim_rejected: { icon: XCircle, color: '#DC2626', bg: '#FEE2E2', border: '#FECACA' },
+        claim_info_requested: { icon: MailQuestion, color: '#D97706', bg: '#FEF3C7', border: '#FDE68A' },
+        warning: { icon: AlertTriangle, color: '#D97706', bg: '#FEF3C7', border: '#FDE68A' },
+        restriction: { icon: ShieldAlert, color: '#DC2626', bg: '#FEE2E2', border: '#FECACA' },
+        appeal_approved: { icon: CheckCircle2, color: '#16A34A', bg: '#DCFCE7', border: '#BBF7D0' },
+        appeal_rejected: { icon: XCircle, color: '#DC2626', bg: '#FEE2E2', border: '#FECACA' },
+        unrestricted: { icon: Unlock, color: '#16A34A', bg: '#DCFCE7', border: '#BBF7D0' },
+        system: { icon: Info, color: '#4F46E5', bg: '#EEF2FF', border: '#C7D2FE' },
     };
-    return map[type] || { icon: AlertCircle, color: '#F06414', bg: 'rgba(240, 100, 20, 0.1)', border: 'rgba(240, 100, 20, 0.4)' };
+    return map[type] || { icon: AlertCircle, color: '#1C2A59', bg: '#F4F5F7', border: '#E5E7EB' };
 }
 
 export default function UpdatesPanel({ updates = [] }) {
@@ -37,18 +37,16 @@ export default function UpdatesPanel({ updates = [] }) {
     return (
         <div className="flex flex-col gap-6">
             {/* Updates Card — Mini Summary */}
-            <div className="rounded-3xl p-6 shadow-xl border relative overflow-hidden"
-                style={{ background: 'rgba(255, 255, 255, 0.02)', backdropFilter: 'blur(30px)', borderColor: 'rgba(255, 255, 255, 0.05)' }}>
-                <div className="flex items-center justify-between mb-6 pb-4 border-b" style={{ borderBottomColor: 'rgba(255,255,255,0.05)' }}>
-                    <h3 className="text-xl font-black flex items-center gap-3 tracking-wide text-white">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/10">
-                            <Bell size={16} style={{ color: '#D4AF37' }} />
+            <div className="rounded-3xl p-6 shadow-sm border border-gray-200 bg-white">
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                    <h3 className="text-xl font-extrabold flex items-center gap-3 tracking-wide text-[#1C2A59]">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#F4F5F7] border border-gray-200">
+                            <Bell size={16} className="text-[#F0A500]" />
                         </div>
                         Updates
                     </h3>
                     {unreadCount > 0 && (
-                        <span className="text-[10px] uppercase font-black tracking-widest px-3 py-1.5 rounded-full"
-                            style={{ background: 'rgba(240, 100, 20, 0.1)', color: '#F06414', border: '1px solid rgba(240, 100, 20, 0.3)' }}>
+                        <span className="text-[10px] uppercase font-extrabold tracking-widest px-3 py-1.5 rounded-full bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]">
                             {unreadCount} New
                         </span>
                     )}
@@ -64,58 +62,56 @@ export default function UpdatesPanel({ updates = [] }) {
                             const content = (
                                 <>
                                     <div className="mt-0.5 shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 border"
-                                        style={{ background: bg, borderColor: border, color, boxShadow: `0 0 12px ${bg}` }}>
+                                        style={{ background: bg, borderColor: border, color }}>
                                         <Icon size={15} strokeWidth={2.5} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between gap-2">
-                                            <h4 className={`font-bold text-xs tracking-wide ${update.read ? 'text-white/60' : 'text-white'}`}>
+                                            <h4 className={`font-bold text-xs tracking-wide ${update.read ? 'text-gray-500' : 'text-[#1C2A59]'}`}>
                                                 {update.title}
                                                 {update.matchScore > 0 && (
                                                     <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded"
                                                         style={{
-                                                            color: update.matchScore >= 70 ? '#4ade80' : update.matchScore >= 50 ? '#D4AF37' : '#F06414',
-                                                            background: update.matchScore >= 70 ? 'rgba(74,222,128,0.1)' : update.matchScore >= 50 ? 'rgba(212,175,55,0.1)' : 'rgba(240,100,20,0.1)',
+                                                            color: update.matchScore >= 70 ? '#16A34A' : update.matchScore >= 50 ? '#D97706' : '#DC2626',
+                                                            background: update.matchScore >= 70 ? '#DCFCE7' : update.matchScore >= 50 ? '#FEF3C7' : '#FEE2E2',
                                                         }}>
                                                         {update.matchScore}%
                                                     </span>
                                                 )}
                                             </h4>
-                                            <span className="text-[9px] font-bold tracking-wider uppercase shrink-0" style={{ color: 'rgba(245, 246, 250, 0.3)' }}>
+                                            <span className="text-[9px] font-bold tracking-wider uppercase shrink-0 text-gray-400">
                                                 {timeAgo(update.createdAt)}
                                             </span>
                                         </div>
-                                        <p className="text-[11px] mt-0.5 leading-relaxed font-medium line-clamp-2" style={{ color: 'rgba(245, 246, 250, 0.5)' }}>
+                                        <p className="text-[11px] mt-0.5 leading-relaxed font-medium line-clamp-2 text-[#3E4A56]">
                                             {update.message}
                                         </p>
                                     </div>
                                     {!update.read && (
-                                        <div className="shrink-0 w-2 h-2 rounded-full mt-2"
-                                            style={{ background: '#F06414', boxShadow: '0 0 8px rgba(240, 100, 20, 0.5)' }} />
+                                        <div className="shrink-0 w-2 h-2 rounded-full mt-2 bg-[#F0A500]" />
                                     )}
                                 </>
                             );
 
                             return isNavigable ? (
                                 <Link key={update._id} href={`/found-items/${foundId}`}
-                                    className="flex gap-3 group cursor-pointer p-2.5 -mx-2.5 rounded-xl hover:bg-white/5 transition-colors">
+                                    className="flex gap-3 group cursor-pointer p-2.5 -mx-2.5 rounded-xl hover:bg-[#F4F5F7] transition-colors">
                                     {content}
                                 </Link>
                             ) : (
                                 <div key={update._id}
-                                    className="flex gap-3 group p-2.5 -mx-2.5 rounded-xl hover:bg-white/5 transition-colors">
+                                    className="flex gap-3 group p-2.5 -mx-2.5 rounded-xl hover:bg-[#F4F5F7] transition-colors">
                                     {content}
                                 </div>
                             );
                         })
                     ) : (
                         <div className="py-6 text-center">
-                            <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center border"
-                                style={{ background: 'rgba(212, 175, 55, 0.05)', borderColor: 'rgba(212, 175, 55, 0.2)' }}>
-                                <Sparkles size={20} color="#D4AF37" className="animate-pulse" />
+                            <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center border bg-[#F4F5F7] border-gray-200">
+                                <Sparkles size={20} color="#008489" className="animate-pulse" />
                             </div>
-                            <h4 className="text-xs font-bold text-white mb-1">No updates yet</h4>
-                            <p className="text-[10px] font-medium" style={{ color: 'rgba(245, 246, 250, 0.4)' }}>
+                            <h4 className="text-xs font-bold text-[#1C2A59] mb-1">No updates yet</h4>
+                            <p className="text-[10px] font-medium text-gray-500">
                                 AI is monitoring for potential matches.
                             </p>
                         </div>
@@ -123,10 +119,9 @@ export default function UpdatesPanel({ updates = [] }) {
                 </div>
 
                 {/* View All → link */}
-                <div className="mt-5 pt-4 border-t" style={{ borderTopColor: 'rgba(255,255,255,0.05)' }}>
+                <div className="mt-5 pt-4 border-t border-gray-100">
                     <Link href="/notifications"
-                        className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest py-2.5 rounded-xl transition-all hover:bg-white/5 group"
-                        style={{ color: 'rgba(245,246,250,0.5)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest py-2.5 rounded-xl transition-all hover:bg-[#F4F5F7] group text-gray-500 hover:text-[#1C2A59]">
                         View All Notifications
                         <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                     </Link>
@@ -134,16 +129,13 @@ export default function UpdatesPanel({ updates = [] }) {
             </div>
 
             {/* Need Help Card */}
-            <div className="rounded-3xl p-6 border relative overflow-hidden"
-                style={{ background: 'rgba(26, 26, 100, 0.2)', borderColor: 'rgba(26, 26, 100, 0.6)', backdropFilter: 'blur(20px)' }}>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#F06414]/10 blur-3xl rounded-full" />
-                <h3 className="font-black text-xl mb-3 tracking-wide text-white relative z-10">Security Help</h3>
-                <p className="text-sm font-medium mb-6 leading-relaxed relative z-10" style={{ color: 'rgba(245, 246, 250, 0.7)' }}>
+            <div className="rounded-3xl p-6 border relative overflow-hidden bg-white border-gray-200 shadow-sm">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#F4F5F7] rounded-full blur-3xl -z-10" />
+                <h3 className="font-extrabold text-xl mb-3 tracking-wide text-[#1C2A59]">Security Help</h3>
+                <p className="text-sm font-medium mb-6 leading-relaxed text-[#3E4A56]">
                     Visit the main security office or contact support for advanced claim inquiries.
                 </p>
-                <button className="w-full relative group overflow-hidden border rounded-xl py-3 text-sm font-bold uppercase tracking-wider text-white z-10 transition-shadow hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]"
-                    style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }}>
-                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <button className="w-full flex items-center justify-center rounded-xl py-3 text-sm font-bold uppercase tracking-wider text-[#1C2A59] bg-[#F4F5F7] hover:bg-gray-200 transition-colors border border-gray-200">
                     Open Support Desk
                 </button>
             </div>

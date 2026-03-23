@@ -76,75 +76,75 @@ export default function EditFoundItemPage() {
     }
 
     if (authLoading || fetching) return (
-        <div className="page-bg min-h-screen"><Navbar />
+        <div className="bg-[#F4F5F7] min-h-screen"><Navbar />
             <div className="flex items-center justify-center pt-40">
-                <Loader2 className="animate-spin text-white/30" size={36} />
+                <Loader2 className="animate-spin text-[#1C2A59]/30" size={36} />
             </div>
         </div>
     )
 
     if (!user) return (
-        <div className="page-bg min-h-screen"><Navbar />
+        <div className="bg-[#F4F5F7] min-h-screen"><Navbar />
             <div className="max-w-md mx-auto pt-32 px-4 text-center">
-                <div className="glass-card p-12">
+                <div className="bg-white rounded border border-gray-200 shadow-sm p-12">
                     <div className="text-5xl mb-4">🔒</div>
-                    <h2 className="text-white font-bold text-lg mb-2">Login Required</h2>
-                    <Link href="/login" className="btn-glass-primary">Sign In</Link>
+                    <h2 className="text-[#1C2A59] font-bold text-lg mb-2">Login Required</h2>
+                    <Link href="/login" className="inline-block px-6 py-2.5 bg-[#1C2A59] text-[#1C2A59] font-bold rounded hover:bg-[#1a254d] transition-colors">Sign In</Link>
                 </div>
             </div>
         </div>
     )
 
     if (forbidden) return (
-        <div className="page-bg min-h-screen"><Navbar />
+        <div className="bg-[#F4F5F7] min-h-screen"><Navbar />
             <div className="max-w-md mx-auto pt-32 px-4 text-center">
-                <div className="glass-card p-12">
+                <div className="bg-white rounded border border-gray-200 shadow-sm p-12">
                     <div className="text-5xl mb-4">⛔</div>
-                    <h2 className="text-white font-bold text-lg mb-2">Access Denied</h2>
-                    <p className="text-white/50 text-sm mb-6">You can only edit your own posts within the 10-minute window.</p>
-                    <Link href="/found-items" className="btn-glass-primary">Back to Found Items</Link>
+                    <h2 className="text-[#1C2A59] font-bold text-lg mb-2">Access Denied</h2>
+                    <p className="text-gray-500 text-sm mb-6">You can only edit your own posts within the 10-minute window.</p>
+                    <Link href="/found-items" className="inline-block px-6 py-2.5 bg-[#1C2A59] text-[#1C2A59] font-bold rounded hover:bg-[#1a254d] transition-colors">Back to Found Items</Link>
                 </div>
             </div>
         </div>
     )
 
     if (success) return (
-        <div className="page-bg min-h-screen"><Navbar />
+        <div className="bg-[#F4F5F7] min-h-screen"><Navbar />
             <div className="max-w-md mx-auto pt-32 px-4 text-center">
-                <div className="glass-card p-12">
+                <div className="bg-white rounded border border-gray-200 shadow-sm p-12">
                     <CheckCircle2 size={48} className="mx-auto mb-4" style={{ color: '#4ade80' }} />
-                    <h2 className="text-white font-bold text-lg mb-2">Updated Successfully!</h2>
-                    <p className="text-white/50 text-sm">Redirecting back to Found Items...</p>
+                    <h2 className="text-[#1C2A59] font-bold text-lg mb-2">Updated Successfully!</h2>
+                    <p className="text-gray-500 text-sm">Redirecting back to Found Items...</p>
                 </div>
             </div>
         </div>
     )
 
     return (
-        <div className="page-bg min-h-screen">
+        <div className="bg-[#F4F5F7] min-h-screen">
             <Navbar />
             <div className="orb w-72 h-72 top-0 right-0 opacity-10" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.5) 0%, transparent 70%)' }} />
 
             <div className="max-w-2xl mx-auto px-4 pt-24 pb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <Link href="/found-items" className="btn-glass px-3 py-2"><ArrowLeft size={16} /></Link>
+                    <Link href="/found-items" className="inline-block px-4 py-2 bg-white border border-gray-200 text-[#1C2A59] font-bold rounded hover:bg-gray-50 transition-colors px-3 py-2"><ArrowLeft size={16} /></Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Edit Found Item</h1>
-                        <p className="text-white/50 text-sm mt-0.5">Update your found item report</p>
+                        <h1 className="text-2xl font-bold text-[#1C2A59]">Edit Found Item</h1>
+                        <p className="text-gray-500 text-sm mt-0.5">Update your found item report</p>
                     </div>
                 </div>
 
-                <div className="glass-card p-8">
+                <div className="bg-white rounded border border-gray-200 shadow-sm p-8">
                     <form onSubmit={handleSubmit} className="space-y-5">
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide">Item Title *</label>
-                                <input className="glass-input" placeholder="e.g. Black Wallet" value={form.title} onChange={change('title')} required />
+                                <label className="text-xs text-gray-400 font-bold tracking-wider uppercase tracking-wide">Item Title *</label>
+                                <input className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" placeholder="e.g. Black Wallet" value={form.title} onChange={change('title')} required />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide">Category *</label>
-                                <select className="glass-select" value={form.category} onChange={change('category')} required>
+                                <label className="text-xs text-gray-400 font-bold tracking-wider uppercase tracking-wide">Category *</label>
+                                <select className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" value={form.category} onChange={change('category')} required>
                                     <option value="">Select category</option>
                                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
@@ -152,27 +152,27 @@ export default function EditFoundItemPage() {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs text-white/60 uppercase tracking-wide">Description *</label>
-                            <textarea className="glass-input min-h-[100px] resize-y" placeholder="Describe the item in detail..." value={form.description} onChange={change('description')} required />
+                            <label className="text-xs text-gray-400 font-bold tracking-wider uppercase tracking-wide">Description *</label>
+                            <textarea className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" placeholder="Describe the item in detail..." value={form.description} onChange={change('description')} required />
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs text-white/60 uppercase tracking-wide">Keywords (comma separated)</label>
-                            <input className="glass-input" placeholder="e.g. wallet, black, leather" value={form.keywords} onChange={change('keywords')} />
+                            <label className="text-xs text-gray-400 font-bold tracking-wider uppercase tracking-wide">Keywords (comma separated)</label>
+                            <input className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" placeholder="e.g. wallet, black, leather" value={form.keywords} onChange={change('keywords')} />
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide">Color</label>
-                                <input className="glass-input" placeholder="e.g. Black" value={form.color} onChange={change('color')} />
+                                <label className="text-xs text-gray-400 font-bold tracking-wider uppercase tracking-wide">Color</label>
+                                <input className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" placeholder="e.g. Black" value={form.color} onChange={change('color')} />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide">Brand</label>
-                                <input className="glass-input" placeholder="e.g. Nike" value={form.brand} onChange={change('brand')} />
+                                <label className="text-xs text-gray-400 font-bold tracking-wider uppercase tracking-wide">Brand</label>
+                                <input className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" placeholder="e.g. Nike" value={form.brand} onChange={change('brand')} />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide">Condition</label>
-                                <select className="glass-select" value={form.condition} onChange={change('condition')}>
+                                <label className="text-xs text-gray-400 font-bold tracking-wider uppercase tracking-wide">Condition</label>
+                                <select className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" value={form.condition} onChange={change('condition')}>
                                     {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
                             </div>
@@ -180,17 +180,17 @@ export default function EditFoundItemPage() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide">Date Found *</label>
-                                <input type="date" className="glass-input" style={{ colorScheme: 'dark' }} value={form.dateFound} onChange={change('dateFound')} required />
+                                <label className="text-xs text-gray-400 font-bold tracking-wider uppercase tracking-wide">Date Found *</label>
+                                <input type="date" className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" style={{ colorScheme: 'light' }} value={form.dateFound} onChange={change('dateFound')} required />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide">Location Found *</label>
-                                <input className="glass-input" placeholder="e.g. Cafeteria B" value={form.locationFound} onChange={change('locationFound')} required />
+                                <label className="text-xs text-gray-400 font-bold tracking-wider uppercase tracking-wide">Location Found *</label>
+                                <input className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" placeholder="e.g. Cafeteria B" value={form.locationFound} onChange={change('locationFound')} required />
                             </div>
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs text-white/60 uppercase tracking-wide">Photo (optional)</label>
+                            <label className="text-xs text-gray-400 font-bold tracking-wider uppercase tracking-wide">Photo (optional)</label>
                             <ImageUpload
                                 value={form.photoUrl}
                                 onChange={(url) => setForm(f => ({ ...f, photoUrl: url }))}
@@ -203,7 +203,7 @@ export default function EditFoundItemPage() {
                             </div>
                         )}
 
-                        <button type="submit" disabled={loading} className="btn-glass-success w-full justify-center py-3 text-sm font-semibold">
+                        <button type="submit" disabled={loading} className="inline-block px-4 py-2 bg-white border border-gray-200 text-[#1C2A59] font-bold rounded hover:bg-gray-50 transition-colors-success w-full justify-center py-3 text-sm font-semibold">
                             {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                             {loading ? 'Saving Changes...' : 'Save Changes'}
                         </button>

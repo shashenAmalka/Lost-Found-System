@@ -7,47 +7,39 @@ export default function ProfileHeader({ user }) {
         : 'U';
 
     const roleBadge = {
-        student: { label: 'Student', color: '#D4AF37' },
-        staff: { label: 'Staff', color: '#6366f1' },
-        admin: { label: 'Admin', color: '#ef4444' },
-    }[user?.role] || { label: 'Student', color: '#D4AF37' };
+        student: { label: 'Student', color: '#F0A500' },
+        staff: { label: 'Staff', color: '#008489' },
+        admin: { label: 'Admin', color: '#dc2626' },
+    }[user?.role] || { label: 'Student', color: '#F0A500' };
 
     return (
-        <div className="flex items-center gap-6 p-8 rounded-[24px] relative overflow-hidden"
-            style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                backdropFilter: 'blur(30px)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-            }}>
-            {/* Ambient glow */}
-            <div className="absolute top-[-50%] left-[-10%] w-[60%] h-[150%] rounded-full opacity-15 blur-[80px] pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse, #1A1A64 0%, transparent 70%)' }} />
+        <div className="flex items-center gap-6 p-8 rounded-[24px] relative overflow-hidden bg-white border border-gray-200 shadow-sm">
+            {/* Ambient background accent */}
+            <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-gray-50 to-transparent pointer-events-none" />
 
             {/* Avatar */}
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shrink-0 relative z-10 shadow-lg"
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shrink-0 relative z-10 shadow-sm"
                 style={{
-                    background: 'linear-gradient(135deg, #1A1A64 0%, #F06414 100%)',
-                    boxShadow: '0 8px 24px rgba(240, 100, 20, 0.35)',
+                    background: 'linear-gradient(135deg, #1C2A59 0%, #008489 100%)',
                 }}>
                 {initials}
             </div>
 
             {/* Info */}
             <div className="relative z-10 flex flex-col gap-2">
-                <h2 className="text-2xl font-bold text-white tracking-tight">{user?.name || 'User'}</h2>
+                <h2 className="text-2xl font-bold text-[#1C2A59] tracking-tight">{user?.name || 'User'}</h2>
                 <div className="flex items-center gap-3 flex-wrap">
                     <span className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest"
                         style={{
-                            background: `${roleBadge.color}20`,
-                            border: `1px solid ${roleBadge.color}60`,
+                            background: `${roleBadge.color}15`,
+                            border: `1px solid ${roleBadge.color}40`,
                             color: roleBadge.color,
                         }}>
                         {roleBadge.label}
                     </span>
                     {user?.campusId && (
-                        <span className="flex items-center gap-1.5 text-sm font-medium" style={{ color: 'rgba(245, 246, 250, 0.6)' }}>
-                            <ShieldCheck size={14} color="#4ade80" /> {user.campusId}
+                        <span className="flex items-center gap-1.5 text-sm font-medium text-[#3E4A56]">
+                            <ShieldCheck size={14} className="text-green-500" /> {user.campusId}
                         </span>
                     )}
                 </div>

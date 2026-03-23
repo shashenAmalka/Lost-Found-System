@@ -96,52 +96,49 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
     }
 
     return (
-        <div className={`glass-card-hover rounded-2xl overflow-hidden group h-full flex flex-col relative`}
+        <div className={`bg-white rounded border border-gray-200 shadow-sm hover:shadow-md overflow-hidden group h-full flex flex-col relative transition-shadow duration-200`}
             style={isOwner ? {
-                border: '1.5px solid rgba(212,175,55,0.35)',
-                boxShadow: '0 0 20px rgba(212,175,55,0.08), inset 0 0 30px rgba(212,175,55,0.03)',
+                border: '1px solid #F0A500',
+                boxShadow: '0 0 0 1px rgba(240,165,0,0.1)',
             } : {}}>
 
             {/* "Your Post" badge for owner */}
             {isOwner && (
-                <div className="absolute top-3 right-3 z-20 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full"
+                <div className="absolute top-3 right-3 z-20 flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded"
                     style={{
-                        background: 'rgba(212,175,55,0.2)',
-                        color: '#D4AF37',
-                        border: '1px solid rgba(212,175,55,0.4)',
-                        backdropFilter: 'blur(8px)',
+                        backgroundColor: '#F0A500',
+                        color: '#1C2A59',
                     }}>
-                    ✦ Your Post
+                    ★ Your Post
                 </div>
             )}
 
             {/* Image */}
             <Link href={href}>
-                <div className="relative h-44 overflow-hidden"
-                    style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(6,182,212,0.1) 100%)' }}>
+                <div className="relative h-44 overflow-hidden bg-[#F4F5F7] border-b border-gray-100">
                     {imageUrl ? (
                         <img src={imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                            <Package size={40} className="text-white/20" />
-                            <span className="text-white/30 text-xs">{item.category}</span>
+                            <Package size={40} className="text-[#3E4A56]/30" />
+                            <span className="text-[#3E4A56]/50 text-xs font-semibold uppercase">{item.category}</span>
                         </div>
                     )}
                     {/* Badges */}
                     <div className={isOwner ? "absolute bottom-3 right-3" : "absolute top-3 right-3"}><StatusBadge status={item.status} /></div>
                     {/* Claim count badge for found items */}
                     {type === 'found' && pendingClaimCount > 0 && (
-                        <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-full"
-                            style={{ background: 'rgba(239,68,68,0.2)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.4)', backdropFilter: 'blur(8px)' }}>
+                        <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded"
+                            style={{ backgroundColor: '#ef4444', color: 'white', border: '1px solid #dc2626' }}>
                             🎯 {pendingClaimCount} Pending
                         </div>
                     )}
-                    <div className="absolute top-3 left-3">
-                        <span className="badge text-xs"
+                    <div className="absolute top-3 left-3 shadow-sm">
+                        <span className="text-xs px-2 py-1 rounded font-bold"
                             style={{
-                                background: type === 'lost' ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.2)',
-                                color: type === 'lost' ? '#fca5a5' : '#6ee7b7',
-                                border: `1px solid ${type === 'lost' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`
+                                backgroundColor: type === 'lost' ? '#fee2e2' : '#d1fae5',
+                                color: type === 'lost' ? '#ef4444' : '#10b981',
+                                border: `1px solid ${type === 'lost' ? '#fca5a5' : '#6ee7b7'}`
                             }}>
                             {type === 'lost' ? '🔍 Lost' : '📦 Found'}
                         </span>
@@ -149,9 +146,8 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
 
                     {/* Privacy lock overlay for found items */}
                     {item.isPrivate && type === 'found' && (
-                        <div className="absolute bottom-3 right-3 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
-                            style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(245,246,250,0.5)', backdropFilter: 'blur(4px)' }}>
-                            <Lock size={9} /> Details Hidden
+                        <div className="absolute bottom-3 right-3 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded bg-[#1C2A59] text-white shadow-sm">
+                            <Lock size={10} /> Hidden
                         </div>
                     )}
                 </div>
@@ -161,22 +157,15 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
             <div className="p-4 flex flex-col gap-3 flex-1">
                 {/* 10-min edit bar — only for owner within window */}
                 {canEdit && isOwner && (
-                    <div className="flex items-center justify-between gap-2 p-2 rounded-xl border"
-                        style={{ background: 'rgba(212,175,55,0.05)', borderColor: 'rgba(212,175,55,0.15)' }}>
+                    <div className="flex items-center justify-between gap-2 p-2 rounded border bg-[#F0A500]/10 border-[#F0A500]/30 shadow-sm">
                         <EditCountdown createdAt={item.createdAt} onExpire={() => setCanEdit(false)} />
                         <div className="flex items-center gap-1.5">
                             <Link href={editHref} onClick={e => e.stopPropagation()}
-                                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:scale-105"
-                                style={{ background: 'rgba(96,165,250,0.15)', color: '#60a5fa', border: '1px solid rgba(96,165,250,0.25)' }}>
+                                className="flex items-center gap-1 text-[10px] font-bold px-2 py-1.5 rounded transition-all hover:bg-blue-50 text-blue-600 border border-blue-200 bg-white">
                                 <Pencil size={10} /> Edit
                             </Link>
                             <button onClick={handleDelete} disabled={deleting}
-                                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 disabled:opacity-50"
-                                style={{
-                                    background: confirmDel ? 'rgba(239,68,68,0.25)' : 'rgba(239,68,68,0.1)',
-                                    color: '#ef4444',
-                                    border: '1px solid rgba(239,68,68,0.25)'
-                                }}>
+                                className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1.5 rounded transition-all hover:bg-red-50 text-red-600 border border-red-200 bg-white disabled:opacity-50 ${confirmDel ? 'bg-red-100' : ''}`}>
                                 <Trash2 size={10} /> {deleting ? '...' : confirmDel ? 'Confirm?' : 'Delete'}
                             </button>
                         </div>
@@ -185,52 +174,52 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
 
                 <Link href={href} className="flex flex-col gap-3 flex-1">
                     <div>
-                        <h3 className="text-white font-semibold text-sm line-clamp-1 group-hover:text-indigo-300 transition-colors">{item.title}</h3>
+                        <h3 className="text-[#1C2A59] font-bold text-base mb-1 line-clamp-1 group-hover:text-[#008489] transition-colors">{item.title}</h3>
                         {/* Description: hide for private found items */}
                         {item.isPrivate && type === 'found' ? (
-                            <p className="text-white/25 text-xs mt-1 italic flex items-center gap-1">
-                                <Lock size={9} /> Description hidden for security
+                            <p className="text-gray-400 text-xs mt-1 italic flex items-center gap-1">
+                                <Lock size={10} /> Description hidden for security
                             </p>
                         ) : (
                             item.description && (
-                                <p className="text-white/50 text-xs mt-1 line-clamp-2">{item.description}</p>
+                                <p className="text-gray-600 text-sm line-clamp-2">{item.description}</p>
                             )
                         )}
                     </div>
 
-                    <div className="space-y-1.5 flex-1">
+                    <div className="space-y-2 flex-1 mt-1">
                         {/* Location: hide for private found items */}
                         {item.isPrivate && type === 'found' ? (
-                            <div className="flex items-center gap-2 text-xs" style={{ color: 'rgba(245,246,250,0.25)' }}>
-                                <MapPin size={11} className="shrink-0" />
+                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                                <MapPin size={12} className="shrink-0" />
                                 <span className="italic">Location hidden</span>
                             </div>
                         ) : (
                             locationVal && (
-                                <div className="flex items-center gap-2 text-xs text-white/50">
-                                    <MapPin size={11} className="shrink-0" />
+                                <div className="flex items-center gap-2 text-xs font-medium text-[#3E4A56]">
+                                    <MapPin size={12} className="shrink-0 text-[#008489]" />
                                     <span className="truncate">{locationVal}</span>
                                 </div>
                             )
                         )}
-                        <div className="flex items-center gap-2 text-xs text-white/50">
-                            <Calendar size={11} className="shrink-0" />
+                        <div className="flex items-center gap-2 text-xs font-medium text-[#3E4A56]">
+                            <Calendar size={12} className="shrink-0 text-[#008489]" />
                             <span>{dateVal ? new Date(dateVal).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
                         </div>
                         {item.category && (
-                            <div className="flex items-center gap-2 text-xs text-white/50">
-                                <Tag size={11} className="shrink-0" />
+                            <div className="flex items-center gap-2 text-xs font-medium text-[#3E4A56]">
+                                <Tag size={12} className="shrink-0 text-[#008489]" />
                                 <span>{item.category}</span>
                             </div>
                         )}
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                        <span className="text-white/30 text-xs flex items-center gap-1">
-                            <Eye size={10} /> {item.views || 0}
+                    <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100">
+                        <span className="text-gray-400 font-semibold text-xs flex items-center gap-1.5">
+                            <Eye size={12} /> {item.views || 0}
                         </span>
-                        <span className="text-indigo-400 text-xs font-medium group-hover:text-indigo-300 transition-colors">
-                            View Details →
+                        <span className="text-[#008489] text-xs font-bold group-hover:text-[#1C2A59] transition-colors">
+                            View Details &rarr;
                         </span>
                     </div>
                 </Link>

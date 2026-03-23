@@ -2,14 +2,14 @@
 import { Clock, MapPin, Eye, X, Package } from 'lucide-react';
 
 const STATUS_MAP = {
-    under_review: { label: 'Under Review', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.35)' },
-    ai_matched: { label: 'AI Screening', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.35)' },
-    admin_review: { label: 'Admin Review', color: '#6366f1', bg: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.35)' },
-    approved: { label: 'Approved', color: '#22c55e', bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.35)' },
-    rejected: { label: 'Rejected', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.35)' },
-    withdrawn: { label: 'Withdrawn', color: '#6b7280', bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.35)' },
-    pickup_scheduled: { label: 'Pickup Scheduled', color: '#14b8a6', bg: 'rgba(20,184,166,0.12)', border: 'rgba(20,184,166,0.35)' },
-    completed: { label: 'Completed', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.35)' },
+    under_review: { label: 'Under Review', color: '#0369A1', bg: '#E0F2FE', border: '#BAE6FD' },
+    ai_matched: { label: 'AI Screening', color: '#D97706', bg: '#FEF3C7', border: '#FDE68A' },
+    admin_review: { label: 'Admin Review', color: '#4338CA', bg: '#E0E7FF', border: '#C7D2FE' },
+    approved: { label: 'Approved', color: '#15803D', bg: '#DCFCE7', border: '#BBF7D0' },
+    rejected: { label: 'Rejected', color: '#DC2626', bg: '#FEE2E2', border: '#FECACA' },
+    withdrawn: { label: 'Withdrawn', color: '#4B5563', bg: '#F3F4F6', border: '#E5E7EB' },
+    pickup_scheduled: { label: 'Pickup Scheduled', color: '#0F766E', bg: '#CCFBF1', border: '#99F6E4' },
+    completed: { label: 'Completed', color: '#047857', bg: '#D1FAE5', border: '#A7F3D0' },
 };
 
 function formatDate(d) {
@@ -24,32 +24,25 @@ export default function ClaimCard({ claim, onViewDetails }) {
     const lostItem = claim.lostItemId;
 
     return (
-        <div className="rounded-[20px] p-6 transition-all duration-300 hover:translate-y-[-2px] group cursor-pointer"
-            onClick={() => onViewDetails(claim)}
-            style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-            }}>
+        <div className="rounded-[20px] p-6 transition-all duration-300 hover:translate-y-[-2px] group cursor-pointer bg-white border border-gray-200 shadow-sm hover:shadow-md"
+            onClick={() => onViewDetails(claim)}>
             {/* Top Row */}
             <div className="flex items-start justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4 min-w-0">
                     {/* Item Thumbnail */}
-                    <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden bg-gray-100 border border-gray-200">
                         {foundItem?.photoUrl ? (
                             <img src={foundItem.photoUrl} alt="" className="w-full h-full object-cover rounded-xl" />
                         ) : (
-                            <Package size={22} style={{ color: 'rgba(245,246,250,0.3)' }} />
+                            <Package size={22} className="text-gray-400" />
                         )}
                     </div>
 
                     <div className="min-w-0">
-                        <h3 className="text-white font-semibold text-base truncate group-hover:text-white/90 transition-colors">
+                        <h3 className="text-[#1C2A59] font-bold text-base truncate group-hover:text-[#F0A500] transition-colors">
                             {foundItem?.title || 'Unknown Item'}
                         </h3>
-                        <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(245,246,250,0.4)' }}>
+                        <p className="text-xs mt-0.5 truncate text-[#3E4A56] font-medium">
                             Claiming: {lostItem?.title || '—'} · ID: #{claimId}
                         </p>
                     </div>
@@ -63,7 +56,7 @@ export default function ClaimCard({ claim, onViewDetails }) {
             </div>
 
             {/* Meta Row */}
-            <div className="flex items-center gap-5 text-xs flex-wrap" style={{ color: 'rgba(245,246,250,0.45)' }}>
+            <div className="flex items-center gap-5 text-xs flex-wrap text-gray-500 font-medium">
                 {foundItem?.locationFound && (
                     <span className="flex items-center gap-1.5">
                         <MapPin size={12} /> {foundItem.locationFound}
@@ -80,16 +73,15 @@ export default function ClaimCard({ claim, onViewDetails }) {
             </div>
 
             {/* Bottom Actions */}
-            <div className="flex items-center justify-between mt-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
                 <button
                     onClick={(e) => { e.stopPropagation(); onViewDetails(claim); }}
-                    className="flex items-center gap-2 text-sm font-medium transition-colors px-4 py-2 rounded-xl"
-                    style={{ color: '#F06414', background: 'rgba(240,100,20,0.1)', border: '1px solid rgba(240,100,20,0.25)' }}>
+                    className="flex items-center gap-2 text-sm font-bold transition-colors px-4 py-2 rounded-xl text-[#F0A500] bg-[#F0A500]/10 border border-[#F0A500]/30 hover:bg-[#F0A500] hover:text-white">
                     <Eye size={14} /> View Details
                 </button>
 
                 {claim.foundItemId?.category && (
-                    <span className="text-xs px-2.5 py-1 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(245,246,250,0.4)' }}>
+                    <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg bg-[#F4F5F7] text-[#3E4A56] border border-gray-200 tracking-widest">
                         {foundItem.category}
                     </span>
                 )}

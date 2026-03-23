@@ -55,7 +55,7 @@ export default function MyClaimsPage() {
         setSelectedClaim(prev => prev?._id === updatedClaim._id ? { ...prev, ...updatedClaim } : prev);
     };
 
-    if (authLoading) return <div className="min-h-screen" style={{ backgroundColor: '#0B0F19' }} />;
+    if (authLoading) return <div className="min-h-screen bg-[#F4F5F7]" />;
     if (!user) return null;
 
     return (
@@ -71,22 +71,21 @@ export default function MyClaimsPage() {
             {/* Loading */}
             {loading && (
                 <div className="flex flex-col items-center justify-center py-20">
-                    <Loader2 size={32} className="animate-spin mb-4" style={{ color: '#F06414' }} />
-                    <p className="text-sm" style={{ color: 'rgba(245,246,250,0.4)' }}>Loading your claims...</p>
+                    <Loader2 size={32} className="animate-spin mb-4 text-[#F0A500]" />
+                    <p className="text-sm text-[#3E4A56] font-medium">Loading your claims...</p>
                 </div>
             )}
 
             {/* Empty State */}
             {!loading && filtered.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <Search size={28} style={{ color: 'rgba(245,246,250,0.15)' }} />
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 bg-gray-50 border border-gray-200">
+                        <Search size={28} className="text-gray-300" />
                     </div>
-                    <h3 className="text-lg font-semibold text-white/70 mb-1">
+                    <h3 className="text-lg font-bold text-[#1C2A59] mb-1">
                         {filter !== 'all' ? 'No claims match this filter' : 'No claims yet'}
                     </h3>
-                    <p className="text-sm" style={{ color: 'rgba(245,246,250,0.35)' }}>
+                    <p className="text-sm text-[#3E4A56] font-medium">
                         {filter !== 'all'
                             ? 'Try changing the filter to see other claims'
                             : 'When you submit a claim for a found item, it will appear here'}

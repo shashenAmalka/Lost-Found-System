@@ -69,21 +69,21 @@ export default function IssueWarningModal({ user: targetUser, onClose, onSuccess
                 style={{ background: 'rgba(15,15,35,0.95)', border: '1px solid rgba(255,255,255,0.08)' }}>
 
                 <div className="p-5 flex items-center justify-between"
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    style={{ borderBottom: '1px solid #E5E7EB' }}>
                     <div>
-                        <h2 className="text-white font-bold text-sm flex items-center gap-2">
+                        <h2 className="text-[#1C2A59] font-bold text-sm flex items-center gap-2">
                             <AlertTriangle size={16} className="text-yellow-400" /> Issue Warning
                         </h2>
-                        <p className="text-[10px] text-white/40 mt-0.5">To: {targetUser?.name} ({targetUser?.campusId})</p>
+                        <p className="text-[10px] text-[#1C2A59]/40 mt-0.5">To: {targetUser?.name} ({targetUser?.campusId})</p>
                     </div>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/5"><X size={16} className="text-white/40" /></button>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/5"><X size={16} className="text-[#1C2A59]/40" /></button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-5 space-y-4">
                     {/* Warning type */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] text-white/50 uppercase tracking-wider">Warning Type *</label>
-                        <select className="glass-select text-xs" value={form.reason} onChange={handleReasonChange} required>
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider">Warning Type *</label>
+                        <select className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" value={form.reason} onChange={handleReasonChange} required>
                             <option value="">Select warning type...</option>
                             {WARNING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
@@ -96,13 +96,13 @@ export default function IssueWarningModal({ user: targetUser, onClose, onSuccess
                                 <Zap size={10} className="text-indigo-400" />
                                 <span className="text-[9px] font-bold text-indigo-400 uppercase">Auto-Generated Summary</span>
                             </div>
-                            <p className="text-[11px] text-white/60">{autoSummary}</p>
+                            <p className="text-[11px] text-gray-400 font-bold tracking-wider">{autoSummary}</p>
                         </div>
                     )}
 
                     {/* Severity selector */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] text-white/50 uppercase tracking-wider">Severity</label>
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider">Severity</label>
                         <div className="flex gap-2">
                             {['LOW', 'MEDIUM', 'HIGH'].map(s => {
                                 const colors = {
@@ -118,7 +118,7 @@ export default function IssueWarningModal({ user: targetUser, onClose, onSuccess
                                         className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all text-center"
                                         style={{
                                             background: active ? c.bg : 'rgba(255,255,255,0.03)',
-                                            border: `1px solid ${active ? c.border : 'rgba(255,255,255,0.06)'}`,
+                                            border: `1px solid ${active ? c.border : '#E5E7EB'}`,
                                             color: active ? c.color : 'rgba(255,255,255,0.3)',
                                         }}>
                                         {s}
@@ -130,8 +130,8 @@ export default function IssueWarningModal({ user: targetUser, onClose, onSuccess
 
                     {/* Admin notes */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] text-white/50 uppercase tracking-wider">Admin Notes</label>
-                        <textarea className="glass-input min-h-[60px] resize-y text-xs"
+                        <label className="text-[10px] text-gray-500 uppercase tracking-wider">Admin Notes</label>
+                        <textarea className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors"
                             placeholder="Additional notes (optional)..."
                             value={form.adminNotes} onChange={e => setForm(f => ({ ...f, adminNotes: e.target.value }))} />
                     </div>
@@ -143,7 +143,7 @@ export default function IssueWarningModal({ user: targetUser, onClose, onSuccess
                     )}
 
                     <div className="flex gap-2">
-                        <button type="button" onClick={onClose} className="btn-glass flex-1 justify-center py-2.5 text-xs">Cancel</button>
+                        <button type="button" onClick={onClose} className="inline-block px-4 py-2 bg-white border border-gray-200 text-[#1C2A59] font-bold rounded hover:bg-gray-50 transition-colors flex-1 justify-center py-2.5 text-xs">Cancel</button>
                         <button type="submit" disabled={loading}
                             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all"
                             style={{

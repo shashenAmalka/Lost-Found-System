@@ -38,62 +38,81 @@ export default function FoundItemsPage() {
     const clearFilters = () => { setFilters({ q: '', category: '', location: '' }); setPage(1) }
 
     return (
-        <div className="page-bg min-h-screen">
+        <div className="min-h-screen bg-[#F4F5F7] font-sans pb-20 pt-20">
             <Navbar />
-            <div className="orb w-72 h-72 top-0 right-0 opacity-15" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.5) 0%, transparent 70%)' }} />
 
-            <div className="max-w-7xl mx-auto px-4 pt-24 pb-16">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div className="max-w-7xl mx-auto px-4 lg:px-8 mt-4">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b-2 border-gray-200 pb-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Found Items</h1>
-                        <p className="text-white/50 text-sm mt-1">{total} item{total !== 1 ? 's' : ''} turned in</p>
+                        <h1 className="text-3xl font-extrabold text-[#1C2A59] flex items-center gap-3">
+                            <span className="w-2 h-8 bg-[#1C2A59] inline-block rounded-sm"></span>
+                            Found Items Directory
+                        </h1>
+                        <p className="text-[#3E4A56] font-medium mt-2">{total} item{total !== 1 ? 's' : ''} currently turned in</p>
                     </div>
                     {user && (
-                        <Link href="/found-items/new" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105"
-                            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #b8941e 100%)', color: '#0a0a1a' }}>
-                            <Plus size={16} /> Report Found Item
+                        <Link href="/found-items/new" className="flex items-center gap-2 px-6 py-3 rounded text-sm font-bold shadow-sm transition-all hover:bg-[#1a254d]"
+                            style={{ backgroundColor: '#1C2A59', color: '#FFFFFF' }}>
+                            <Plus size={18} /> Report Found Item
                         </Link>
                     )}
                 </div>
 
-                <div className="glass-card p-4 mb-6 flex flex-col sm:flex-row gap-3">
+                {/* Filters */}
+                <div className="bg-white p-5 rounded border border-gray-200 shadow-sm mb-8 flex flex-col md:flex-row gap-4">
                     <div className="flex-1 relative">
-                        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-                        <input className="glass-input pl-9" placeholder="Search by keyword..." value={filters.q} onChange={setFilter('q')} />
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input className="w-full pl-10 pr-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" 
+                            placeholder="Search by keyword..." value={filters.q} onChange={setFilter('q')} />
                     </div>
-                    <select className="glass-select sm:w-44" value={filters.category} onChange={setFilter('category')}>
+                    <select className="w-full md:w-56 px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] focus:outline-none focus:border-[#F0A500] transition-colors appearance-none" 
+                        value={filters.category} onChange={setFilter('category')}>
                         <option value="">All Categories</option>
                         {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
-                    <input className="glass-input sm:w-44" placeholder="Location..." value={filters.location} onChange={setFilter('location')} />
+                    <div className="relative w-full md:w-56">
+                        <input className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" 
+                            placeholder="Location..." value={filters.location} onChange={setFilter('location')} />
+                    </div>
                     {(filters.q || filters.category || filters.location) && (
-                        <button onClick={clearFilters} className="btn-glass text-xs px-4 py-2 flex items-center gap-1.5 shrink-0">
-                            <X size={14} /> Clear
+                        <button onClick={clearFilters} className="text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded flex items-center gap-1.5 shrink-0 transition-colors border border-transparent hover:border-red-200">
+                            <X size={16} /> Clear Filters
                         </button>
                     )}
                 </div>
 
+                {/* Grid */}
                 {loading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                        {[...Array(8)].map((_, i) => <div key={i} className="glass-card h-72 animate-pulse" style={{ opacity: 0.5 }} />)}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {[...Array(8)].map((_, i) => (
+                            <div key={i} className="bg-white rounded border border-gray-100 h-80 animate-pulse shadow-sm" />
+                        ))}
                     </div>
                 ) : items.length === 0 ? (
-                    <div className="glass-card p-16 text-center">
-                        <div className="text-5xl mb-4">📦</div>
-                        <h3 className="text-white font-semibold mb-2">No found items yet</h3>
-                        <p className="text-white/50 text-sm">Be the first to report a found item!</p>
+                    <div className="bg-white rounded border border-gray-200 p-16 text-center shadow-sm">
+                        <div className="text-5xl mb-4 text-[#008489]">📦</div>
+                        <h3 className="text-[#1C2A59] font-bold text-xl mb-2">No found items yet</h3>
+                        <p className="text-gray-500 text-sm">Be the first to report a found item on campus!</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {items.map(item => <ItemCard key={item._id} item={item} type="found" onDeleted={handleDeleted} />)}
                     </div>
                 )}
 
+                {/* Pagination */}
                 {pages > 1 && (
-                    <div className="flex items-center justify-center gap-3 mt-10">
-                        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-glass px-3 py-2 disabled:opacity-40"><ChevronLeft size={16} /></button>
-                        <span className="text-white/60 text-sm">Page {page} of {pages}</span>
-                        <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages} className="btn-glass px-3 py-2 disabled:opacity-40"><ChevronRight size={16} /></button>
+                    <div className="flex items-center justify-center gap-4 mt-12 bg-white inline-flex mx-auto p-2 rounded shadow-sm border border-gray-200">
+                        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                            className="p-2 rounded hover:bg-[#F4F5F7] text-[#1C2A59] disabled:opacity-30 transition-colors">
+                            <ChevronLeft size={20} />
+                        </button>
+                        <span className="text-[#3E4A56] font-bold text-sm px-4">Page {page} of {pages}</span>
+                        <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages}
+                            className="p-2 rounded hover:bg-[#F4F5F7] text-[#1C2A59] disabled:opacity-30 transition-colors">
+                            <ChevronRight size={20} />
+                        </button>
                     </div>
                 )}
             </div>

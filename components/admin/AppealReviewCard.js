@@ -29,7 +29,7 @@ export default function AppealReviewCard({ appeal, onDecision }) {
 
     return (
         <div className="p-4 rounded-xl transition-all hover:scale-[1.005]"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #E5E7EB' }}>
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -37,11 +37,11 @@ export default function AppealReviewCard({ appeal, onDecision }) {
                         <UserIcon size={14} className="text-indigo-400" />
                     </div>
                     <div>
-                        <p className="text-xs font-semibold text-white">{user.name || 'Unknown'}</p>
-                        <p className="text-[9px] text-white/30">{user.campusId || user.email}</p>
+                        <p className="text-xs font-semibold text-[#1C2A59]">{user.name || 'Unknown'}</p>
+                        <p className="text-[9px] text-[#1C2A59]/30">{user.campusId || user.email}</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[9px] text-white/30">
+                <div className="flex items-center gap-1.5 text-[9px] text-[#1C2A59]/30">
                     <Clock size={9} />
                     {new Date(appeal.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </div>
@@ -53,9 +53,9 @@ export default function AppealReviewCard({ appeal, onDecision }) {
                     <FileText size={9} className="text-indigo-400" />
                     <span className="text-[9px] font-bold uppercase text-indigo-400">Appeal Message</span>
                 </div>
-                <p className="text-xs text-white/60">{appeal.appealMessage}</p>
+                <p className="text-xs text-gray-400 font-bold tracking-wider">{appeal.appealMessage}</p>
                 {appeal.supportingExplanation && (
-                    <p className="text-[10px] text-white/40 mt-1.5">{appeal.supportingExplanation}</p>
+                    <p className="text-[10px] text-[#1C2A59]/40 mt-1.5">{appeal.supportingExplanation}</p>
                 )}
                 {appeal.evidenceUrl && (
                     <a href={appeal.evidenceUrl} target="_blank" rel="noopener"
@@ -64,7 +64,7 @@ export default function AppealReviewCard({ appeal, onDecision }) {
             </div>
 
             {/* Admin response */}
-            <textarea className="glass-input w-full text-xs min-h-[50px] resize-y mb-3"
+            <textarea className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors"
                 placeholder="Admin response (required for rejection)..."
                 value={adminResponse} onChange={e => setAdminResponse(e.target.value)} />
 

@@ -14,12 +14,15 @@ export default function CategoryFields({ category, values, onChange }) {
         onChange({ ...values, [key]: e.target.value });
     };
 
+    const inputClass = "w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors"
+    const labelClass = "text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1 block"
+
     return (
         <div className="space-y-4 pt-2">
             {/* Section Header */}
-            <div className="flex items-center gap-2 pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <Sparkles size={14} style={{ color: '#F06414' }} />
-                <span className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: 'rgba(245,246,250,0.5)' }}>
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                <Sparkles size={14} className="text-[#F0A500]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
                     {category} Details
                 </span>
             </div>
@@ -28,13 +31,13 @@ export default function CategoryFields({ category, values, onChange }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {fields.map((field) => (
                     <div key={field.key} className={`space-y-1.5 ${field.type === 'textarea' ? 'sm:col-span-2' : ''}`}>
-                        <label className="text-xs text-white/60 uppercase tracking-wide">
-                            {field.label} {field.required && <span style={{ color: '#F06414' }}>*</span>}
+                        <label className={labelClass}>
+                            {field.label} {field.required && <span className="text-red-500">*</span>}
                         </label>
 
                         {field.type === 'select' ? (
                             <select
-                                className="glass-select"
+                                className={inputClass}
                                 value={values[field.key] || ''}
                                 onChange={handleChange(field.key)}
                                 required={field.required}
@@ -46,7 +49,7 @@ export default function CategoryFields({ category, values, onChange }) {
                             </select>
                         ) : field.type === 'textarea' ? (
                             <textarea
-                                className="glass-input min-h-[80px] resize-y"
+                                className={`${inputClass} min-h-[80px] resize-y`}
                                 placeholder={field.placeholder}
                                 value={values[field.key] || ''}
                                 onChange={handleChange(field.key)}
@@ -55,12 +58,11 @@ export default function CategoryFields({ category, values, onChange }) {
                         ) : (
                             <input
                                 type={field.type}
-                                className="glass-input"
+                                className={inputClass}
                                 placeholder={field.placeholder}
                                 value={values[field.key] || ''}
                                 onChange={handleChange(field.key)}
                                 required={field.required}
-                                style={field.type === 'date' ? { colorScheme: 'dark' } : {}}
                             />
                         )}
                     </div>

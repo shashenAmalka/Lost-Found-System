@@ -5,9 +5,9 @@ import IssueWarningModal from './IssueWarningModal'
 import AppealReviewCard from './AppealReviewCard'
 
 const STATUS_STYLES = {
-    active: { bg: 'rgba(74,222,128,0.12)', color: '#4ade80', label: 'Active' },
-    limited: { bg: 'rgba(245,158,11,0.12)', color: '#fbbf24', label: 'Limited' },
-    restricted: { bg: 'rgba(239,68,68,0.12)', color: '#f87171', label: 'Restricted' },
+    active: { bg: '#d1fae5', color: '#10B981', label: 'Active' },
+    limited: { bg: '#fef3c7', color: '#F0A500', label: 'Limited' },
+    full: { bg: '#fee2e2', color: '#ef4444', label: 'Full Restriction' },
 }
 
 export default function UserModerationPanel() {
@@ -85,7 +85,7 @@ export default function UserModerationPanel() {
 
     if (loading) return (
         <div className="flex items-center justify-center py-20">
-            <Loader2 className="animate-spin text-white/20" size={32} />
+            <Loader2 className="animate-spin text-gray-400" size={32} />
         </div>
     )
 
@@ -94,19 +94,18 @@ export default function UserModerationPanel() {
             {/* Stats Bar */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                    { icon: Users, label: 'Total Users', value: stats.total, color: '#6366f1' },
-                    { icon: Shield, label: 'Active', value: stats.active, color: '#4ade80' },
-                    { icon: ShieldAlert, label: 'Limited', value: stats.limited, color: '#fbbf24' },
-                    { icon: ShieldOff, label: 'Full Restricted', value: stats.full, color: '#f87171' },
+                    { icon: Users, label: 'Total Users', value: stats.total, color: '#1C2A59' },
+                    { icon: Shield, label: 'Active', value: stats.active, color: '#10B981' },
+                    { icon: ShieldAlert, label: 'Limited', value: stats.limited, color: '#F0A500' },
+                    { icon: ShieldOff, label: 'Full Restricted', value: stats.full, color: '#ef4444' },
                 ].map(({ icon: Icon, label, value, color }) => (
-                    <div key={label} className="glass-card p-4 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                            style={{ background: `${color}15` }}>
-                            <Icon size={16} style={{ color }} />
+                    <div key={label} className="bg-white border border-gray-200 shadow-sm rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gray-50 border border-gray-100">
+                            <Icon size={16} color={color} />
                         </div>
                         <div>
-                            <p className="text-lg font-bold text-white">{value}</p>
-                            <p className="text-[10px] text-white/40 uppercase tracking-wider">{label}</p>
+                            <p className="text-lg font-bold text-[#1C2A59]">{value}</p>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider">{label}</p>
                         </div>
                     </div>
                 ))}
@@ -114,8 +113,8 @@ export default function UserModerationPanel() {
 
             {/* Pending Appeals */}
             {appeals.length > 0 && (
-                <div className="glass-card p-5">
-                    <h3 className="text-sm font-bold text-yellow-300 flex items-center gap-2 mb-4">
+                <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5">
+                    <h3 className="text-sm font-bold text-[#F0A500] flex items-center gap-2 mb-4">
                         <AlertTriangle size={14} /> Pending Appeals ({appeals.length})
                     </h3>
                     <div className="grid gap-3">
@@ -128,19 +127,19 @@ export default function UserModerationPanel() {
 
             {/* Search */}
             <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-                <input className="glass-input pl-9 text-xs" placeholder="Search users by name, campus ID, or email..."
+                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 pl-10 text-sm text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F0A500]/50 transition-shadow shadow-sm" placeholder="Search users by name, campus ID, or email..."
                     value={search} onChange={e => setSearch(e.target.value)} />
             </div>
 
             {/* User Table */}
-            <div className="glass-card overflow-hidden">
+            <div className="bg-white border border-gray-200 shadow-sm rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-xs">
                         <thead>
-                            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                            <tr className="border-b border-gray-200 bg-gray-50">
                                 {['User', 'Campus ID', 'Role', 'Status', 'Warnings', 'Appeals', 'Actions'].map(h => (
-                                    <th key={h} className="text-left px-4 py-3 text-[9px] font-bold text-white/30 uppercase tracking-wider">{h}</th>
+                                    <th key={h} className="text-left px-4 py-3 text-[9px] font-bold text-gray-500 uppercase tracking-wider">{h}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -150,25 +149,22 @@ export default function UserModerationPanel() {
                                 const isExpanded = expandedId === u._id
                                 return (
                                     <>
-                                        <tr key={u._id} className="group cursor-pointer hover:bg-white/[0.02] transition-colors"
-                                            onClick={() => toggleExpand(u._id)}
-                                            style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <tr key={u._id} className="group cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100"
+                                            onClick={() => toggleExpand(u._id)}>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold"
-                                                        style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>
+                                                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-[#1C2A59]/10 text-[#1C2A59]">
                                                         {(u.name || '?')[0].toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <p className="text-white font-medium text-xs">{u.name}</p>
-                                                        <p className="text-[9px] text-white/30">{u.email}</p>
+                                                        <p className="text-[#1C2A59] font-medium text-xs">{u.name}</p>
+                                                        <p className="text-[9px] text-gray-500">{u.email}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3 text-white/50">{u.campusId}</td>
+                                            <td className="px-4 py-3 text-gray-500">{u.campusId}</td>
                                             <td className="px-4 py-3">
-                                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase"
-                                                    style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8' }}>
+                                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-[#1C2A59]/10 text-[#1C2A59]">
                                                     {u.role}
                                                 </span>
                                             </td>
@@ -179,21 +175,19 @@ export default function UserModerationPanel() {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <div className="flex gap-0.5">
+                                                <div className="flex gap-0.5 items-center">
                                                     {[1, 2, 3].map(i => (
                                                         <div key={i} className="w-2 h-2 rounded-full"
                                                             style={{
-                                                                background: i <= (u.activeWarnings || u.warningCount || 0) ? '#ef4444' : 'rgba(255,255,255,0.1)',
-                                                                boxShadow: i <= (u.activeWarnings || u.warningCount || 0) ? '0 0 4px rgba(239,68,68,0.5)' : 'none',
+                                                                background: i <= (u.activeWarnings || u.warningCount || 0) ? '#ef4444' : '#E5E7EB',
                                                             }} />
                                                     ))}
-                                                    <span className="text-[9px] text-white/30 ml-1">{u.activeWarnings || u.warningCount || 0}</span>
+                                                    <span className="text-[9px] text-gray-400 ml-1 font-medium">{u.activeWarnings || u.warningCount || 0}</span>
                                                 </div>
                                             </td>
                                             <td className="px-4 py-3">
                                                 {u.hasPendingAppeal && (
-                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
-                                                        style={{ background: 'rgba(245,158,11,0.12)', color: '#fbbf24' }}>
+                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-700">
                                                         Pending
                                                     </span>
                                                 )}
@@ -201,35 +195,35 @@ export default function UserModerationPanel() {
                                             <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                                                 <div className="flex gap-1.5">
                                                     <button onClick={() => setWarningModalUser(u)} title="Issue Warning"
-                                                        className="p-1.5 rounded-lg hover:bg-yellow-500/10 transition-colors">
-                                                        <AlertTriangle size={12} className="text-yellow-400" />
+                                                        className="p-1.5 rounded-lg hover:bg-yellow-50 text-yellow-600 transition-colors">
+                                                        <AlertTriangle size={12} />
                                                     </button>
                                                     {u.status === 'active' && (
                                                         <button onClick={() => handleAction(u._id, 'restrict_limited', 'Admin action')}
                                                             title="Restrict (Limited)" disabled={actionLoading === u._id}
-                                                            className="p-1.5 rounded-lg hover:bg-amber-500/10 transition-colors">
-                                                            <ShieldAlert size={12} className="text-amber-400" />
+                                                            className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-600 transition-colors">
+                                                            <ShieldAlert size={12} />
                                                         </button>
                                                     )}
                                                     {(u.status === 'limited' || u.status === 'active') && (
                                                         <button onClick={() => handleAction(u._id, 'restrict_full', 'Admin action')}
                                                             title="Restrict (Full)" disabled={actionLoading === u._id}
-                                                            className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors">
-                                                            <Ban size={12} className="text-red-400" />
+                                                            className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
+                                                            <Ban size={12} />
                                                         </button>
                                                     )}
                                                     {u.status !== 'active' && (
                                                         <button onClick={() => handleAction(u._id, 'unrestrict')}
                                                             title="Unrestrict" disabled={actionLoading === u._id}
-                                                            className="p-1.5 rounded-lg hover:bg-green-500/10 transition-colors">
-                                                            <Undo2 size={12} className="text-green-400" />
+                                                            className="p-1.5 rounded-lg hover:bg-green-50 text-green-600 transition-colors">
+                                                            <Undo2 size={12} />
                                                         </button>
                                                     )}
                                                     {(u.activeWarnings || u.warningCount || 0) > 0 && (
                                                         <button onClick={() => handleAction(u._id, 'reduce_warning')}
                                                             title="Reduce Warning" disabled={actionLoading === u._id}
-                                                            className="p-1.5 rounded-lg hover:bg-indigo-500/10 transition-colors">
-                                                            <MinusCircle size={12} className="text-indigo-400" />
+                                                            className="p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-600 transition-colors">
+                                                            <MinusCircle size={12} />
                                                         </button>
                                                     )}
                                                 </div>
@@ -239,47 +233,47 @@ export default function UserModerationPanel() {
                                         {/* Expanded Panel */}
                                         {isExpanded && (
                                             <tr key={`${u._id}-exp`}>
-                                                <td colSpan={7} className="p-4" style={{ background: 'rgba(255,255,255,0.01)' }}>
+                                                <td colSpan={7} className="p-4 bg-gray-50/50 border-b border-gray-100">
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                         {/* User Info */}
-                                                        <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                            <p className="text-[9px] font-bold uppercase text-white/30 mb-2">User Info</p>
+                                                        <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                                            <p className="text-[9px] font-bold uppercase text-gray-400 mb-2">User Info</p>
                                                             <div className="space-y-1.5 text-[10px]">
-                                                                <p className="text-white/50"><span className="text-white/30">Name:</span> <span className="text-white">{u.name}</span></p>
-                                                                <p className="text-white/50"><span className="text-white/30">Email:</span> <span className="text-white">{u.email}</span></p>
-                                                                <p className="text-white/50"><span className="text-white/30">Campus ID:</span> <span className="text-white">{u.campusId}</span></p>
-                                                                <p className="text-white/50"><span className="text-white/30">Dept:</span> <span className="text-white">{u.department || '—'}</span></p>
-                                                                <p className="text-white/50"><span className="text-white/30">Restriction:</span> <span className="text-white">{u.restrictionLevel || 'NONE'}</span></p>
+                                                                <p className="text-gray-500"><span className="text-gray-400">Name:</span> <span className="text-[#1C2A59] font-medium">{u.name}</span></p>
+                                                                <p className="text-gray-500"><span className="text-gray-400">Email:</span> <span className="text-[#1C2A59] font-medium">{u.email}</span></p>
+                                                                <p className="text-gray-500"><span className="text-gray-400">Campus ID:</span> <span className="text-[#1C2A59] font-medium">{u.campusId}</span></p>
+                                                                <p className="text-gray-500"><span className="text-gray-400">Dept:</span> <span className="text-[#1C2A59] font-medium">{u.department || '—'}</span></p>
+                                                                <p className="text-gray-500"><span className="text-gray-400">Restriction:</span> <span className="text-[#1C2A59] font-medium">{u.restrictionLevel || 'NONE'}</span></p>
                                                                 {u.restrictionReason && (
-                                                                    <p className="text-white/50"><span className="text-white/30">Reason:</span> <span className="text-yellow-400">{u.restrictionReason}</span></p>
+                                                                    <p className="text-gray-500"><span className="text-gray-400">Reason:</span> <span className="text-amber-600 font-medium">{u.restrictionReason}</span></p>
                                                                 )}
                                                             </div>
                                                         </div>
 
                                                         {/* Warning Timeline */}
-                                                        <div className="md:col-span-2 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                            <p className="text-[9px] font-bold uppercase text-white/30 mb-2">Warning History</p>
+                                                        <div className="md:col-span-2 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                                            <p className="text-[9px] font-bold uppercase text-gray-400 mb-2">Warning History</p>
                                                             {expandedWarnings[u._id] ? (
                                                                 expandedWarnings[u._id].length === 0 ? (
-                                                                    <p className="text-[10px] text-white/20 italic">No warnings recorded.</p>
+                                                                    <p className="text-[10px] text-gray-400 italic">No warnings recorded.</p>
                                                                 ) : (
                                                                     <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                                                                         {expandedWarnings[u._id].map(w => {
-                                                                            const sevColors = { LOW: '#818cf8', MEDIUM: '#fbbf24', HIGH: '#f87171' }
-                                                                            const statColors = { ACTIVE: '#f87171', EXPIRED: 'rgba(255,255,255,0.3)', REVOKED: '#4ade80' }
+                                                                            const sevColors = { LOW: '#1C2A59', MEDIUM: '#F0A500', HIGH: '#ef4444' }
+                                                                            const statColors = { ACTIVE: '#ef4444', EXPIRED: '#9CA3AF', REVOKED: '#10B981' }
                                                                             return (
-                                                                                <div key={w._id} className="flex items-start gap-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                                                                    <div className="w-1.5 h-1.5 rounded-full mt-1.5" style={{ background: statColors[w.status] || '#fff' }} />
+                                                                                <div key={w._id} className="flex items-start gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
+                                                                                    <div className="w-1.5 h-1.5 rounded-full mt-1.5" style={{ background: statColors[w.status] || '#E5E7EB' }} />
                                                                                     <div className="flex-1 min-w-0">
                                                                                         <div className="flex items-center gap-1.5 mb-0.5">
                                                                                             <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded"
-                                                                                                style={{ background: `${sevColors[w.severity]}20`, color: sevColors[w.severity] }}>
+                                                                                                style={{ background: `${sevColors[w.severity]}15`, color: sevColors[w.severity] }}>
                                                                                                 {w.severity}
                                                                                             </span>
-                                                                                            <span className="text-[8px] uppercase" style={{ color: statColors[w.status] }}>{w.status}</span>
+                                                                                            <span className="text-[8px] uppercase font-bold" style={{ color: statColors[w.status] }}>{w.status}</span>
                                                                                         </div>
-                                                                                        <p className="text-[10px] text-white/60">{w.reason}</p>
-                                                                                        <p className="text-[8px] text-white/25 mt-0.5">
+                                                                                        <p className="text-[10px] text-gray-600 font-medium">{w.reason}</p>
+                                                                                        <p className="text-[8px] text-gray-400 mt-0.5 font-medium">
                                                                                             {new Date(w.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                                                             {' · '}{w.issuedByName || 'Admin'}
                                                                                         </p>
@@ -290,7 +284,7 @@ export default function UserModerationPanel() {
                                                                     </div>
                                                                 )
                                                             ) : (
-                                                                <Loader2 size={14} className="animate-spin text-white/20" />
+                                                                <Loader2 size={14} className="animate-spin text-gray-400" />
                                                             )}
                                                         </div>
                                                     </div>

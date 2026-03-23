@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import useDashboardData from '@/components/user-dashboard/useDashboardData'
 import SidebarNav from '@/components/user-dashboard/SidebarNav'
 import MatchCard from '@/components/user-dashboard/MatchCard'
-import { Sparkles, Search, Filter, ArrowLeft } from 'lucide-react'
+import { Sparkles, Search, Filter } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -15,7 +15,7 @@ export default function MatchesPage() {
     const [search, setSearch] = useState('')
     const [catFilter, setCatFilter] = useState('')
 
-    if (authLoading) return <div className="min-h-screen" style={{ backgroundColor: '#0B0F19' }} />
+    if (authLoading) return <div className="min-h-screen bg-[#F4F5F7]" />
     if (!user) { router.push('/login'); return null }
 
     const categories = [...new Set(matches.map(m => m.category).filter(Boolean))]
@@ -27,28 +27,25 @@ export default function MatchesPage() {
     })
 
     return (
-        <div className="min-h-screen flex" style={{ backgroundColor: '#0B0F19', color: '#F5F6FA', position: 'relative', overflow: 'hidden' }}>
-            {/* Ambient Orbs */}
-            <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full opacity-15 blur-[150px] pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse, #1A1A64 0%, transparent 70%)' }} />
-            <div className="absolute bottom-[-15%] left-[-5%] w-[40%] h-[50%] rounded-full opacity-10 blur-[120px] pointer-events-none"
-                style={{ background: 'radial-gradient(circle, #D4AF37 0%, transparent 70%)' }} />
-
+        <div className="min-h-screen flex bg-[#F4F5F7] font-sans">
             <SidebarNav />
 
-            <main className="flex-1 md:ml-64 min-h-screen relative z-10 p-6 md:p-8 overflow-y-auto">
+            <main className="flex-1 md:ml-64 min-h-screen p-6 md:p-8 overflow-y-auto">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                     <div>
-                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(245,246,250,0.4)' }}>
-                            <Link href="/user-dashboard" className="hover:text-white transition-colors">Dashboard</Link>
-                            <span style={{ color: 'rgba(245,246,250,0.2)' }}>/</span>
-                            <span style={{ color: '#D4AF37' }}>Potential Matches</span>
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-2 text-gray-400">
+                            <Link href="/user-dashboard" className="hover:text-[#1C2A59] transition-colors">Dashboard</Link>
+                            <span className="text-gray-300">/</span>
+                            <span className="text-[#F0A500]">Potential Matches</span>
                         </div>
-                        <h1 className="text-3xl font-black text-white flex items-center gap-3">
-                            <Sparkles size={28} style={{ color: '#D4AF37' }} /> AI Potential Matches
+                        <h1 className="text-3xl font-black text-[#1C2A59] flex items-center gap-3 tracking-tight">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#fef3c7] border border-[#fde68a]">
+                                <Sparkles size={20} className="text-[#F0A500]" />
+                            </div>
+                            AI Potential Matches
                         </h1>
-                        <p className="text-sm mt-1 font-medium" style={{ color: 'rgba(245,246,250,0.5)' }}>
+                        <p className="text-sm mt-1 font-medium text-gray-500">
                             Items our AI engine has matched to your lost reports
                         </p>
                     </div>
@@ -57,19 +54,17 @@ export default function MatchesPage() {
                 {/* Search & Filter */}
                 <div className="flex flex-col sm:flex-row gap-3 mb-8">
                     <div className="flex-1 relative">
-                        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'rgba(245,246,250,0.3)' }} />
+                        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
-                            className="w-full pl-11 pr-4 py-3 rounded-xl text-sm font-medium border outline-none transition-all focus:border-white/20"
-                            style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)', color: '#F5F6FA' }}
+                            className="w-full pl-11 pr-4 py-3 rounded-xl text-sm font-medium border border-gray-200 bg-white outline-none transition-all focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] text-[#1C2A59] placeholder-gray-400"
                             placeholder="Search matches by title or location..."
                             value={search} onChange={e => setSearch(e.target.value)}
                         />
                     </div>
                     <div className="flex items-center gap-2">
-                        <Filter size={14} style={{ color: 'rgba(245,246,250,0.4)' }} />
+                        <Filter size={14} className="text-gray-400 shrink-0" />
                         <select
-                            className="px-4 py-3 rounded-xl text-sm font-semibold border outline-none"
-                            style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)', color: '#F5F6FA' }}
+                            className="px-4 py-3 rounded-xl text-sm font-semibold border border-gray-200 bg-white outline-none text-[#1C2A59] focus:border-[#F0A500]"
                             value={catFilter} onChange={e => setCatFilter(e.target.value)}>
                             <option value="">All Categories</option>
                             {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -79,17 +74,17 @@ export default function MatchesPage() {
 
                 {/* Stats Bar */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-                    <div className="rounded-2xl p-4 border" style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.05)' }}>
-                        <p className="text-2xl font-black text-white">{matches.length}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-wider mt-1" style={{ color: 'rgba(245,246,250,0.5)' }}>Total Matches</p>
+                    <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                        <p className="text-2xl font-black text-[#1C2A59]">{matches.length}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mt-1 text-gray-400">Total Matches</p>
                     </div>
-                    <div className="rounded-2xl p-4 border" style={{ background: 'rgba(212,175,55,0.05)', borderColor: 'rgba(212,175,55,0.15)' }}>
-                        <p className="text-2xl font-black" style={{ color: '#D4AF37' }}>{filtered.length}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-wider mt-1" style={{ color: 'rgba(245,246,250,0.5)' }}>Showing</p>
+                    <div className="bg-white rounded-2xl p-4 border-l-4 shadow-sm" style={{ borderLeftColor: '#F0A500', borderTop: '1px solid #e5e7eb', borderRight: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+                        <p className="text-2xl font-black text-[#F0A500]">{filtered.length}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mt-1 text-gray-400">Showing</p>
                     </div>
-                    <div className="rounded-2xl p-4 border hidden sm:block" style={{ background: 'rgba(74,222,128,0.05)', borderColor: 'rgba(74,222,128,0.15)' }}>
-                        <p className="text-2xl font-black" style={{ color: '#4ade80' }}>{categories.length}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-wider mt-1" style={{ color: 'rgba(245,246,250,0.5)' }}>Categories</p>
+                    <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm hidden sm:block">
+                        <p className="text-2xl font-black text-[#008489]">{categories.length}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mt-1 text-gray-400">Categories</p>
                     </div>
                 </div>
 
@@ -97,20 +92,20 @@ export default function MatchesPage() {
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[...Array(6)].map((_, i) => (
-                            <div key={i} className="h-72 rounded-[20px] animate-pulse border" style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.04)' }} />
+                            <div key={i} className="h-72 rounded-2xl animate-pulse bg-white border border-gray-100" />
                         ))}
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="rounded-3xl border p-16 text-center" style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.05)' }}>
-                        <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center border" style={{ background: 'rgba(212, 175, 55, 0.05)', borderColor: 'rgba(212, 175, 55, 0.2)' }}>
-                            <Sparkles size={28} color="#D4AF37" className="animate-pulse" />
+                    <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-16 text-center shadow-sm">
+                        <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center bg-[#fef3c7] border border-[#fde68a]">
+                            <Sparkles size={28} className="text-[#F0A500] animate-pulse" />
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2">
+                        <h3 className="text-xl font-black text-[#1C2A59] mb-2">
                             {matches.length === 0 ? 'No matches yet' : 'No results found'}
                         </h3>
-                        <p className="text-sm font-medium max-w-sm mx-auto" style={{ color: 'rgba(245, 246, 250, 0.5)' }}>
+                        <p className="text-sm font-medium text-gray-400 max-w-sm mx-auto">
                             {matches.length === 0
-                                ? 'Our AI is continuously scanning. We\'ll alert you immediately when a strong match is found.'
+                                ? "Our AI is continuously scanning. We'll alert you immediately when a strong match is found."
                                 : 'Try adjusting your search or filter criteria.'}
                         </p>
                     </div>

@@ -9,7 +9,8 @@ module.exports = {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Inter', 'Outfit', 'system-ui', 'sans-serif'],
+                sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+                mono: ['JetBrains Mono', 'Courier New', 'monospace'],
             },
             colors: {
                 glass: {

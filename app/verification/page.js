@@ -49,31 +49,31 @@ export default function VerificationFormsPage() {
         }
     }
 
-    if (authLoading) return <div className="page-bg min-h-screen"><Navbar /></div>
+    if (authLoading) return <div className="bg-[#F4F5F7] min-h-screen"><Navbar /></div>
     if (!user) return (
-        <div className="page-bg min-h-screen"><Navbar />
+        <div className="bg-[#F4F5F7] min-h-screen"><Navbar />
             <div className="max-w-md mx-auto pt-32 px-4 text-center">
-                <div className="glass-card p-12">
+                <div className="bg-white rounded border border-gray-200 shadow-sm p-12">
                     <div className="text-5xl mb-4">🔒</div>
-                    <h2 className="text-white font-bold text-lg mb-2">Login Required</h2>
-                    <Link href="/login" className="btn-glass-primary">Sign In</Link>
+                    <h2 className="text-[#1C2A59] font-bold text-lg mb-2">Login Required</h2>
+                    <Link href="/login" className="inline-block px-6 py-2.5 bg-[#1C2A59] text-[#1C2A59] font-bold rounded hover:bg-[#1a254d] transition-colors">Sign In</Link>
                 </div>
             </div>
         </div>
     )
 
     return (
-        <div className="page-bg min-h-screen">
+        <div className="bg-[#F4F5F7] min-h-screen">
             <Navbar />
             <div className="max-w-3xl mx-auto px-4 pt-24 pb-16">
                 <div className="flex items-center gap-3 mb-6">
-                    <Link href="/user-dashboard" className="btn-glass px-3 py-2"><ArrowLeft size={16} /></Link>
+                    <Link href="/user-dashboard" className="inline-block px-4 py-2 bg-white border border-gray-200 text-[#1C2A59] font-bold rounded hover:bg-gray-50 transition-colors px-3 py-2"><ArrowLeft size={16} /></Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-[#1C2A59] flex items-center gap-2">
                             <ClipboardCheck size={22} style={{ color: '#a855f7' }} />
                             Verification Forms
                         </h1>
-                        <p className="text-white/50 text-sm mt-0.5">Admin requires you to verify your identity for your claim</p>
+                        <p className="text-gray-500 text-sm mt-0.5">Admin requires you to verify your identity for your claim</p>
                     </div>
                 </div>
 
@@ -85,24 +85,24 @@ export default function VerificationFormsPage() {
                 )}
 
                 {loading ? (
-                    <div className="flex justify-center py-20"><Loader2 className="animate-spin text-white/30" size={32} /></div>
+                    <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#1C2A59]/30" size={32} /></div>
                 ) : forms.length === 0 ? (
-                    <div className="glass-card p-16 text-center">
+                    <div className="bg-white rounded border border-gray-200 shadow-sm p-16 text-center">
                         <ClipboardCheck size={48} className="mx-auto mb-4 opacity-20" />
-                        <h3 className="text-white font-bold text-lg">No Verification Forms</h3>
-                        <p className="text-white/50 text-sm mt-2">You have no pending verification forms at this time.</p>
+                        <h3 className="text-[#1C2A59] font-bold text-lg">No Verification Forms</h3>
+                        <p className="text-gray-500 text-sm mt-2">You have no pending verification forms at this time.</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         {forms.map(form => (
-                            <div key={form._id} className="glass-card p-6 space-y-5">
+                            <div key={form._id} className="bg-white rounded border border-gray-200 shadow-sm p-6 space-y-5">
                                 {/* Header */}
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h3 className="text-white font-bold">
+                                        <h3 className="text-[#1C2A59] font-bold">
                                             Verification for: {form.foundItemId?.title || 'Unknown Item'}
                                         </h3>
-                                        <p className="text-white/40 text-xs mt-1">
+                                        <p className="text-[#1C2A59]/40 text-xs mt-1">
                                             {form.foundItemId?.category} · {form.foundItemId?.locationFound}
                                         </p>
                                     </div>
@@ -119,12 +119,12 @@ export default function VerificationFormsPage() {
                                     <div className="space-y-4">
                                         {form.questions.map((q, i) => (
                                             <div key={i} className="space-y-2">
-                                                <label className="text-sm text-white/70 font-semibold flex items-start gap-2">
+                                                <label className="text-sm text-[#1C2A59]/70 font-semibold flex items-start gap-2">
                                                     <span className="text-purple-400 font-bold shrink-0">Q{i + 1}.</span>
                                                     {q.question}
                                                 </label>
                                                 <textarea
-                                                    className="glass-input min-h-[80px] resize-y text-sm"
+                                                    className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors"
                                                     placeholder="Type your answer here..."
                                                     value={answers[`${form._id}_${i}`] || ''}
                                                     onChange={e => setAnswers(prev => ({ ...prev, [`${form._id}_${i}`]: e.target.value }))}
@@ -145,7 +145,7 @@ export default function VerificationFormsPage() {
                                         {form.questions.map((q, i) => (
                                             <div key={i} className="p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)' }}>
                                                 <p className="text-xs text-purple-400 font-bold mb-1">Q{i + 1}. {q.question}</p>
-                                                <p className="text-sm text-white/80">{q.answer || 'No answer provided'}</p>
+                                                <p className="text-sm text-[#1C2A59]/80">{q.answer || 'No answer provided'}</p>
                                             </div>
                                         ))}
                                         {form.status === 'submitted' && (
@@ -156,7 +156,7 @@ export default function VerificationFormsPage() {
                                         {form.status === 'reviewed' && form.adminNotes && (
                                             <div className="p-4 rounded-xl border" style={{ background: 'rgba(74,222,128,0.05)', borderColor: 'rgba(74,222,128,0.2)' }}>
                                                 <p className="text-xs text-green-400 font-bold mb-1">Admin Notes:</p>
-                                                <p className="text-sm text-white/80">{form.adminNotes}</p>
+                                                <p className="text-sm text-[#1C2A59]/80">{form.adminNotes}</p>
                                             </div>
                                         )}
                                     </div>

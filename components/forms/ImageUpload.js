@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
-import { ImagePlus, X, Loader2, UploadCloud } from 'lucide-react'
+import { X, Loader2, UploadCloud } from 'lucide-react'
 
 export default function ImageUpload({ value, onChange }) {
     const [uploading, setUploading] = useState(false)
@@ -55,16 +55,16 @@ export default function ImageUpload({ value, onChange }) {
     // If an image is already uploaded/set
     if (value) {
         return (
-            <div className="relative w-full h-40 rounded-xl overflow-hidden border border-white/10 group">
+            <div className="relative w-full h-40 rounded-xl overflow-hidden border border-gray-200 group bg-white">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={value} alt="Uploaded" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button
                         type="button"
                         onClick={() => onChange('')}
-                        className="btn-glass p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                        className="p-2.5 bg-white rounded-full text-red-500 hover:bg-red-50 shadow-md transition-colors"
                     >
-                        <X size={20} />
+                        <X size={18} />
                     </button>
                 </div>
             </div>
@@ -86,27 +86,27 @@ export default function ImageUpload({ value, onChange }) {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
                 className={`w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors
-                    ${error ? 'border-red-500/30 bg-red-500/5' : 'border-white/10 hover:border-white/20 hover:bg-white/5'}
+                    ${error ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-[#F0A500] hover:bg-[#fef3c7]/30'}
                     ${uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 `}
             >
                 {uploading ? (
                     <>
-                        <Loader2 className="animate-spin text-white/50" size={24} />
-                        <span className="text-sm text-white/50">Uploading to Cloudinary...</span>
+                        <Loader2 className="animate-spin text-[#1C2A59]" size={24} />
+                        <span className="text-sm text-[#1C2A59] font-medium">Uploading to Cloudinary...</span>
                     </>
                 ) : (
                     <>
-                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/50">
+                        <div className="w-10 h-10 rounded-full bg-[#F4F5F7] border border-gray-200 flex items-center justify-center text-[#F0A500]">
                             <UploadCloud size={20} />
                         </div>
-                        <span className="text-sm text-white/60 font-medium">Click or touch to upload photo</span>
-                        <span className="text-xs text-white/30">JPG, PNG, WebP up to 5MB</span>
+                        <span className="text-sm text-[#3E4A56] font-semibold">Click or touch to upload photo</span>
+                        <span className="text-xs text-gray-400 font-medium">JPG, PNG, WebP up to 5MB</span>
                     </>
                 )}
             </button>
 
-            {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+            {error && <p className="text-xs text-red-500 font-semibold mt-1">{error}</p>}
         </div>
     )
 }

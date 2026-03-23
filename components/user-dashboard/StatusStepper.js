@@ -18,16 +18,14 @@ export default function StatusStepper({ currentStatus, claimId, itemName, lastSe
     const activeIndex = getActiveIndex();
 
     return (
-        <div className="rounded-[20px] p-6 shadow-lg border relative overflow-hidden"
-            style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(30px)', borderColor: 'rgba(255, 255, 255, 0.05)' }}>
-
+        <div className="rounded-[24px] p-6 shadow-sm border border-gray-200 bg-white relative overflow-hidden">
             <div className="flex justify-between items-start mb-8">
                 <div>
-                    <h2 className="text-xl font-bold mb-1 tracking-wide" style={{ color: '#F5F6FA' }}>Active Claim Status</h2>
-                    <p className="font-semibold text-lg" style={{ color: '#F06414' }}>{itemName}</p>
-                    <p className="text-sm mt-1" style={{ color: 'rgba(245, 246, 250, 0.5)' }}>Last seen at {lastSeen}</p>
+                    <h2 className="text-xl font-extrabold mb-1 tracking-wide text-[#1C2A59]">Active Claim Status</h2>
+                    <p className="font-semibold text-lg text-[#F0A500]">{itemName}</p>
+                    <p className="text-sm mt-1 text-[#3E4A56]">Last seen at {lastSeen}</p>
                 </div>
-                <div className="text-xs font-bold tracking-[0.1em] px-3 py-1 rounded bg-white/5 border border-white/10 uppercase" style={{ color: 'rgba(245, 246, 250, 0.6)' }}>
+                <div className="text-xs font-bold tracking-[0.1em] px-3 py-1 rounded bg-[#F4F5F7] border border-gray-200 uppercase text-[#3E4A56]">
                     Claim #{claimId}
                 </div>
             </div>
@@ -45,38 +43,37 @@ export default function StatusStepper({ currentStatus, claimId, itemName, lastSe
                             <div key={step.id} className="flex flex-col items-center flex-1 relative group">
                                 {/* Connecting Line (Desktop) */}
                                 {index !== STEPS.length - 1 && (
-                                    <div className={`hidden md:block absolute top-[24px] left-[50%] w-full h-[2px] z-[-1] transition-colors duration-500 ${isCompleted ? 'bg-[#F06414]' : 'bg-white/10'}`} />
+                                    <div className={`hidden md:block absolute top-[24px] left-[50%] w-full h-[2px] z-[-1] transition-colors duration-500 ${isCompleted ? 'bg-[#F0A500]' : 'bg-gray-200'}`} />
                                 )}
 
                                 {/* Connecting Line (Mobile) */}
                                 {index !== STEPS.length - 1 && (
-                                    <div className={`md:hidden absolute top-[48px] left-[24px] w-[2px] h-full z-[-1] transition-colors duration-500 ${isCompleted ? 'bg-[#F06414]' : 'bg-white/10'}`} />
+                                    <div className={`md:hidden absolute top-[48px] left-[24px] w-[2px] h-full z-[-1] transition-colors duration-500 ${isCompleted ? 'bg-[#F0A500]' : 'bg-gray-200'}`} />
                                 )}
 
                                 {/* Icon Circle */}
                                 <div
                                     className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 relative ${isCompleted
-                                            ? 'border-[#F06414] text-[#F06414]'
+                                            ? 'border-[#F0A500] text-[#1C2A59] bg-[#FFFBEB]'
                                             : isActive
-                                                ? 'border-[#F06414] text-white bg-[#F06414] shadow-[0_0_20px_rgba(240,100,20,0.6)]'
-                                                : 'border-white/20 text-white/30 bg-white/5'
+                                                ? 'border-[#F0A500] text-white bg-[#F0A500] shadow-sm'
+                                                : 'border-gray-200 text-gray-400 bg-[#F4F5F7]'
                                         }`}
-                                    style={isCompleted ? { background: 'rgba(240, 100, 20, 0.1)', backdropFilter: 'blur(10px)' } : {}}
                                 >
-                                    <Icon size={20} strokeWidth={isActive || isCompleted ? 2.5 : 2} className={isActive ? 'drop-shadow-md' : ''} />
+                                    <Icon size={20} strokeWidth={isActive || isCompleted ? 2.5 : 2} className={isActive ? 'drop-shadow-sm' : ''} />
                                 </div>
 
                                 {/* Labels */}
                                 <div className="mt-4 text-center">
-                                    <p className={`text-sm font-bold tracking-wide transition-colors duration-300 ${isActive ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' : isPending ? 'text-white/30' : 'text-[#F5F6FA]'}`}>
+                                    <p className={`text-sm font-bold tracking-wide transition-colors duration-300 ${isActive ? 'text-[#1C2A59]' : isPending ? 'text-gray-400' : 'text-[#3E4A56]'}`}>
                                         {step.label}
                                     </p>
 
-                                    <p className="text-[11px] mt-1 font-medium tracking-wider uppercase min-h-[16px]" style={{ color: 'rgba(245, 246, 250, 0.4)' }}>
+                                    <p className={`text-[11px] mt-1 font-medium tracking-wider uppercase min-h-[16px] text-gray-500`}>
                                         {statusDates[step.id] ? statusDates[step.id] : (isPending ? 'Pending' : '')}
                                     </p>
                                     {isActive && (
-                                        <p className="text-[10px] font-black uppercase mt-1 tracking-widest animate-pulse" style={{ color: '#F06414' }}>
+                                        <p className="text-[10px] font-black uppercase mt-1 tracking-widest animate-pulse text-[#F0A500]">
                                             In Progress
                                         </p>
                                     )}

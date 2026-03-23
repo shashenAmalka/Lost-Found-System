@@ -15,22 +15,21 @@ export default function AdminMessagePanel({ claim }) {
         <div className="space-y-4">
             {/* Rejection Reason */}
             {isRejected && (
-                <div className="p-5 rounded-[16px] flex items-start gap-4"
-                    style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                    <XCircle size={20} className="shrink-0 mt-0.5" style={{ color: '#ef4444' }} />
+                <div className="p-5 rounded-[16px] flex items-start gap-4 bg-red-50 border border-red-200">
+                    <XCircle size={20} className="shrink-0 mt-0.5 text-red-500" />
                     <div>
-                        <h4 className="text-sm font-bold" style={{ color: '#fca5a5' }}>Claim Rejected</h4>
+                        <h4 className="text-sm font-bold text-red-700">Claim Rejected</h4>
                         {claim.adminNote && (
-                            <p className="text-sm mt-2" style={{ color: 'rgba(245,246,250,0.6)' }}>
-                                <span className="font-semibold text-white/70">Reason: </span>{claim.adminNote}
+                            <p className="text-sm mt-2 text-[#3E4A56] font-medium">
+                                <span className="font-bold text-[#1C2A59]">Reason: </span>{claim.adminNote}
                             </p>
                         )}
                         {claim.reviewedAt && (
-                            <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'rgba(245,246,250,0.35)' }}>
+                            <p className="text-xs mt-2 flex items-center gap-1 text-gray-500 font-medium">
                                 <Calendar size={11} /> Decision made on {formatDate(claim.reviewedAt)}
                             </p>
                         )}
-                        <div className="mt-3 p-3 rounded-lg text-xs" style={{ background: 'rgba(255,255,255,0.03)', color: 'rgba(245,246,250,0.4)' }}>
+                        <div className="mt-3 p-3 rounded-lg text-xs bg-white/50 text-red-600 font-medium border border-red-200/50">
                             If you believe this is an error, please contact the Lost & Found office or submit a new claim with additional evidence.
                         </div>
                     </div>
@@ -39,22 +38,21 @@ export default function AdminMessagePanel({ claim }) {
 
             {/* Completed Report */}
             {isCompleted && (
-                <div className="p-5 rounded-[16px] flex items-start gap-4"
-                    style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                    <CheckCircle size={20} className="shrink-0 mt-0.5" style={{ color: '#10b981' }} />
+                <div className="p-5 rounded-[16px] flex items-start gap-4 bg-emerald-50 border border-emerald-200">
+                    <CheckCircle size={20} className="shrink-0 mt-0.5 text-emerald-500" />
                     <div>
-                        <h4 className="text-sm font-bold" style={{ color: '#6ee7b7' }}>Claim Completed</h4>
-                        <p className="text-sm mt-2" style={{ color: 'rgba(245,246,250,0.6)' }}>
+                        <h4 className="text-sm font-bold text-emerald-700">Claim Completed</h4>
+                        <p className="text-sm mt-2 text-[#3E4A56] font-medium">
                             Your item has been successfully returned. Thank you for using Smart Campus Lost & Found!
                         </p>
                         {claim.completedAt && (
-                            <p className="text-xs mt-2 flex items-center gap-1" style={{ color: 'rgba(245,246,250,0.35)' }}>
+                            <p className="text-xs mt-2 flex items-center gap-1 text-gray-500 font-medium">
                                 <Calendar size={11} /> Completed on {formatDate(claim.completedAt)}
                             </p>
                         )}
                         {claim.adminNote && (
-                            <p className="text-sm mt-2" style={{ color: 'rgba(245,246,250,0.5)' }}>
-                                <span className="font-semibold text-white/70">Admin note: </span>{claim.adminNote}
+                            <p className="text-sm mt-2 text-[#3E4A56] font-medium">
+                                <span className="font-bold text-[#1C2A59]">Admin note: </span>{claim.adminNote}
                             </p>
                         )}
                     </div>
@@ -63,14 +61,13 @@ export default function AdminMessagePanel({ claim }) {
 
             {/* Admin Note (general — for non-rejected, non-completed) */}
             {!isRejected && !isCompleted && claim.adminNote && (
-                <div className="p-5 rounded-[16px] flex items-start gap-4"
-                    style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)' }}>
-                    <MessageCircle size={18} className="shrink-0 mt-0.5" style={{ color: '#818cf8' }} />
+                <div className="p-5 rounded-[16px] flex items-start gap-4 bg-indigo-50 border border-indigo-200">
+                    <MessageCircle size={18} className="shrink-0 mt-0.5 text-indigo-500" />
                     <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: '#a5b4fc' }}>Message from Admin</h4>
-                        <p className="text-sm mt-2" style={{ color: 'rgba(245,246,250,0.7)' }}>{claim.adminNote}</p>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700">Message from Admin</h4>
+                        <p className="text-sm mt-2 text-[#1C2A59] font-medium">{claim.adminNote}</p>
                         {claim.reviewedAt && (
-                            <p className="text-xs mt-2" style={{ color: 'rgba(245,246,250,0.35)' }}>{formatDate(claim.reviewedAt)}</p>
+                            <p className="text-xs mt-2 text-gray-500 font-medium">{formatDate(claim.reviewedAt)}</p>
                         )}
                     </div>
                 </div>
@@ -78,12 +75,11 @@ export default function AdminMessagePanel({ claim }) {
 
             {/* Approval Confirmation */}
             {isApproved && !claim.adminNote && (
-                <div className="p-5 rounded-[16px] flex items-start gap-4"
-                    style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
-                    <CheckCircle size={18} className="shrink-0 mt-0.5" style={{ color: '#22c55e' }} />
+                <div className="p-5 rounded-[16px] flex items-start gap-4 bg-green-50 border border-green-200">
+                    <CheckCircle size={18} className="shrink-0 mt-0.5 text-green-500" />
                     <div>
-                        <h4 className="text-sm font-bold" style={{ color: '#86efac' }}>Claim Approved!</h4>
-                        <p className="text-sm mt-1" style={{ color: 'rgba(245,246,250,0.6)' }}>
+                        <h4 className="text-sm font-bold text-green-700">Claim Approved!</h4>
+                        <p className="text-sm mt-1 text-[#3E4A56] font-medium">
                             Your claim has been approved. Please schedule a pickup below.
                         </p>
                     </div>
@@ -92,10 +88,9 @@ export default function AdminMessagePanel({ claim }) {
 
             {/* No messages state */}
             {!claim.adminNote && !isRejected && !isCompleted && !isApproved && (
-                <div className="p-5 rounded-[16px] text-center"
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
-                    <MessageCircle size={24} className="mx-auto mb-2" style={{ color: 'rgba(245,246,250,0.15)' }} />
-                    <p className="text-xs" style={{ color: 'rgba(245,246,250,0.3)' }}>No messages from admin yet</p>
+                <div className="p-5 rounded-[16px] text-center bg-gray-50 border border-gray-100">
+                    <MessageCircle size={24} className="mx-auto mb-2 text-gray-300" />
+                    <p className="text-xs text-gray-400 font-medium">No messages from admin yet</p>
                 </div>
             )}
         </div>

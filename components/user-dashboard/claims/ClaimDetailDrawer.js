@@ -42,32 +42,27 @@ export default function ClaimDetailDrawer({ claim, onClose, onClaimUpdate }) {
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity" onClick={onClose} />
 
             {/* Drawer */}
-            <div className="fixed top-0 right-0 h-full w-full max-w-2xl z-[70] overflow-y-auto"
+            <div className="fixed top-0 right-0 h-full w-full max-w-2xl z-[70] overflow-y-auto bg-[#F4F5F7] shadow-[-20px_0_60px_rgba(0,0,0,0.1)]"
                 style={{
-                    background: '#0B0F19',
-                    borderLeft: '1px solid rgba(255,255,255,0.06)',
-                    boxShadow: '-20px 0 60px rgba(0,0,0,0.5)',
                     animation: 'slideInRight 0.3s ease-out',
                 }}>
 
                 {/* Header */}
-                <div className="sticky top-0 z-10 flex items-center justify-between p-6 pb-4"
-                    style={{ background: 'rgba(11,15,25,0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="sticky top-0 z-10 flex items-center justify-between p-6 pb-4 bg-white/90 backdrop-blur-md border-b border-gray-200">
                     <div>
                         <div className="flex items-center gap-3">
-                            <h2 className="text-lg font-bold text-white">Claim #{claimId}</h2>
+                            <h2 className="text-lg font-bold text-[#1C2A59]">Claim #{claimId}</h2>
                             <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider"
                                 style={{ background: status.bg, border: `1px solid ${status.border}`, color: status.color }}>
                                 {status.label}
                             </span>
                         </div>
-                        <p className="text-xs mt-1" style={{ color: 'rgba(245,246,250,0.4)' }}>
+                        <p className="text-xs mt-1 text-[#3E4A56] font-medium">
                             {claim.foundItemId?.title || 'Unknown Item'} — Full Details
                         </p>
                     </div>
                     <button onClick={onClose}
-                        className="w-9 h-9 rounded-xl flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
-                        style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all border border-gray-200">
                         <X size={18} />
                     </button>
                 </div>
@@ -88,17 +83,15 @@ export default function ClaimDetailDrawer({ claim, onClose, onClaimUpdate }) {
 
                     {/* Withdraw action */}
                     {canWithdraw && (
-                        <div className="p-5 rounded-[16px] flex items-center justify-between"
-                            style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)' }}>
+                        <div className="p-5 rounded-[16px] flex items-center justify-between bg-red-50 border border-red-200">
                             <div className="flex items-center gap-3">
-                                <AlertTriangle size={16} style={{ color: '#f87171' }} />
-                                <span className="text-sm" style={{ color: 'rgba(245,246,250,0.6)' }}>Want to cancel this claim?</span>
+                                <AlertTriangle size={16} className="text-red-500" />
+                                <span className="text-sm text-red-700 font-medium">Want to cancel this claim?</span>
                             </div>
                             <button
                                 onClick={handleWithdraw}
                                 disabled={withdrawing}
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-[1.02] disabled:opacity-50"
-                                style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] disabled:opacity-50 text-red-600 bg-red-100 border border-red-300 hover:bg-red-200">
                                 {withdrawing ? <Loader2 size={14} className="animate-spin" /> : null}
                                 {withdrawing ? 'Withdrawing...' : 'Withdraw Claim'}
                             </button>

@@ -29,13 +29,12 @@ export default function ClaimsHeader({ totalCount, filter, onFilterChange, sort,
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             {/* Title */}
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: 'rgba(240, 100, 20, 0.15)', border: '1px solid rgba(240, 100, 20, 0.3)' }}>
-                    <Search size={20} style={{ color: '#F06414' }} />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#F0A500]/10 border border-[#F0A500]/30 shadow-sm">
+                    <Search size={20} className="text-[#F0A500]" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">My Claims</h1>
-                    <p className="text-xs mt-0.5" style={{ color: 'rgba(245, 246, 250, 0.5)' }}>
+                    <h1 className="text-2xl font-extrabold text-[#1C2A59] tracking-tight">My Claims</h1>
+                    <p className="text-xs mt-0.5 text-[#3E4A56] font-medium">
                         {totalCount} claim{totalCount !== 1 ? 's' : ''} total
                     </p>
                 </div>
@@ -47,19 +46,17 @@ export default function ClaimsHeader({ totalCount, filter, onFilterChange, sort,
                 <div className="relative">
                     <button
                         onClick={() => { setFilterOpen(!filterOpen); setSortOpen(false); }}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:text-white transition-all"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-[#3E4A56] hover:text-[#1C2A59] hover:bg-gray-50 transition-all bg-white border border-gray-200 shadow-sm">
                         <Filter size={14} />
                         {activeFilter.label}
                         <ChevronDown size={14} className={`transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {filterOpen && (
-                        <div className="absolute right-0 mt-2 w-48 rounded-xl py-1 shadow-lg z-50"
-                            style={{ background: '#13162B', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div className="absolute right-0 mt-2 w-48 rounded-xl py-1 shadow-lg z-50 bg-white border border-gray-200">
                             {FILTER_OPTIONS.map(opt => (
                                 <button key={opt.value}
                                     onClick={() => { onFilterChange(opt.value); setFilterOpen(false); }}
-                                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${filter === opt.value ? 'text-white bg-white/10' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+                                    className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${filter === opt.value ? 'text-[#008489] bg-[#E0F2FE]' : 'text-[#3E4A56] hover:text-[#1C2A59] hover:bg-gray-100'}`}>
                                     {opt.label}
                                 </button>
                             ))}
@@ -71,19 +68,17 @@ export default function ClaimsHeader({ totalCount, filter, onFilterChange, sort,
                 <div className="relative">
                     <button
                         onClick={() => { setSortOpen(!sortOpen); setFilterOpen(false); }}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white/70 hover:text-white transition-all"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-[#3E4A56] hover:text-[#1C2A59] hover:bg-gray-50 transition-all bg-white border border-gray-200 shadow-sm">
                         <ArrowUpDown size={14} />
                         {activeSort.label}
                         <ChevronDown size={14} className={`transition-transform ${sortOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {sortOpen && (
-                        <div className="absolute right-0 mt-2 w-44 rounded-xl py-1 shadow-lg z-50"
-                            style={{ background: '#13162B', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div className="absolute right-0 mt-2 w-44 rounded-xl py-1 shadow-lg z-50 bg-white border border-gray-200">
                             {SORT_OPTIONS.map(opt => (
                                 <button key={opt.value}
                                     onClick={() => { onSortChange(opt.value); setSortOpen(false); }}
-                                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${sort === opt.value ? 'text-white bg-white/10' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+                                    className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${sort === opt.value ? 'text-[#008489] bg-[#E0F2FE]' : 'text-[#3E4A56] hover:text-[#1C2A59] hover:bg-gray-100'}`}>
                                     {opt.label}
                                 </button>
                             ))}

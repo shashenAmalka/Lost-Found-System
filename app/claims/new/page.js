@@ -21,7 +21,7 @@ function ClaimFormContent() {
     const [form, setForm] = useState({
         lostItemId: '', foundItemId,
         ownershipExplanation: '', hiddenDetails: '',
-        exactColorBrand: '', dateLost: '', locationLost: '', proofUrl: '',
+        exactColorBrand: '', dateLost: '', timeLost: '', locationLost: '', proofUrl: '',
         pickupPreference: 'Campus Lost & Found Office',
     })
 
@@ -48,9 +48,38 @@ function ClaimFormContent() {
             }).catch(() => { })
     }, [user])
 
+    const today = new Date().toISOString().split('T')[0]
+
+    const getCurrentTime = () => {
+        const n = new Date()
+        return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`
+    }
+
+    const handleTimeChange = (e) => {
+        const val = e.target.value
+        if (form.dateLost === today && val > getCurrentTime()) {
+            setError('⏱ Cannot select a future time for today.')
+            setForm(f => ({ ...f, timeLost: '' }))
+            return
+        }
+        setError('')
+        setForm(f => ({ ...f, timeLost: val }))
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
+        const now = new Date()
+        const todayStr = now.toISOString().split('T')[0]
+        const currentTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
+        if (form.dateLost && form.dateLost > todayStr) {
+            setError('Date Lost cannot be a future date.')
+            return
+        }
+        if (form.dateLost === todayStr && form.timeLost && form.timeLost > currentTimeStr) {
+            setError('Time Lost cannot be in the future.')
+            return
+        }
         setLoading(true)
         try {
             const payload = { ...form }
@@ -73,95 +102,95 @@ function ClaimFormContent() {
     }
 
     if (authLoading || fetching) return (
-        <div className="page-bg min-h-screen"><Navbar />
+        <div className="min-h-screen bg-[#F4F5F7] font-sans pb-20 pt-20"><Navbar />
             <div className="flex items-center justify-center pt-40">
-                <Loader2 className="animate-spin text-white/30" size={36} />
+                <Loader2 className="animate-spin text-[#1C2A59]/30" size={36} />
             </div>
         </div>
     )
     if (!user) return (
-        <div className="page-bg min-h-screen"><Navbar />
+        <div className="min-h-screen bg-[#F4F5F7] font-sans pb-20 pt-20"><Navbar />
             <div className="max-w-md mx-auto pt-32 px-4 text-center">
-                <div className="glass-card p-12"><div className="text-5xl mb-4">🔒</div><h2 className="text-white font-bold mb-2">Login Required</h2>
-                    <Link href="/login" className="btn-glass-primary mt-4">Sign In</Link>
+                <div className="bg-white p-12 rounded border border-gray-200 shadow-sm"><div className="text-5xl mb-4 text-[#F0A500]">🔒</div><h2 className="text-[#1C2A59] font-bold text-xl mb-2">Login Required</h2>
+                    <Link href="/login" className="inline-block px-6 py-2.5 bg-[#1C2A59] text-white font-bold rounded hover:bg-[#1a254d] transition-colors mt-4">Sign In</Link>
                 </div>
             </div>
         </div>
     )
 
     if (isRestricted) return (
-        <div className="page-bg min-h-screen"><Navbar />
+        <div className="min-h-screen bg-[#F4F5F7] font-sans pb-20 pt-20"><Navbar />
             <div className="max-w-md mx-auto pt-32 px-4 text-center">
-                <div className="glass-card p-12"><div className="text-5xl mb-4">⛔</div>
-                    <h2 className="text-red-400 font-bold mb-2">Account Restricted</h2>
-                    <p className="text-white/50 text-sm">Your account has been restricted. Contact admin for help.</p>
+                <div className="bg-white p-12 rounded border border-gray-200 shadow-sm"><div className="text-5xl mb-4">⛔</div>
+                    <h2 className="text-red-600 font-bold mb-2">Account Restricted</h2>
+                    <p className="text-[#3E4A56] text-sm">Your account has been restricted. Contact admin for help.</p>
                 </div>
             </div>
         </div>
     )
 
     if (success) return (
-        <div className="page-bg min-h-screen"><Navbar />
+        <div className="min-h-screen bg-[#F4F5F7] font-sans pb-20 pt-20"><Navbar />
             <div className="max-w-lg mx-auto pt-32 px-4 animate-slide-up">
-                <div className="glass-card p-8 text-center space-y-4">
-                    <CheckCircle2 size={48} className="mx-auto" style={{ color: '#4ade80' }} />
-                    <h2 className="text-white font-bold text-xl">Claim Submitted!</h2>
-                    <p className="text-white/50 text-sm">Your claim has been submitted for admin review. You'll be notified of the result.</p>
-                    <p className="text-white/40 text-xs">Redirecting to dashboard...</p>
+                <div className="bg-white p-12 rounded border border-gray-200 shadow-sm text-center space-y-4">
+                    <CheckCircle2 size={48} className="mx-auto" style={{ color: '#008489' }} />
+                    <h2 className="text-[#1C2A59] font-bold text-xl">Claim Submitted!</h2>
+                    <p className="text-[#3E4A56] text-sm">Your claim has been submitted for admin review. You'll be notified of the result.</p>
+                    <p className="text-gray-400 font-bold text-xs uppercase tracking-wider pt-4">Redirecting to dashboard...</p>
                 </div>
             </div>
         </div>
     )
 
-    return (
-        <div className="page-bg min-h-screen"><Navbar />
-            <div className="orb w-64 h-64 top-0 left-0 opacity-10" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.5) 0%, transparent 70%)' }} />
+    const inputClass = "w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors"
+    const labelClass = "text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1 block flex items-center gap-1.5"
 
-            <div className="max-w-2xl mx-auto px-4 pt-24 pb-16">
-                <div className="flex items-center gap-3 mb-6">
-                    <Link href={foundItemId ? `/found-items/${foundItemId}` : '/found-items'} className="btn-glass px-3 py-2"><ArrowLeft size={16} /></Link>
+    return (
+        <div className="min-h-screen bg-[#F4F5F7] font-sans pb-20 pt-20"><Navbar />
+
+            <div className="max-w-2xl mx-auto px-4 pt-10 pb-16">
+                <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-200">
+                    <Link href={foundItemId ? `/found-items/${foundItemId}` : '/found-items'} className="p-2 border border-gray-200 rounded text-gray-500 hover:text-[#1C2A59] hover:bg-white transition-colors"><ArrowLeft size={18} /></Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Submit Claim</h1>
-                        <p className="text-white/50 text-sm mt-0.5">Prove ownership to reclaim your item</p>
+                        <h1 className="text-2xl font-extrabold text-[#1C2A59]">Submit Claim</h1>
+                        <p className="text-[#3E4A56] font-medium text-sm mt-0.5">Prove ownership to reclaim your item</p>
                     </div>
                 </div>
 
                 {/* Warning */}
-                <div className="mb-6 p-4 rounded-xl flex items-start gap-3"
-                    style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
-                    <AlertTriangle size={18} className="text-yellow-400 mt-0.5 shrink-0" />
+                <div className="mb-6 p-4 rounded flex items-start gap-4"
+                    style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+                    <AlertTriangle size={20} className="text-[#D97706] mt-0.5 shrink-0" />
                     <div>
-                        <p className="text-xs font-semibold text-yellow-300">⚠️ Fair Warning</p>
-                        <p className="text-xs text-white/50 mt-0.5">False claims will increase your warning count. 3 warnings = account restriction.</p>
+                        <p className="text-sm font-bold text-[#92400E]">⚠️ Fair Warning</p>
+                        <p className="text-xs text-[#92400E]/80 mt-1">False claims will increase your warning count. 3 warnings = account restriction.</p>
                     </div>
                 </div>
 
                 {/* Found Item Preview Card */}
                 {foundItem && (
-                    <div className="mb-6 p-4 rounded-xl flex items-center gap-4"
-                        style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0"
-                            style={{ background: 'rgba(16,185,129,0.1)' }}>
+                    <div className="mb-6 p-4 rounded flex items-center gap-5 bg-white border border-gray-200 shadow-sm">
+                        <div className="w-20 h-20 rounded border border-gray-100 overflow-hidden shrink-0 bg-[#F4F5F7]">
                             {foundItem.photoUrl ? (
                                 <img src={foundItem.photoUrl} alt={foundItem.title} className="w-full h-full object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <Package size={24} className="text-emerald-400/30" />
+                                    <Package size={24} className="text-gray-300" />
                                 </div>
                             )}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: '#6ee7b7' }}>Claiming This Item</p>
-                            <h3 className="text-white font-semibold text-sm truncate">{foundItem.title}</h3>
-                            <div className="flex items-center gap-3 mt-1">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[#008489] mb-1">Claiming This Item</p>
+                            <h3 className="text-[#1C2A59] font-extrabold text-base truncate">{foundItem.title}</h3>
+                            <div className="flex flex-wrap items-center gap-4 mt-2">
                                 {foundItem.category && (
-                                    <span className="flex items-center gap-1 text-[10px] text-white/40">
-                                        <Tag size={9} /> {foundItem.category}
+                                    <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                        <Tag size={12} /> {foundItem.category}
                                     </span>
                                 )}
                                 {foundItem.dateFound && (
-                                    <span className="flex items-center gap-1 text-[10px] text-white/40">
-                                        <Calendar size={9} /> Found {new Date(foundItem.dateFound).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                    <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                        <Calendar size={12} /> Found {new Date(foundItem.dateFound).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                                     </span>
                                 )}
                             </div>
@@ -169,20 +198,20 @@ function ClaimFormContent() {
                     </div>
                 )}
 
-                <div className="glass-card p-8">
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="bg-white rounded border border-gray-200 p-8 shadow-sm">
+                    <form onSubmit={handleSubmit} className="space-y-6">
 
                         {/* Optional: Link a Lost Item */}
                         {lostItems.length > 0 && (
-                            <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide flex items-center gap-1.5">
-                                    <LinkIcon size={10} /> Link a Lost Report (optional)
+                            <div>
+                                <label className={labelClass}>
+                                    <LinkIcon size={12} /> Link a Lost Report (optional)
                                 </label>
-                                <select className="glass-select" value={form.lostItemId} onChange={change('lostItemId')}>
+                                <select className={inputClass} value={form.lostItemId} onChange={change('lostItemId')}>
                                     <option value="">Skip — I haven't posted a lost report</option>
                                     {lostItems.map(i => <option key={i._id} value={i._id}>{i.title} ({i.category})</option>)}
                                 </select>
-                                <p className="text-[10px] text-white/30">Linking a lost report helps AI verify your claim faster, but is not required.</p>
+                                <p className="text-[10px] text-gray-400 mt-1.5 font-medium">Linking a lost report helps AI verify your claim faster, but is not required.</p>
                             </div>
                         )}
 
@@ -190,46 +219,51 @@ function ClaimFormContent() {
                             <input type="hidden" value={foundItemId} />
                         )}
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs text-white/60 uppercase tracking-wide">Ownership Explanation *</label>
-                            <textarea className="glass-input min-h-[120px] resize-y"
+                        <div>
+                            <label className={labelClass}>Ownership Explanation <span className="text-red-500">*</span></label>
+                            <textarea className={`${inputClass} min-h-[120px] resize-y`}
                                 placeholder="Explain how you can prove this item is yours. Be as detailed as possible — describe unique marks, contents, purchase details..."
                                 value={form.ownershipExplanation} onChange={change('ownershipExplanation')} required />
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs text-white/60 uppercase tracking-wide">Hidden Identifying Details</label>
-                            <textarea className="glass-input min-h-[80px] resize-y"
+                        <div>
+                            <label className={labelClass}>Hidden Identifying Details</label>
+                            <textarea className={`${inputClass} min-h-[80px] resize-y`}
                                 placeholder="Describe hidden marks, scratches, stickers, or other details not visible in photos..."
                                 value={form.hiddenDetails} onChange={change('hiddenDetails')} />
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide">Exact Color / Brand</label>
-                                <input className="glass-input" placeholder="e.g. Deep Blue, Apple iPhone 14 Pro" value={form.exactColorBrand} onChange={change('exactColorBrand')} />
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                            <div>
+                                <label className={labelClass}>Exact Color / Brand</label>
+                                <input className={inputClass} placeholder="e.g. Deep Blue, Apple iPhone 14 Pro" value={form.exactColorBrand} onChange={change('exactColorBrand')} />
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs text-white/60 uppercase tracking-wide">Date Lost</label>
-                                <input type="date" className="glass-input" style={{ colorScheme: 'dark' }} value={form.dateLost} onChange={change('dateLost')} />
+                            <div>
+                                <label className={labelClass}>Date Lost</label>
+                                <input type="date" className={inputClass} value={form.dateLost} onChange={change('dateLost')} max={today} />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Time Lost</label>
+                                <input type="time" className={inputClass} value={form.timeLost} onChange={handleTimeChange} />
+                                {form.dateLost === today && <p className="text-[10px] text-[#F0A500] mt-1 font-bold">⏱ Only past & current time allowed for today</p>}
                             </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs text-white/60 uppercase tracking-wide flex items-center gap-1.5">
-                                <MapPin size={10} /> Where did you lose it?
+                        <div>
+                            <label className={labelClass}>
+                                <MapPin size={12} /> Where did you lose it?
                             </label>
-                            <input className="glass-input" placeholder="e.g. Library Block C, 2nd floor reading area" value={form.locationLost} onChange={change('locationLost')} />
+                            <input className={inputClass} placeholder="e.g. Library Block C, 2nd floor reading area" value={form.locationLost} onChange={change('locationLost')} />
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs text-white/60 uppercase tracking-wide">Additional Proof (URL)</label>
-                            <input className="glass-input" placeholder="Link to receipt, photo of purchase, etc." value={form.proofUrl} onChange={change('proofUrl')} />
+                        <div>
+                            <label className={labelClass}>Additional Proof (URL)</label>
+                            <input className={inputClass} placeholder="Link to receipt, photo of purchase, etc." value={form.proofUrl} onChange={change('proofUrl')} />
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs text-white/60 uppercase tracking-wide">Pickup Preference</label>
-                            <select className="glass-select" value={form.pickupPreference} onChange={change('pickupPreference')}>
+                        <div>
+                            <label className={labelClass}>Pickup Preference</label>
+                            <select className={inputClass} value={form.pickupPreference} onChange={change('pickupPreference')}>
                                 <option value="Campus Lost & Found Office">Campus Lost & Found Office</option>
                                 <option value="Security Office">Security Office</option>
                                 <option value="Department Office">Department Office</option>
@@ -238,13 +272,14 @@ function ClaimFormContent() {
                         </div>
 
                         {error && (
-                            <div className="p-3 rounded-xl text-sm text-red-400" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                            <div className="p-4 rounded border bg-red-50 border-red-200 text-red-600 text-sm font-semibold">
                                 {error}
                             </div>
                         )}
 
-                        <button type="submit" disabled={loading} className="btn-glass-primary w-full justify-center py-3 text-sm font-semibold">
-                            {loading ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}
+                        <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-3 py-4 rounded text-sm font-extrabold uppercase tracking-wide transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ backgroundColor: '#1C2A59', color: '#FFFFFF' }}>
+                            {loading ? <Loader2 size={18} className="animate-spin" /> : <Shield size={18} />}
                             {loading ? 'Submitting Claim...' : 'Submit Claim for Review'}
                         </button>
                     </form>
@@ -258,7 +293,7 @@ import { Suspense } from 'react'
 
 export default function NewClaimPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen page-bg flex items-center justify-center text-white">Loading...</div>}>
+        <Suspense fallback={<div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center text-[#1C2A59]">Loading...</div>}>
             <ClaimFormContent />
         </Suspense>
     )
