@@ -16,7 +16,10 @@ export default function MyClaimsPage() {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
     const [sort, setSort] = useState('newest');
+
+    // Drawer state
     const [selectedClaim, setSelectedClaim] = useState(null);
+    const [drawerEditMode, setDrawerEditMode] = useState(false);
 
     useEffect(() => {
         if (!user && !authLoading) { router.push('/login'); return; }
@@ -32,27 +35,39 @@ export default function MyClaimsPage() {
     // Filter + Sort
     const filtered = useMemo(() => {
         let result = [...claims];
-
-        // Filter
-        if (filter !== 'all') {
-            result = result.filter(c => c.status === filter);
-        }
-
-        // Sort
-        if (sort === 'newest') {
-            result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        } else if (sort === 'oldest') {
-            result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        } else if (sort === 'status') {
-            result.sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
-        }
-
+        if (filter !== 'all') result = result.filter(c => c.status === filter);
+        if (sort === 'newest') result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        else if (sort === 'oldest') result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        else if (sort === 'status') result.sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
         return result;
     }, [claims, filter, sort]);
 
     const handleClaimUpdate = (updatedClaim) => {
         setClaims(prev => prev.map(c => c._id === updatedClaim._id ? { ...c, ...updatedClaim } : c));
         setSelectedClaim(prev => prev?._id === updatedClaim._id ? { ...prev, ...updatedClaim } : prev);
+    };
+
+    // Open drawer normally (view mode)
+    const openDrawer = (claim) => {
+        setDrawerEditMode(false);
+        setSelectedClaim(claim);
+    };
+
+    // Open drawer directly in edit mode
+    const openDrawerEdit = (claim) => {
+        setDrawerEditMode(true);
+        setSelectedClaim(claim);
+    };
+
+    // Open drawer directly in withdraw mode
+    const openDrawerWithdraw = (claim) => {
+        setDrawerEditMode(false);
+        setSelectedClaim({ ...claim, _autoWithdraw: true });
+    };
+
+    const closeDrawer = () => {
+        setSelectedClaim(null);
+        setDrawerEditMode(false);
     };
 
     if (authLoading) return <div className="min-h-screen bg-[#F4F5F7]" />;
@@ -100,7 +115,9 @@ export default function MyClaimsPage() {
                         <ClaimCard
                             key={claim._id}
                             claim={claim}
-                            onViewDetails={(c) => setSelectedClaim(c)}
+                            onViewDetails={openDrawer}
+                            onEditRequest={openDrawerEdit}
+                            onWithdrawRequest={openDrawerWithdraw}
                         />
                     ))}
                 </div>
@@ -110,7 +127,9 @@ export default function MyClaimsPage() {
             {selectedClaim && (
                 <ClaimDetailDrawer
                     claim={selectedClaim}
-                    onClose={() => setSelectedClaim(null)}
+                    initialEditMode={drawerEditMode}
+                    autoWithdraw={selectedClaim._autoWithdraw || false}
+                    onClose={closeDrawer}
                     onClaimUpdate={handleClaimUpdate}
                 />
             )}

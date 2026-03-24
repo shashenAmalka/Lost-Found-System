@@ -44,22 +44,54 @@ export async function PATCH(request, { params }) {
 
         await connectDB()
         const claim = await ClaimRequest.findById(params.id)
+            .populate('lostItemId')
+            .populate('foundItemId')
+            .populate('claimantId', '-password')
         if (!claim) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
         const body = await request.json()
 
-        // User can only withdraw their own claim
+        // --- Non-admin users ---
         if (decoded.role !== 'admin') {
-            if (claim.claimantId.toString() !== decoded.id) {
+            if (claim.claimantId._id.toString() !== decoded.id) {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             }
-            if (body.action !== 'withdraw') {
-                return NextResponse.json({ error: 'Only admins can change claim status' }, { status: 403 })
+
+            // WITHDRAW action
+            if (body.action === 'withdraw') {
+                const editableStatuses = ['under_review', 'ai_matched']
+                if (!editableStatuses.includes(claim.status)) {
+                    return NextResponse.json({ error: 'Claim cannot be withdrawn at this stage' }, { status: 400 })
+                }
+                claim.status = 'withdrawn'
+                const note = body.withdrawReason
+                    ? `Claim withdrawn by user. Reason: ${body.withdrawReason}`
+                    : 'Claim withdrawn by user'
+                claim.trackingHistory.push({ status: 'Withdrawn', note, updatedBy: decoded.name })
+                await claim.save()
+                const updated = await ClaimRequest.findById(claim._id)
+                    .populate('lostItemId').populate('foundItemId').populate('claimantId', '-password').lean()
+                return NextResponse.json({ claim: updated })
             }
-            claim.status = 'withdrawn'
-            claim.trackingHistory.push({ status: 'Withdrawn', note: 'Claim withdrawn by user', updatedBy: decoded.name })
-            await claim.save()
-            return NextResponse.json({ claim })
+
+            // UPDATE (edit) action — only allowed when under_review or ai_matched
+            if (body.action === 'update') {
+                const editableStatuses = ['under_review', 'ai_matched']
+                if (!editableStatuses.includes(claim.status)) {
+                    return NextResponse.json({ error: 'Claim cannot be edited at this stage' }, { status: 400 })
+                }
+                const allowed = ['ownershipExplanation', 'hiddenDetails', 'exactColorBrand', 'dateLost', 'timeLost', 'locationLost', 'proofUrl', 'pickupPreference']
+                allowed.forEach(field => {
+                    if (body[field] !== undefined) claim[field] = body[field]
+                })
+                claim.trackingHistory.push({ status: 'Updated', note: 'Claim details updated by claimant', updatedBy: decoded.name })
+                await claim.save()
+                const updated = await ClaimRequest.findById(claim._id)
+                    .populate('lostItemId').populate('foundItemId').populate('claimantId', '-password').lean()
+                return NextResponse.json({ claim: updated })
+            }
+
+            return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
         }
 
         return NextResponse.json({ error: 'Use admin endpoint' }, { status: 400 })
