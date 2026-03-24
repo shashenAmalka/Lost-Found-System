@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { useAuth } from '@/context/AuthContext'
-import { Send, ArrowLeft, Shield, AlertTriangle, Package, MapPin, Tag, Calendar, Loader2, CheckCircle2, Link as LinkIcon } from 'lucide-react'
+import { validateOwnershipExplanation, validateClaimEvidence, CLAIM_LIMITS } from '@/lib/validations'
+import { Send, ArrowLeft, Shield, AlertTriangle, Package, MapPin, Tag, Calendar, Loader2, CheckCircle2, Link as LinkIcon, Info } from 'lucide-react'
 import Link from 'next/link'
 
 function ClaimFormContent() {
@@ -17,6 +18,7 @@ function ClaimFormContent() {
     const [loading, setLoading] = useState(false)
     const [fetching, setFetching] = useState(true)
     const [error, setError] = useState('')
+    const [fieldErrors, setFieldErrors] = useState({})
     const [success, setSuccess] = useState(false)
     const [form, setForm] = useState({
         lostItemId: '', foundItemId,
@@ -69,6 +71,23 @@ function ClaimFormContent() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
+        setFieldErrors({})
+
+        // ── Validation ──
+        const newFieldErrors = {}
+
+        const ownershipResult = validateOwnershipExplanation(form.ownershipExplanation)
+        if (!ownershipResult.valid) newFieldErrors.ownershipExplanation = ownershipResult.error
+
+        const evidenceResult = validateClaimEvidence(form)
+        if (!evidenceResult.valid) newFieldErrors.evidence = evidenceResult.error
+
+        if (Object.keys(newFieldErrors).length > 0) {
+            setFieldErrors(newFieldErrors)
+            setError('Please fix the highlighted errors before submitting.')
+            return
+        }
+
         const now = new Date()
         const todayStr = now.toISOString().split('T')[0]
         const currentTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`
@@ -221,9 +240,37 @@ function ClaimFormContent() {
 
                         <div>
                             <label className={labelClass}>Ownership Explanation <span className="text-red-500">*</span></label>
-                            <textarea className={`${inputClass} min-h-[120px] resize-y`}
+                            <textarea className={`${inputClass} min-h-[120px] resize-y ${fieldErrors.ownershipExplanation ? 'border-red-400 focus:border-red-500 focus:ring-red-400' : ''}`}
                                 placeholder="Explain how you can prove this item is yours. Be as detailed as possible — describe unique marks, contents, purchase details..."
-                                value={form.ownershipExplanation} onChange={change('ownershipExplanation')} required />
+                                value={form.ownershipExplanation} onChange={change('ownershipExplanation')}
+                                maxLength={CLAIM_LIMITS.OWNERSHIP_MAX} required />
+                            <div className="flex items-center justify-between mt-1.5">
+                                {fieldErrors.ownershipExplanation ? (
+                                    <p className="text-xs text-red-500 font-semibold">{fieldErrors.ownershipExplanation}</p>
+                                ) : (
+                                    <p className="text-[10px] text-gray-400 font-medium">Minimum {CLAIM_LIMITS.OWNERSHIP_MIN} characters required</p>
+                                )}
+                                <span className={`text-[10px] font-bold tabular-nums ${
+                                    form.ownershipExplanation.trim().length < CLAIM_LIMITS.OWNERSHIP_MIN
+                                        ? 'text-red-400'
+                                        : form.ownershipExplanation.trim().length > CLAIM_LIMITS.OWNERSHIP_MAX * 0.9
+                                            ? 'text-[#D97706]'
+                                            : 'text-gray-400'
+                                }`}>{form.ownershipExplanation.trim().length} / {CLAIM_LIMITS.OWNERSHIP_MAX}</span>
+                            </div>
+                        </div>
+
+                        {/* Strong Evidence Notice */}
+                        <div className={`p-3 rounded flex items-start gap-3 ${fieldErrors.evidence ? 'bg-red-50 border border-red-200' : 'bg-blue-50/60 border border-blue-100'}`}>
+                            <Info size={16} className={`mt-0.5 shrink-0 ${fieldErrors.evidence ? 'text-red-500' : 'text-blue-400'}`} />
+                            <div>
+                                <p className={`text-xs font-bold ${fieldErrors.evidence ? 'text-red-600' : 'text-blue-600'}`}>
+                                    {fieldErrors.evidence ? fieldErrors.evidence : 'At least one strong evidence is required below'}
+                                </p>
+                                {!fieldErrors.evidence && (
+                                    <p className="text-[10px] text-blue-500/70 mt-0.5">Provide hidden identifying details, link a lost report, or add a proof URL.</p>
+                                )}
+                            </div>
                         </div>
 
                         <div>

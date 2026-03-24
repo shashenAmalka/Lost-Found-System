@@ -9,6 +9,7 @@ import User from '@/models/User'
 import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
 import { computeMatchScore, computeClaimMatchScore } from '@/lib/aiEngine'
+import { validateOwnershipExplanation, validateClaimEvidence } from '@/lib/validations'
 
 export async function GET(request) {
     try {
@@ -56,6 +57,18 @@ export async function POST(request) {
 
         if (!foundItemId || !ownershipExplanation) {
             return NextResponse.json({ error: 'Found item and ownership explanation are required' }, { status: 400 })
+        }
+
+        // Validate ownership explanation length
+        const ownershipResult = validateOwnershipExplanation(ownershipExplanation)
+        if (!ownershipResult.valid) {
+            return NextResponse.json({ error: ownershipResult.error }, { status: 400 })
+        }
+
+        // Validate at least one strong evidence
+        const evidenceResult = validateClaimEvidence({ lostItemId, hiddenDetails, proofUrl })
+        if (!evidenceResult.valid) {
+            return NextResponse.json({ error: evidenceResult.error }, { status: 400 })
         }
 
         // Check for duplicate claim
