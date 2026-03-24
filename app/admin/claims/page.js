@@ -1,12 +1,11 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-    LayoutDashboard, FileText, ShieldAlert, Activity,
+    FileText, ShieldAlert,
     Shield, Check, X, MessageCircle, ChevronDown, ChevronUp,
-    Filter, LogOut, AlertTriangle, ChevronRight, Sparkles,
+    Filter, AlertTriangle, ChevronRight, Sparkles,
     ArrowUpDown, User as UserIcon, History, Trophy, Send,
     Eye, MapPin, Calendar, Tag, Package, Unlock, Clock,
 } from 'lucide-react'
@@ -441,8 +440,7 @@ function aiLevelColor(level) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminClaimsPage() {
-    const { user, loading: authLoading, isAdmin, logout } = useAuth()
-    const router = useRouter()
+    const { user } = useAuth()
     const [grouped, setGrouped] = useState([])
     const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 })
     const [loading, setLoading] = useState(true)
@@ -455,13 +453,34 @@ export default function AdminClaimsPage() {
     const [sidePanelItem, setSidePanelItem] = useState(null)
     const [rescoring, setRescoring] = useState(false)
     const filterRef = useRef(null)
+    const [datePreset, setDatePreset] = useState('all')
+    const [dateFrom, setDateFrom] = useState('')
+    const [dateTo, setDateTo] = useState('')
+    const [dateDropOpen, setDateDropOpen] = useState(false)
+    const dateRef = useRef(null)
 
-    // Close filter dropdown on outside click
+    // Close dropdowns on outside click
     useEffect(() => {
-        const handler = (e) => { if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false) }
+        const handler = (e) => {
+            if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false)
+            if (dateRef.current && !dateRef.current.contains(e.target)) setDateDropOpen(false)
+        }
         document.addEventListener('mousedown', handler)
         return () => document.removeEventListener('mousedown', handler)
     }, [])
+
+    // Date preset helpers
+    const applyDatePreset = (preset) => {
+        setDatePreset(preset)
+        const today = new Date()
+        const fmt = (d) => d.toISOString().split('T')[0]
+        if (preset === 'today') { setDateFrom(fmt(today)); setDateTo(fmt(today)) }
+        else if (preset === '7days') { const d = new Date(); d.setDate(d.getDate() - 7); setDateFrom(fmt(d)); setDateTo(fmt(today)) }
+        else if (preset === '30days') { const d = new Date(); d.setDate(d.getDate() - 30); setDateFrom(fmt(d)); setDateTo(fmt(today)) }
+        else if (preset === 'all') { setDateFrom(''); setDateTo('') }
+        if (preset !== 'custom') setDateDropOpen(false)
+    }
+    const dateLabel = datePreset === 'all' ? 'All Dates' : datePreset === 'today' ? 'Today' : datePreset === '7days' ? 'Last 7 Days' : datePreset === '30days' ? 'Last 30 Days' : dateFrom && dateTo ? `${dateFrom} – ${dateTo}` : 'Custom'
 
     const fetchClaims = useCallback(() => {
         if (!user) return
@@ -469,6 +488,8 @@ export default function AdminClaimsPage() {
         const qs = new URLSearchParams()
         if (filter) qs.set('status', filter)
         qs.set('sort', sortBy)
+        if (dateFrom) qs.set('dateFrom', dateFrom)
+        if (dateTo) qs.set('dateTo', dateTo)
         fetch(`/api/admin/claims?${qs}`, { credentials: 'include' })
             .then(r => r.json())
             .then(d => {
@@ -477,7 +498,7 @@ export default function AdminClaimsPage() {
             })
             .catch(() => { })
             .finally(() => setLoading(false))
-    }, [user, filter, sortBy])
+    }, [user, filter, sortBy, dateFrom, dateTo])
 
     useEffect(() => { fetchClaims() }, [fetchClaims])
 
@@ -530,9 +551,6 @@ export default function AdminClaimsPage() {
         }
     }
 
-    if (authLoading) return <div className="min-h-screen bg-gray-50" />
-    if (!user || !isAdmin) { router.push('/login'); return null }
-
     const STATUS_FILTERS = [
         { value: '', label: 'All Statuses' },
         { value: 'under_review', label: 'Under Review' },
@@ -543,49 +561,10 @@ export default function AdminClaimsPage() {
     ]
     const currentFilter = STATUS_FILTERS.find(f => f.value === filter) || STATUS_FILTERS[0]
 
-    const navItems = [
-        { icon: LayoutDashboard, label: 'Overview', href: '/admin/dashboard' },
-        { icon: FileText, label: 'Claim Management', href: '/admin/claims', active: true },
-        { icon: ShieldAlert, label: 'User Moderation', href: '/admin/dashboard?tab=moderation' },
-        { icon: Activity, label: 'Analytics Data', href: '/admin/dashboard?tab=analytics' },
-    ]
-
     return (
-        <div className="min-h-screen flex bg-gray-50" style={{ fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif" }}>
+        <>
             {/* Side Panel */}
             {sidePanelItem && <FoundItemPanel item={sidePanelItem} onClose={() => setSidePanelItem(null)} />}
-
-            {/* Sidebar */}
-            <aside className="w-56 shrink-0 flex flex-col border-r hidden md:flex bg-white border-gray-200">
-                <div className="p-5 border-b border-gray-200">
-                    <div className="flex items-center gap-2.5 mb-1">
-                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black bg-[#F0A500] text-white shadow-sm">
-                            SC
-                        </div>
-                        <div><p className="font-black text-sm text-[#1C2A59]">Admin</p><p className="text-[10px] font-bold text-gray-500">Command Center</p></div>
-                    </div>
-                </div>
-                <nav className="flex-1 p-3 space-y-1">
-                    {navItems.map(({ icon: Icon, label, href, active }) => (
-                        <Link key={label} href={href}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                                active
-                                ? 'bg-[#1C2A59] text-white shadow-md'
-                                : 'text-gray-500 hover:bg-gray-50 hover:text-[#1C2A59]'
-                            }`}>
-                            <Icon size={15} /> {label}
-                        </Link>
-                    ))}
-                </nav>
-                <div className="p-3 border-t border-gray-200">
-                    <button onClick={logout}
-                        className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-gray-500 hover:bg-red-50 hover:text-red-600">
-                        <LogOut size={14} /> Sign Out
-                    </button>
-                </div>
-            </aside>
-
-            <main className="flex-1 min-h-screen relative z-10 p-6 md:p-8 overflow-y-auto">
 
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
@@ -644,6 +623,49 @@ export default function AdminClaimsPage() {
                                             {f.label}
                                         </button>
                                     ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Date Filter Dropdown */}
+                        <div ref={dateRef} className="relative">
+                            <button onClick={() => setDateDropOpen(o => !o)}
+                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border bg-white border-gray-200 text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                                style={{ minWidth: '150px' }}>
+                                <Calendar size={13} className="text-[#F0A500]" />
+                                {dateLabel}
+                                <ChevronDown size={13} className={`ml-auto transition-transform ${dateDropOpen ? 'rotate-180' : ''} text-gray-400`} />
+                            </button>
+                            {dateDropOpen && (
+                                <div className="absolute right-0 top-full mt-1 w-64 rounded-xl border overflow-hidden z-30 shadow-xl bg-white border-gray-200 p-3 space-y-2">
+                                    {[{ v: 'all', l: 'All Dates' }, { v: 'today', l: '📅 Today' }, { v: '7days', l: '📆 Last 7 Days' }, { v: '30days', l: '🗓 Last 30 Days' }, { v: 'custom', l: '✏️ Custom Range' }].map(({ v, l }) => (
+                                        <button key={v} onClick={() => applyDatePreset(v)}
+                                            className={`w-full text-left px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                                                datePreset === v ? 'bg-[#1C2A59] text-white' : 'text-gray-600 hover:bg-gray-50'
+                                            }`}>
+                                            {l}
+                                        </button>
+                                    ))}
+                                    {datePreset === 'custom' && (
+                                        <div className="pt-2 border-t border-gray-100 space-y-2">
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">From</label>
+                                                    <input type="date" className="w-full px-2 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-gray-50 text-[#1C2A59] focus:outline-none focus:border-[#F0A500]" value={dateFrom} onChange={e => setDateFrom(e.target.value)} max={dateTo || undefined} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">To</label>
+                                                    <input type="date" className="w-full px-2 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-gray-50 text-[#1C2A59] focus:outline-none focus:border-[#F0A500]" value={dateTo} onChange={e => setDateTo(e.target.value)} min={dateFrom || undefined} />
+                                                </div>
+                                            </div>
+                                            <button onClick={() => setDateDropOpen(false)}
+                                                disabled={!dateFrom || !dateTo}
+                                                className="w-full py-2 rounded-lg text-xs font-bold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                                style={{ background: 'linear-gradient(135deg, #1C2A59, #2d4080)' }}>
+                                                Apply Range
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -770,7 +792,6 @@ export default function AdminClaimsPage() {
                         })}
                     </div>
                 )}
-            </main>
-        </div>
+        </>
     )
 }
