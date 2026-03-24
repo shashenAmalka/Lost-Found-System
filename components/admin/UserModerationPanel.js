@@ -19,6 +19,8 @@ export default function UserModerationPanel() {
     const [warningModalUser, setWarningModalUser] = useState(null)
     const [expandedWarnings, setExpandedWarnings] = useState({})
     const [actionLoading, setActionLoading] = useState(null)
+    const [currentPage, setCurrentPage] = useState(1)
+    const pageSize = 10
 
     const fetchData = useCallback(async () => {
         try {
@@ -74,6 +76,13 @@ export default function UserModerationPanel() {
             u.email?.toLowerCase().includes(search.toLowerCase())
         )
     )
+
+    // Pagination logic
+    const totalPages = Math.ceil(filtered.length / pageSize)
+    const paginatedUsers = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
+    // Reset pagination on search
+    useEffect(() => { setCurrentPage(1) }, [search])
 
     // Stats
     const stats = {
@@ -133,18 +142,18 @@ export default function UserModerationPanel() {
             </div>
 
             {/* User Table */}
-            <div className="bg-white border border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                        <thead>
-                            <tr className="border-b border-gray-200 bg-gray-50">
+            <div className="bg-white border border-gray-200 shadow-sm rounded-2xl overflow-hidden flex flex-col">
+                <div className="overflow-x-auto max-h-[600px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                    <table className="w-full text-xs relative border-separate border-spacing-0">
+                        <thead className="sticky top-0 z-20">
+                            <tr className="bg-gray-50">
                                 {['User', 'Campus ID', 'Role', 'Status', 'Warnings', 'Appeals', 'Actions'].map(h => (
-                                    <th key={h} className="text-left px-4 py-3 text-[9px] font-bold text-gray-500 uppercase tracking-wider">{h}</th>
+                                    <th key={h} className="text-left px-4 py-3.5 text-[9px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">{h}</th>
                                 ))}
                             </tr>
                         </thead>
-                        <tbody>
-                            {filtered.map(u => {
+                        <tbody className="divide-y divide-gray-100">
+                            {paginatedUsers.length > 0 ? paginatedUsers.map(u => {
                                 const st = STATUS_STYLES[u.status] || STATUS_STYLES.active
                                 const isExpanded = expandedId === u._id
                                 return (
@@ -293,10 +302,41 @@ export default function UserModerationPanel() {
                                         )}
                                     </>
                                 )
-                            })}
+                            }) : (
+                                <tr>
+                                    <td colSpan={7} className="py-20 text-center">
+                                        <p className="text-sm text-gray-400 font-medium">No users found matching "{search}"</p>
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between bg-white">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            Page <span className="text-[#1C2A59]">{currentPage}</span> of {totalPages}
+                        </p>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1.5 rounded-lg border border-gray-200 text-[10px] font-bold uppercase transition-colors hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed text-[#1C2A59]"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-1.5 rounded-lg bg-[#1C2A59] text-white text-[10px] font-bold uppercase transition-all hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Warning Modal */}

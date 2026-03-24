@@ -22,7 +22,7 @@ export default function AdminSidebar({ logout }) {
     }
 
     return (
-        <aside className="w-64 h-screen hidden lg:flex flex-col justify-between border-r sticky top-0 z-50 shrink-0 bg-white border-gray-200">
+        <aside className="w-64 h-full hidden lg:flex flex-col justify-between border-r shrink-0 bg-white border-gray-200">
             <div>
                 {/* Header */}
                 <div className="p-6 border-b border-gray-200">

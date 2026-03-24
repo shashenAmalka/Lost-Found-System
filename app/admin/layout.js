@@ -12,12 +12,12 @@ export default function AdminLayout({ children }) {
     if (!user || !isAdmin) { router.push('/login'); return null }
 
     return (
-        <div className="min-h-screen flex bg-[#F4F5F7] text-[#1C2A59] relative overflow-hidden">
+        <div className="h-screen w-full flex bg-[#F4F5F7] text-[#1C2A59] overflow-hidden">
             <AdminSidebar logout={logout} />
 
-            {/* Mobile Top Bar */}
-            <div className="flex-1 flex flex-col min-h-screen">
-                <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+            {/* Main Area Wrapper */}
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
+                <div className="lg:hidden flex shrink-0 items-center justify-between p-4 border-b border-gray-200 bg-white">
                     <div className="flex items-center gap-2">
                         <ShieldAlert size={24} className="text-[#F0A500]" />
                         <span className="font-bold text-lg text-[#1C2A59]">Admin Panel</span>
