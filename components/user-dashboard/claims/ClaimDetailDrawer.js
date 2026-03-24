@@ -175,7 +175,8 @@ function WithdrawModal({ claimId, onClose, onWithdrawn }) {
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed');
-            onWithdrawn(data.claim);
+            // Hard delete — signal parent to remove from list
+            onWithdrawn(null);
         } catch (e) {
             setErr(e.message);
         } finally {
@@ -308,8 +309,14 @@ export default function ClaimDetailDrawer({ claim, onClose, onClaimUpdate, initi
     };
 
     const handleWithdrawn = (updated) => {
-        setLocalClaim(updated);
         setShowWithdrawModal(false);
+        if (updated === null) {
+            // Hard deleted — close drawer and signal parent to remove claim
+            if (onClaimUpdate) onClaimUpdate({ _id: localClaim._id, _deleted: true });
+            onClose();
+            return;
+        }
+        setLocalClaim(updated);
         if (onClaimUpdate) onClaimUpdate(updated);
     };
 

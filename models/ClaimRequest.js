@@ -20,6 +20,8 @@ const ClaimRequestSchema = new mongoose.Schema({
     hiddenDetails: { type: String, default: '' }, // identifying marks not in public description
     exactColorBrand: { type: String, default: '' },
     dateLost: { type: Date },
+    timeLost: { type: String, default: '' },
+    locationLost: { type: String, default: '' },
     proofUrl: { type: String, default: '' }, // optional upload
     pickupPreference: { type: String, default: 'Campus Lost & Found Office' },
 
@@ -65,5 +67,9 @@ const ClaimRequestSchema = new mongoose.Schema({
     completedAt: { type: Date },
 }, { timestamps: true })
 
-const ClaimRequest = mongoose.models.ClaimRequest || mongoose.model('ClaimRequest', ClaimRequestSchema)
+// Delete cached model in dev to pick up schema changes on hot-reload
+if (mongoose.models.ClaimRequest) {
+    delete mongoose.models.ClaimRequest
+}
+const ClaimRequest = mongoose.model('ClaimRequest', ClaimRequestSchema)
 export default ClaimRequest

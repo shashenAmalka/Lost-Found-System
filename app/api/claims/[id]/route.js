@@ -57,21 +57,14 @@ export async function PATCH(request, { params }) {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             }
 
-            // WITHDRAW action
+            // WITHDRAW action — hard delete from database
             if (body.action === 'withdraw') {
                 const editableStatuses = ['under_review', 'ai_matched']
                 if (!editableStatuses.includes(claim.status)) {
                     return NextResponse.json({ error: 'Claim cannot be withdrawn at this stage' }, { status: 400 })
                 }
-                claim.status = 'withdrawn'
-                const note = body.withdrawReason
-                    ? `Claim withdrawn by user. Reason: ${body.withdrawReason}`
-                    : 'Claim withdrawn by user'
-                claim.trackingHistory.push({ status: 'Withdrawn', note, updatedBy: decoded.name })
-                await claim.save()
-                const updated = await ClaimRequest.findById(claim._id)
-                    .populate('lostItemId').populate('foundItemId').populate('claimantId', '-password').lean()
-                return NextResponse.json({ claim: updated })
+                await ClaimRequest.findByIdAndDelete(claim._id)
+                return NextResponse.json({ deleted: true, message: 'Claim withdrawn and deleted successfully' })
             }
 
             // UPDATE (edit) action — only allowed when under_review or ai_matched

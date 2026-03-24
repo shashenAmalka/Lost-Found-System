@@ -43,6 +43,12 @@ export default function MyClaimsPage() {
     }, [claims, filter, sort]);
 
     const handleClaimUpdate = (updatedClaim) => {
+        if (updatedClaim._deleted) {
+            // Hard deleted — remove from list
+            setClaims(prev => prev.filter(c => c._id !== updatedClaim._id));
+            setSelectedClaim(null);
+            return;
+        }
         setClaims(prev => prev.map(c => c._id === updatedClaim._id ? { ...c, ...updatedClaim } : c));
         setSelectedClaim(prev => prev?._id === updatedClaim._id ? { ...prev, ...updatedClaim } : prev);
     };

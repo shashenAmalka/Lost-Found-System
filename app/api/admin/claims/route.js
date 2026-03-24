@@ -23,7 +23,20 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url)
         const status = searchParams.get('status') || ''
-        const filter = status ? { status } : {}
+        const dateFrom = searchParams.get('dateFrom') || ''
+        const dateTo = searchParams.get('dateTo') || ''
+        const filter = {}
+        if (status) {
+            filter.status = status
+        } else {
+            // Always exclude withdrawn claims from admin view
+            filter.status = { $ne: 'withdrawn' }
+        }
+        if (dateFrom || dateTo) {
+            filter.createdAt = {}
+            if (dateFrom) filter.createdAt.$gte = new Date(dateFrom + 'T00:00:00.000Z')
+            if (dateTo) filter.createdAt.$lte = new Date(dateTo + 'T23:59:59.999Z')
+        }
 
         const allClaims = await ClaimRequest.find(filter)
             .populate('lostItemId', 'title category possibleLocation dateLost imageUrl')
