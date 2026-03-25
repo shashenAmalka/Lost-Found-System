@@ -29,6 +29,7 @@ export async function GET(request) {
 
         const appeals = await UserAppeal.find(filter)
             .populate('userId', 'name email campusId warningCount status restrictionLevel avatar')
+            .populate('warningId', 'reason severity shortAutoSummary createdAt')
             .sort({ createdAt: -1 })
             .lean()
 
@@ -54,7 +55,7 @@ export async function PATCH(request) {
             return NextResponse.json({ error: 'appealId and decision are required' }, { status: 400 })
         }
 
-        const appeal = await UserAppeal.findById(appealId)
+        const appeal = await UserAppeal.findById(appealId).populate('warningId')
         if (!appeal) return NextResponse.json({ error: 'Appeal not found' }, { status: 404 })
 
         appeal.status = decision === 'approve' ? 'APPROVED' : 'REJECTED'
@@ -64,39 +65,76 @@ export async function PATCH(request) {
         appeal.adminResponse = adminResponse || reviewNotes || ''
         await appeal.save()
 
-        // If approved, unrestrict the user and revoke all active warnings
+        // Handle different appeal types
         if (decision === 'approve') {
-            const user = await User.findById(appeal.userId)
-            if (user) {
-                user.status = 'active'
-                user.restrictionLevel = 'NONE'
-                user.restrictionReason = ''
-                user.restrictedAt = null
-                user.warningCount = 0
-                await user.save()
+            // If this is a warning removal appeal
+            if (appeal.appealType === 'WARNING_REMOVAL' && appeal.warningId) {
+                // Revoke the specific warning
+                const warning = appeal.warningId
+                warning.status = 'REVOKED'
+                await warning.save()
 
-                // Revoke all active warnings
-                await UserWarning.updateMany(
-                    { userId: appeal.userId, status: 'ACTIVE' },
-                    { status: 'REVOKED' }
-                )
+                // Recalculate active warnings
+                const activeWarnings = await UserWarning.countDocuments({
+                    userId: appeal.userId,
+                    status: 'ACTIVE',
+                })
+
+                const user = await User.findById(appeal.userId)
+                if (user) {
+                    user.warningCount = activeWarnings
+
+                    // If warnings drop below 3 and user was only LIMITED (not FULL) restricted, auto-unrestrict
+                    if (activeWarnings < 3 && user.restrictionLevel === 'LIMITED') {
+                        user.status = 'active'
+                        user.restrictionLevel = 'NONE'
+                        user.restrictionReason = ''
+                        user.restrictedAt = null
+                    }
+                    await user.save()
+                }
+
+                // Notify user about warning removal approval
+                await Notification.create({
+                    userId: appeal.userId,
+                    type: 'appeal_approved',
+                    title: '✅ Warning Removal Approved',
+                    message: `Your appeal to remove the warning for "${warning.reason}" has been approved!${activeWarnings < 3 ? ' Your account restriction has been lifted.' : ''}${adminResponse ? ` Admin note: "${adminResponse}"` : ''}`,
+                })
+            } else {
+                // General account restriction appeal - revoke all warnings and unrestrict
+                const user = await User.findById(appeal.userId)
+                if (user) {
+                    user.status = 'active'
+                    user.restrictionLevel = 'NONE'
+                    user.restrictionReason = ''
+                    user.restrictedAt = null
+                    user.warningCount = 0
+                    await user.save()
+
+                    // Revoke all active warnings
+                    await UserWarning.updateMany(
+                        { userId: appeal.userId, status: 'ACTIVE' },
+                        { status: 'REVOKED' }
+                    )
+                }
+
+                // Notify user about appeal decision
+                await Notification.create({
+                    userId: appeal.userId,
+                    type: 'appeal_approved',
+                    title: '🎉 Appeal Approved',
+                    message: `Your appeal has been approved! Your account restrictions have been lifted and all warnings revoked.${adminResponse ? ` Admin note: "${adminResponse}"` : ''}`,
+                })
             }
-        }
-
-        // Notify user about appeal decision
-        if (decision === 'approve') {
-            await Notification.create({
-                userId: appeal.userId,
-                type: 'appeal_approved',
-                title: '🎉 Appeal Approved',
-                message: `Your appeal has been approved! Your account restrictions have been lifted and all warnings revoked.${adminResponse ? ` Admin note: "${adminResponse}"` : ''}`,
-            })
         } else {
+            // Rejection notification differs based on appeal type
+            const appealTypeLabel = appeal.appealType === 'WARNING_REMOVAL' ? 'Warning removal' : 'Account restriction'
             await Notification.create({
                 userId: appeal.userId,
                 type: 'appeal_rejected',
-                title: 'Appeal Rejected',
-                message: `Your appeal has been reviewed and was not approved.${adminResponse ? ` Reason: "${adminResponse}"` : ' Please contact support for further assistance.'}`,
+                title: '❌ Appeal Rejected',
+                message: `Your ${appealTypeLabel} appeal has been reviewed and was not approved.${adminResponse ? ` Reason: "${adminResponse}"` : ' Please contact support for further assistance.'}`,
             })
         }
 
@@ -106,7 +144,7 @@ export async function PATCH(request) {
             action: decision === 'approve' ? 'APPROVE_APPEAL' : 'REJECT_APPEAL',
             targetType: 'User',
             targetId: appeal.userId,
-            details: `Appeal ${decision}d. ${adminResponse || ''}`,
+            details: `${appeal.appealType} appeal ${decision}d. ${adminResponse || ''}`,
         })
 
         return NextResponse.json({ appeal })

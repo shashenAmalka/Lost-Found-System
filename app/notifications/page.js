@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
+import WarningAppealModal from '@/components/WarningAppealModal'
 import Link from 'next/link'
 import {
     Bell, CheckCircle2, Sparkles, AlertCircle, AlertTriangle,
@@ -108,7 +109,7 @@ function MatchScoreBadge({ score }) {
     )
 }
 
-function NotificationCard({ notif, onMarkRead, onDismiss }) {
+function NotificationCard({ notif, onMarkRead, onDismiss, onWarningAppeal }) {
     const config = getNotifConfig(notif.type)
     const Icon = config.icon
     const foundItem = notif.foundItemId && typeof notif.foundItemId === 'object' ? notif.foundItemId : null
@@ -141,11 +142,11 @@ function NotificationCard({ notif, onMarkRead, onDismiss }) {
         )
     } else if (notif.type === 'warning') {
         actionBtn = (
-            <Link href="/user-dashboard"
+            <button onClick={() => onWarningAppeal?.(notif)}
                 className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl border transition-all hover:shadow-sm"
                 style={{ background: '#fef3c7', color: '#b45309', borderColor: '#fde68a' }}>
-                <AlertTriangle size={12} /> View Details
-            </Link>
+                <AlertTriangle size={12} /> Request Removal
+            </button>
         )
     }
 
@@ -212,6 +213,9 @@ export default function NotificationsPage() {
     const [counts, setCounts] = useState({ all: 0, claims: 0, ai_matches: 0, warnings: 0, system: 0 })
     const [unreadCount, setUnreadCount] = useState(0)
     const [markingAll, setMarkingAll] = useState(false)
+    const [selectedWarning, setSelectedWarning] = useState(null)
+    const [warningDetails, setWarningDetails] = useState(null)
+    const [loadingWarning, setLoadingWarning] = useState(false)
 
     const TABS = [
         { key: '', label: 'All', icon: Bell },
@@ -270,6 +274,25 @@ export default function NotificationsPage() {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })))
         setUnreadCount(0)
         setMarkingAll(false)
+    }
+
+    const handleWarningAppeal = async (notif) => {
+        setSelectedWarning(notif)
+        setLoadingWarning(true)
+        try {
+            // Fetch the user's active warnings to find the one that matches this notification
+            const res = await fetch('/api/appeals', { credentials: 'include' })
+            const data = await res.json()
+            if (res.ok && data.warnings && data.warnings.length > 0) {
+                // Try to find warning based on notification message or just use the first active warning
+                const warning = data.warnings.find(w => w.reason && notif.message?.includes(w.reason)) || data.warnings[0]
+                setWarningDetails(warning)
+            }
+        } catch (err) {
+            console.error('Failed to fetch warning details:', err)
+        } finally {
+            setLoadingWarning(false)
+        }
     }
 
     if (authLoading) return <div className="min-h-screen bg-[#F4F5F7]"><Navbar /><div className="pt-32 text-center"><Loader2 className="animate-spin text-gray-300 mx-auto" size={32} /></div></div>
@@ -351,6 +374,7 @@ export default function NotificationsPage() {
                                 notif={notif}
                                 onMarkRead={handleMarkRead}
                                 onDismiss={handleDismiss}
+                                onWarningAppeal={handleWarningAppeal}
                             />
                         ))}
                     </div>
@@ -368,6 +392,20 @@ export default function NotificationsPage() {
                                 : "AI is monitoring for potential matches. You'll be notified here instantly."}
                         </p>
                     </div>
+                )}
+
+                {/* Warning Appeal Modal */}
+                {selectedWarning && warningDetails && (
+                    <WarningAppealModal
+                        warning={warningDetails}
+                        onClose={() => {
+                            setSelectedWarning(null)
+                            setWarningDetails(null)
+                        }}
+                        onSuccess={() => {
+                            fetchNotifications()
+                        }}
+                    />
                 )}
             </div>
         </div>
