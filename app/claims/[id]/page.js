@@ -134,6 +134,18 @@ export default function ClaimDetailPage() {
                         </div>
                     )}
 
+<<<<<<< Updated upstream
+=======
+                    {/* Chat Window - Show for all active claims */}
+                    {!['withdrawn', 'completed'].includes(claim.status) && (
+                        <ChatWindow 
+                            claimId={id}
+                            isAdmin={user?.role === 'admin'}
+                            recipientName={user?.role === 'admin' ? claim.claimantName : 'Support Team'}
+                        />
+                    )}
+
+>>>>>>> Stashed changes
                     {/* Tracking History */}
                     {claim.trackingHistory?.length > 0 && (
                         <div className="bg-white rounded border border-gray-200 shadow-sm p-6 space-y-4">
