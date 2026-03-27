@@ -9,6 +9,7 @@ import Notification from '@/models/Notification'
 import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
 import { computeMatchScore } from '@/lib/aiEngine'
+import { isDbConnectionError } from '@/lib/mongodb'
 
 export async function GET(request) {
     try {
@@ -47,6 +48,12 @@ export async function GET(request) {
         return NextResponse.json({ items, total, page, pages: Math.ceil(total / limit) })
     } catch (err) {
         console.error(err)
+        if (isDbConnectionError(err)) {
+            return NextResponse.json({
+                error: 'Database connection unavailable. Check network/DNS or MongoDB access settings.'
+            }, { status: 503 })
+        }
+
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }
 }
@@ -158,6 +165,12 @@ export async function POST(request) {
         return NextResponse.json({ item, matches }, { status: 201 })
     } catch (err) {
         console.error(err)
+        if (isDbConnectionError(err)) {
+            return NextResponse.json({
+                error: 'Database connection unavailable. Check network/DNS or MongoDB access settings.'
+            }, { status: 503 })
+        }
+
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }
 }

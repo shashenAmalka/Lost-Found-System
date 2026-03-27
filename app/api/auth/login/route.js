@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
 import { signToken } from '@/lib/auth'
+import { isDbConnectionError } from '@/lib/mongodb'
 
 export async function POST(request) {
     try {
@@ -65,6 +66,12 @@ export async function POST(request) {
         return response
     } catch (err) {
         console.error(err)
+        if (isDbConnectionError(err)) {
+            return NextResponse.json({
+                error: 'Database connection unavailable. Check network/DNS or MongoDB access settings.'
+            }, { status: 503 })
+        }
+
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }
 }
