@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { CheckCircle, XCircle, Loader2, FileText, Clock, User as UserIcon } from 'lucide-react'
+import { CheckCircle, XCircle, Loader2, FileText, Clock, User as UserIcon, AlertTriangle } from 'lucide-react'
 
 export default function AppealReviewCard({ appeal, onDecision }) {
     const [loading, setLoading] = useState(false)
@@ -26,6 +26,15 @@ export default function AppealReviewCard({ appeal, onDecision }) {
     }
 
     const user = appeal.userId || {}
+    const isWarningAppeal = appeal.appealType === 'WARNING_REMOVAL'
+    const warning = appeal.warningId
+
+    const SEVERITY_COLORS = {
+        LOW: { bg: '#dcfce7', color: '#16a34a' },
+        MEDIUM: { bg: '#fef3c7', color: '#b45309' },
+        HIGH: { bg: '#fee2e2', color: '#dc2626' },
+    }
+    const severityStyle = SEVERITY_COLORS[warning?.severity] || SEVERITY_COLORS.MEDIUM
 
     return (
         <div className="p-4 rounded-xl transition-all hover:scale-[1.005]"
@@ -46,6 +55,32 @@ export default function AppealReviewCard({ appeal, onDecision }) {
                     {new Date(appeal.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </div>
             </div>
+
+            {/* Appeal type badge */}
+            {isWarningAppeal && (
+                <div className="mb-3 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-2">
+                    <AlertTriangle size={12} className="text-amber-600" />
+                    <span className="text-[9px] font-bold text-amber-600 uppercase">Warning Removal Appeal</span>
+                </div>
+            )}
+
+            {/* Warning details (if warning removal appeal) */}
+            {isWarningAppeal && warning && (
+                <div className="mb-3 p-3 rounded-lg" style={{ background: severityStyle.bg + '20', border: `1px solid ${severityStyle.bg}` }}>
+                    <div className="flex items-start gap-2">
+                        <AlertTriangle size={12} style={{ color: severityStyle.color, marginTop: '2px' }} />
+                        <div>
+                            <p className="text-[9px] font-bold uppercase" style={{ color: severityStyle.color }}>
+                                {warning.severity} Severity Warning
+                            </p>
+                            <p className="text-xs font-medium text-gray-700 mt-1">{warning.reason}</p>
+                            {warning.shortAutoSummary && (
+                                <p className="text-[9px] text-gray-600 mt-1">{warning.shortAutoSummary}</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Appeal message */}
             <div className="p-3 rounded-lg mb-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>

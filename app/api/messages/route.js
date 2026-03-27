@@ -154,7 +154,6 @@ export async function POST(request) {
             const populatedMessage = await Message.findById(newMessage._id)
                 .populate('senderId', 'name email')
 
-            // Format response with all required fields
             const formattedMessage = {
                 _id: populatedMessage._id,
                 message: populatedMessage.message,
@@ -221,7 +220,6 @@ export async function POST(request) {
             const populatedMessage = await Message.findById(newMessage._id)
                 .populate('senderId', 'name email')
 
-            // Format response with all required fields
             const formattedMessage = {
                 _id: populatedMessage._id,
                 message: populatedMessage.message,
