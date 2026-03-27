@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import {
     Search, Bell, Menu, X, LogOut, User, LayoutDashboard,
-    Package, Shield, GraduationCap, ChevronDown
+    Package, Shield, GraduationCap, ChevronDown, Mail
 } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
 import NotificationToast from '@/components/NotificationToast'
@@ -134,6 +134,18 @@ export default function Navbar() {
                                                         <LayoutDashboard size={16} /> Dashboard
                                                     </Link>
                                                 )}
+                                                {!isAdmin && (
+                                                    <Link href="/messages" onClick={() => setDropdownOpen(false)}
+                                                        className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-[#3E4A56] hover:bg-gray-50 transition-colors">
+                                                        <Mail size={16} /> Messages
+                                                    </Link>
+                                                )}
+                                                {isAdmin && (
+                                                    <Link href="/admin/messages" onClick={() => setDropdownOpen(false)}
+                                                        className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-[#3E4A56] hover:bg-gray-50 transition-colors">
+                                                        <Mail size={16} /> Conversations
+                                                    </Link>
+                                                )}
                                                 <div className="border-t border-gray-100 my-1" />
                                                 <button onClick={() => { logout(); setDropdownOpen(false) }}
                                                     className="flex items-center gap-2 w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
@@ -173,6 +185,8 @@ export default function Navbar() {
                             ) : (
                                 <>
                                     {!isAdmin && <Link href="/user-dashboard" onClick={() => setMobileOpen(false)} className="block w-full text-center py-2 text-white border border-white/20 rounded font-semibold">Dashboard</Link>}
+                                    {!isAdmin && <Link href="/messages" onClick={() => setMobileOpen(false)} className="block w-full text-center py-2 text-white border border-white/20 rounded font-semibold">Messages</Link>}
+                                    {isAdmin && <Link href="/admin/messages" onClick={() => setMobileOpen(false)} className="block w-full text-center py-2 text-white border border-white/20 rounded font-semibold">Conversations</Link>}
                                     <button onClick={() => { logout(); setMobileOpen(false) }} className="block w-full py-2 bg-red-500/10 text-red-400 rounded font-semibold border border-red-500/20 text-center">Logout</button>
                                 </>
                             )}

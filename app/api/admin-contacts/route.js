@@ -8,6 +8,25 @@ import User from '@/models/User'
 import Notification from '@/models/Notification'
 import { verifyToken } from '@/lib/auth'
 
+function toClientMessage(msg) {
+    const senderObj = msg?.senderId && typeof msg.senderId === 'object' ? msg.senderId : null
+    return {
+        _id: msg?._id,
+        claimId: msg?.claimId || null,
+        contactId: msg?.contactId || null,
+        senderId: senderObj?._id || msg?.senderId || null,
+        senderRole: msg?.senderRole || 'user',
+        senderName: msg?.senderName || senderObj?.name || 'Unknown',
+        recipientId: msg?.recipientId || null,
+        message: msg?.message || '',
+        edited: Boolean(msg?.edited),
+        editedAt: msg?.editedAt || null,
+        read: Boolean(msg?.read),
+        readAt: msg?.readAt || null,
+        createdAt: msg?.createdAt,
+    }
+}
+
 // GET - Fetch admin contacts for user or all contacts for admin
 export async function GET(request) {
     try {
@@ -48,7 +67,7 @@ export async function GET(request) {
                 )
             }
 
-            return NextResponse.json({ contact, messages })
+            return NextResponse.json({ contact, messages: messages.map(toClientMessage) })
         }
 
         // List contacts
@@ -64,7 +83,21 @@ export async function GET(request) {
             .sort({ lastMessageAt: -1, createdAt: -1 })
             .lean()
 
-        return NextResponse.json({ contacts })
+        const contactsWithUnread = await Promise.all(
+            contacts.map(async (contact) => {
+                const unreadCount = await Message.countDocuments({
+                    contactId: contact._id,
+                    recipientId: decoded.id,
+                    read: false,
+                })
+                return {
+                    ...contact,
+                    unreadCount,
+                }
+            })
+        )
+
+        return NextResponse.json({ contacts: contactsWithUnread })
     } catch (err) {
         console.error('[AdminContact GET]', err)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
@@ -103,13 +136,15 @@ export async function POST(request) {
             claimId: claimId || null,
         })
 
+        const admins = await User.find({ role: 'admin' }).select('_id')
+
         // Create initial message
         const firstMessage = await Message.create({
             contactId: contact._id,
             senderId: decoded.id,
             senderRole: 'user',
             senderName: user.name,
-            recipientId: null, // Will be assigned when admin responds
+            recipientId: admins[0]?._id || null,
             message: initialMessage,
         })
 
@@ -123,7 +158,6 @@ export async function POST(request) {
         )
 
         // Notify admins
-        const admins = await User.find({ role: 'admin' }).select('_id')
         for (const admin of admins) {
             await Notification.create({
                 userId: admin._id,
@@ -163,6 +197,7 @@ export async function PATCH(request) {
         const update = {}
         if (status) update.status = status
         if (assignedTo) update.assignedTo = assignedTo
+        if (status === 'in_progress' && !assignedTo) update.assignedTo = decoded.id
 
         const contact = await AdminContact.findByIdAndUpdate(contactId, update, { new: true })
             .populate('userId', 'name email')

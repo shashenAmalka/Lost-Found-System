@@ -135,8 +135,8 @@ export default function ClaimDetailPage() {
                         </div>
                     )}
 
-                    {/* Chat Window - Show for all active claims */}
-                    {!['withdrawn', 'completed'].includes(claim.status) && (
+                    {/* Chat Window - User can chat after approval, admin can always chat. */}
+                    {(user?.role === 'admin' || claim.status === 'approved') && (
                         <ChatWindow
                             claimId={id}
                             isAdmin={user?.role === 'admin'}

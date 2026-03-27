@@ -9,6 +9,27 @@ import ClaimRequest from '@/models/ClaimRequest'
 import User from '@/models/User'
 import { verifyToken } from '@/lib/auth'
 
+const EDIT_WINDOW_MS = 60 * 1000
+
+function toClientMessage(msg) {
+    const senderObj = msg?.senderId && typeof msg.senderId === 'object' ? msg.senderId : null
+    return {
+        _id: msg?._id,
+        claimId: msg?.claimId || null,
+        contactId: msg?.contactId || null,
+        senderId: senderObj?._id || msg?.senderId || null,
+        senderRole: msg?.senderRole || 'user',
+        senderName: msg?.senderName || senderObj?.name || 'Unknown',
+        recipientId: msg?.recipientId || null,
+        message: msg?.message || '',
+        edited: Boolean(msg?.edited),
+        editedAt: msg?.editedAt || null,
+        read: Boolean(msg?.read),
+        readAt: msg?.readAt || null,
+        createdAt: msg?.createdAt,
+    }
+}
+
 // GET /api/messages — Fetch messages for a claim or contact
 export async function GET(request) {
     try {
@@ -47,7 +68,7 @@ export async function GET(request) {
         }
 
         const messages = await Message.find(query)
-            .populate('senderId', 'name email')
+            .populate('senderId', 'name email role')
             .sort({ createdAt: 1 })
             .lean()
 
@@ -57,7 +78,7 @@ export async function GET(request) {
             { read: true, readAt: new Date() }
         )
 
-        return NextResponse.json({ messages })
+        return NextResponse.json({ messages: messages.map(toClientMessage) })
     } catch (err) {
         console.error('[Messages GET]', err)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
@@ -101,6 +122,14 @@ export async function POST(request) {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
             }
 
+            if (contact.status === 'closed' || contact.status === 'resolved') {
+                return NextResponse.json({ error: 'This chat has been closed by admin.' }, { status: 403 })
+            }
+
+            if (!isAdmin && contact.status !== 'in_progress') {
+                return NextResponse.json({ error: 'Wait until admin accepts your request.' }, { status: 403 })
+            }
+
             // Determine recipient
             if (isAdmin) {
                 recipientId = contact.userId
@@ -123,6 +152,7 @@ export async function POST(request) {
                 {
                     $push: { messages: newMessage._id },
                     lastMessageAt: new Date(),
+                    ...(isAdmin && contact.status === 'open' ? { status: 'in_progress', assignedTo: decoded.id } : {}),
                 }
             )
 
@@ -141,9 +171,10 @@ export async function POST(request) {
             })
 
             const populatedMessage = await Message.findById(newMessage._id)
-                .populate('senderId', 'name email')
+                .populate('senderId', 'name email role')
+                .lean()
 
-            return NextResponse.json({ message: populatedMessage }, { status: 201 })
+            return NextResponse.json({ message: toClientMessage(populatedMessage) }, { status: 201 })
         }
 
         // Handle claim-based message
@@ -195,12 +226,55 @@ export async function POST(request) {
             })
 
             const populatedMessage = await Message.findById(newMessage._id)
-                .populate('senderId', 'name email')
+                .populate('senderId', 'name email role')
+                .lean()
 
-            return NextResponse.json({ message: populatedMessage }, { status: 201 })
+            return NextResponse.json({ message: toClientMessage(populatedMessage) }, { status: 201 })
         }
     } catch (err) {
         console.error('[Messages POST]', err)
+        return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    }
+}
+
+// PATCH /api/messages — Edit a sent message within 1 minute
+export async function PATCH(request) {
+    try {
+        const token = request.cookies.get('auth_token')?.value
+        const decoded = token ? verifyToken(token) : null
+        if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+        await connectDB()
+        const { messageId, message } = await request.json()
+
+        if (!messageId || !message?.trim()) {
+            return NextResponse.json({ error: 'messageId and message are required' }, { status: 400 })
+        }
+
+        const existing = await Message.findById(messageId)
+        if (!existing) return NextResponse.json({ error: 'Message not found' }, { status: 404 })
+
+        if (existing.senderId?.toString() !== decoded.id) {
+            return NextResponse.json({ error: 'You can only edit your own messages' }, { status: 403 })
+        }
+
+        const createdAtMs = new Date(existing.createdAt).getTime()
+        if (!Number.isFinite(createdAtMs) || Date.now() - createdAtMs > EDIT_WINDOW_MS) {
+            return NextResponse.json({ error: 'Edit time window expired' }, { status: 403 })
+        }
+
+        existing.message = message.trim()
+        existing.edited = true
+        existing.editedAt = new Date()
+        await existing.save()
+
+        const populated = await Message.findById(existing._id)
+            .populate('senderId', 'name email role')
+            .lean()
+
+        return NextResponse.json({ message: toClientMessage(populated) })
+    } catch (err) {
+        console.error('[Messages PATCH]', err)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }
 }
