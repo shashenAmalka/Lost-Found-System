@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
+import ChatWindow from '@/components/ChatWindow'
 import StatusBadge from '@/components/ui/StatusBadge'
 import AIScoreDisplay from '@/components/ui/AIScoreDisplay'
 import { useAuth } from '@/context/AuthContext'
@@ -132,6 +133,15 @@ export default function ClaimDetailPage() {
                                 <p className="text-[#1C2A59]/70 text-sm mt-1">{claim.adminNote}</p>
                             </div>
                         </div>
+                    )}
+
+                    {/* Chat Window - User can chat after approval, admin can always chat. */}
+                    {(user?.role === 'admin' || claim.status === 'approved') && (
+                        <ChatWindow
+                            claimId={id}
+                            isAdmin={user?.role === 'admin'}
+                            recipientName={user?.role === 'admin' ? claim.claimantName : 'Support Team'}
+                        />
                     )}
 
                     {/* Tracking History */}

@@ -4,6 +4,9 @@ import './globals.css'
 export const metadata = {
     title: 'Smart Campus Lost & Found System',
     description: 'AI-Assisted Lost & Found Platform for University Campus',
+    icons: {
+        icon: '/icon.svg',
+    },
 }
 
 export default function RootLayout({ children }) {

@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import {
     Search, Bell, Menu, X, LogOut, User, LayoutDashboard,
-    Package, Shield, GraduationCap, ChevronDown
+    Package, Shield, GraduationCap, ChevronDown, Mail, PlusCircle,
+    Sparkles, ClipboardList, Info
 } from 'lucide-react'
 import NotificationBell from '@/components/NotificationBell'
 import NotificationToast from '@/components/NotificationToast'
@@ -27,6 +28,9 @@ export default function Navbar() {
         { href: '/', label: 'Home', icon: GraduationCap },
         { href: '/lost-items', label: 'Lost Items', icon: Search },
         { href: '/found-items', label: 'Found Items', icon: Package },
+        { href: '/matches', label: 'AI Potential Matches', icon: Sparkles, authOnly: true },
+       // { href: '/user-dashboard/claims', label: 'Active Claims', icon: ClipboardList, authOnly: true },
+        { href: '/about', label: 'About Us', icon: Info },
     ]
 
     const adminLinks = [
@@ -38,39 +42,46 @@ export default function Navbar() {
     const getNavLinks = () => {
         if (isAdmin) return adminLinks;
         if (user) return userLinks;
-        return userLinks.filter(link => link.href !== '/user-dashboard');
+        return userLinks.filter(link => !link.authOnly);
     }
     const navLinks = getNavLinks()
 
     return (
-        <>
-            {/* Top Gold Bar */}
-            <div className="fixed top-0 left-0 right-0 h-1 bg-[#F0A500] z-[60]" />
-
-            <nav className={`fixed top-1 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'shadow-md' : ''}`}
-                style={{ backgroundColor: '#3E4A56' }}
+        <div className="fixed top-0 left-0 w-full z-50 flex justify-center pt-3 px-4 md:px-8 pointer-events-none">
+            <nav className={`pointer-events-auto w-full max-w-7xl rounded-2xl transition-all duration-400 border border-white/10 ${
+                scrolled 
+                ? 'shadow-[0_8px_30px_rgb(0,0,0,0.12)] bg-[#1C2A59]/85 backdrop-blur-xl translate-y-0' 
+                : 'shadow-lg bg-[#3E4A56]/90 backdrop-blur-md translate-y-1'
+                }`}
+                style={{
+                    borderTop: '3px solid #F0A500'
+                }}
             >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-[60px]">
+                <div className="px-3 sm:px-6">
+                    <div className="flex items-center justify-between h-[68px]">
                         {/* Logo Area */}
-                        <Link href={isAdmin ? '/admin/dashboard' : '/'} className="flex items-center gap-3 bg-white px-3 py-1.5 rounded shadow-sm mr-4" style={{ height: '80%' }}>
-                            <div className="font-bold text-xl tracking-tight flex items-center h-full">
-                                <span style={{ color: '#1C2A59' }}>SLIIT</span>
-                                <span style={{ color: '#F0A500' }} className="mx-1">UNI</span>
-                                <span className="text-gray-300 mx-2 text-xl font-light">|</span>
-                                <span style={{ color: '#1C2A59' }} className="text-lg">Lost & Found</span>
+                        <Link href={isAdmin ? '/admin/dashboard' : '/'} className="flex items-center gap-2 group mr-2">
+                            <div className="bg-white px-3 py-2 rounded-xl shadow-sm transition-transform group-hover:scale-105">
+                                <div className="font-bold tracking-tight flex items-center">
+                                    <span style={{ color: '#1C2A59' }} className="text-lg">SLIIT</span>
+                                    <span style={{ color: '#F0A500' }} className="mx-0.5 text-lg">UNI</span>
+                                </div>
+                            </div>
+                            <div className="hidden sm:flex flex-col ml-1">
+                                <span className="text-white text-sm font-bold tracking-wide leading-tight">Lost & Found</span>
+                                
                             </div>
                         </Link>
 
-                        {/* Desktop Nav Links */}
-                        <div className="hidden md:flex items-center flex-1">
+                        {/* Desktop Nav Links (Centered) */}
+                        <div className="hidden lg:flex items-center justify-center gap-1 flex-1 px-4">
                             {navLinks.map(({ href, label, icon: Icon }) => {
                                 const active = pathname === href
                                 return (
                                     <Link key={href} href={href}
-                                        className={`flex items-center gap-2 px-4 h-[60px] text-sm font-semibold transition-all duration-200 border-b-4 hover:bg-white/10 ${active
-                                            ? 'text-white border-[#F0A500]'
-                                            : 'text-gray-200 border-transparent hover:border-gray-400'
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs xl:text-sm font-extrabold transition-all duration-300 whitespace-nowrap ${active
+                                            ? 'bg-white/10 text-white shadow-inner border border-white/5'
+                                            : 'text-gray-300 hover:text-white hover:bg-white/5'
                                             }`}
                                     >
                                         {label}
@@ -79,107 +90,145 @@ export default function Navbar() {
                             })}
                         </div>
 
-                        {/* Right side */}
+                        {/* Right side Actions */}
                         <div className="hidden md:flex items-center gap-4">
-                            {!loading && !user && (
-                                <>
-                                    <Link href="/login" className="text-sm font-semibold text-white hover:text-[#F0A500] transition-colors">Login</Link>
-                                    <Link href="/register" className="text-sm font-semibold px-4 py-2 rounded shadow-sm transition-colors" style={{ backgroundColor: '#F0A500', color: '#1C2A59' }}>
-                                        Register
-                                    </Link>
-                                </>
+                            
+                            {/* Premium Quick Action Button for Users (non-admin) */}
+                            {!isAdmin && (
+                                <Link 
+                                    href="/lost-items/new" 
+                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group"
+                                    style={{ background: 'linear-gradient(135deg, #F0A500 0%, #D89200 100%)', color: '#1C2A59' }}
+                                >
+                                    <PlusCircle size={16} className="group-hover:rotate-90 transition-transform duration-300" />
+                                    <span>Report Item</span>
+                                </Link>
                             )}
-                            {!loading && user && (
-                                <>
-                                    {!isAdmin && (
-                                        <div className="flex items-center gap-3 mr-2">
-                                            <NotificationBell />
-                                            <NotificationToast />
-                                        </div>
-                                    )}
-                                    {/* User dropdown */}
-                                    <div className="relative">
-                                        <button
-                                            onClick={() => setDropdownOpen(!dropdownOpen)}
-                                            className="flex items-center gap-2 text-sm px-2 py-1.5 rounded hover:bg-white/10 transition-colors"
-                                        >
-                                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm"
-                                                style={{ backgroundColor: '#1C2A59' }}>
-                                                {user.name?.[0]?.toUpperCase()}
-                                            </div>
-                                            <div className="flex flex-col items-start ml-1 hidden lg:flex">
-                                                <span className="text-xs text-gray-300 font-medium">Logged in user</span>
-                                                <span className="max-w-[120px] truncate text-white font-semibold text-[13px]">{user.name}</span>
-                                            </div>
-                                            <ChevronDown size={14} className={`text-white transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-                                        </button>
-                                        
-                                        {dropdownOpen && (
-                                            <div className="absolute right-0 mt-2 w-64 rounded-md py-1 shadow-lg border border-gray-200"
-                                                style={{ zIndex: 100, backgroundColor: '#FFFFFF' }}>
-                                                <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
-                                                   <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white shadow-sm"
-                                                        style={{ backgroundColor: '#1C2A59' }}>
-                                                        {user.name?.[0]?.toUpperCase()}
-                                                   </div>
-                                                   <div className="flex flex-col">
-                                                       <span className="font-bold text-[#1C2A59] text-sm">{user.name}</span>
-                                                       <span className="text-[#F0A500] text-xs font-semibold">{user.email || 'user@my.sliit.lk'}</span>
-                                                   </div>
-                                                </div>
 
-                                                {!isAdmin && (
-                                                    <Link href="/user-dashboard" onClick={() => setDropdownOpen(false)}
-                                                        className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-[#3E4A56] hover:bg-gray-50 transition-colors">
-                                                        <LayoutDashboard size={16} /> Dashboard
-                                                    </Link>
-                                                )}
-                                                <div className="border-t border-gray-100 my-1" />
-                                                <button onClick={() => { logout(); setDropdownOpen(false) }}
-                                                    className="flex items-center gap-2 w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
-                                                    <LogOut size={16} /> Log Out
-                                                </button>
+                            {/* Auth Controls */}
+                            <div className="flex items-center gap-3 pl-2 border-l border-white/10">
+                                {!loading && !user && (
+                                    <>
+                                        <Link href="/login" className="text-sm font-bold text-gray-200 hover:text-white px-3 py-2 rounded-xl hover:bg-white/10 transition-colors">Login</Link>
+                                        <Link href="/register" className="text-sm font-bold px-5 py-2.5 rounded-xl shadow-sm transition-colors hover:opacity-90 bg-white text-[#1C2A59]">
+                                            Register
+                                        </Link>
+                                    </>
+                                )}
+                                {!loading && user && (
+                                    <>
+                                        {!isAdmin && (
+                                            <div className="flex items-center gap-2">
+                                                <NotificationBell />
+                                                <NotificationToast />
                                             </div>
                                         )}
-                                    </div>
-                                </>
-                            )}
+                                        {/* User dropdown profile */}
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setDropdownOpen(!dropdownOpen)}
+                                                className="flex items-center gap-2 p-1 pl-2 pr-3 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 transition-all group"
+                                            >
+                                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-extrabold shadow-sm bg-white text-[#1C2A59] group-hover:scale-105 transition-transform">
+                                                    {user.name?.[0]?.toUpperCase()}
+                                                </div>
+                                                <div className="flex flex-col items-start ml-1 hidden lg:flex">
+                                                    <span className="max-w-[100px] truncate text-white font-bold text-xs">{user.name}</span>
+                                                </div>
+                                                <ChevronDown size={14} className={`text-white transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                                            </button>
+                                            
+                                            {dropdownOpen && (
+                                                <div className="absolute right-0 mt-3 w-64 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.2)] border border-gray-100 overflow-hidden transform origin-top-right transition-all"
+                                                    style={{ zIndex: 100, backgroundColor: '#FFFFFF' }}>
+                                                    <div className="px-5 py-4 bg-[#F4F5F7] border-b border-gray-100 flex items-center gap-3">
+                                                       <div className="w-12 h-12 rounded-[1rem] flex items-center justify-center text-xl font-bold shadow-inner bg-[#1C2A59] text-white">
+                                                            {user.name?.[0]?.toUpperCase()}
+                                                       </div>
+                                                       <div className="flex flex-col">
+                                                           <span className="font-extrabold text-[#1C2A59] text-sm truncate w-[140px]">{user.name}</span>
+                                                           <span className="text-[#008489] text-[11px] font-bold tracking-wide mt-0.5">{user.email || 'user@my.sliit.lk'}</span>
+                                                       </div>
+                                                    </div>
+
+                                                    <div className="p-2 space-y-1">
+                                                        {!isAdmin && (
+                                                            <Link href="/user-dashboard" onClick={() => setDropdownOpen(false)}
+                                                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-[#3E4A56] hover:bg-[#F0A500]/10 hover:text-[#1C2A59] transition-colors">
+                                                                <LayoutDashboard size={18} className="text-[#F0A500]" /> My Dashboard
+                                                            </Link>
+                                                        )}
+                                                        {!isAdmin && (
+                                                            <Link href="/messages" onClick={() => setDropdownOpen(false)}
+                                                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-[#3E4A56] hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                                                <Mail size={18} className="text-blue-500" /> Messages
+                                                            </Link>
+                                                        )}
+                                                        {isAdmin && (
+                                                            <Link href="/admin/messages" onClick={() => setDropdownOpen(false)}
+                                                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-[#3E4A56] hover:bg-purple-50 hover:text-purple-700 transition-colors">
+                                                                <Mail size={18} className="text-purple-500" /> Conversations
+                                                            </Link>
+                                                        )}
+                                                        <div className="border-t border-gray-100 my-1 mx-2" />
+                                                        <button onClick={() => { logout(); setDropdownOpen(false) }}
+                                                            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 transition-colors">
+                                                            <LogOut size={18} className="text-red-500" /> Sign Out
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Mobile hamburger */}
-                        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 text-white hover:bg-white/10 rounded transition-colors">
-                            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-                        </button>
+                        {/* Mobile hamburger & Action */}
+                        <div className="md:hidden flex items-center gap-3">
+                            {user && !isAdmin && (
+                                <Link href="/lost-items/new" className="p-2 rounded-full bg-[#F0A500] text-[#1C2A59] shadow-sm">
+                                    <PlusCircle size={18} />
+                                </Link>
+                            )}
+                            <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-white hover:bg-white/10 rounded-xl transition-colors">
+                                {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Mobile menu */}
+                {/* Mobile menu dropdown */}
                 {mobileOpen && (
-                    <div className="md:hidden border-t border-gray-600 shadow-lg"
-                        style={{ backgroundColor: '#3E4A56' }}>
-                        {navLinks.map(({ href, label }) => (
-                            <Link key={href} href={href}
-                                onClick={() => setMobileOpen(false)}
-                                className={`block px-4 py-4 text-sm font-semibold border-b border-gray-600 ${pathname === href ? 'text-[#F0A500] bg-white/5' : 'text-gray-200'}`}>
-                                {label}
-                            </Link>
-                        ))}
-                        <div className="p-4 space-y-3">
+                    <div className="md:hidden border-t border-white/10 bg-[#1C2A59]/95 backdrop-blur-xl rounded-b-2xl overflow-hidden shadow-2xl">
+                        <div className="p-3 space-y-1">
+                            {navLinks.map(({ href, label }) => (
+                                <Link key={href} href={href}
+                                    onClick={() => setMobileOpen(false)}
+                                    className={`block px-5 py-3.5 rounded-xl text-sm font-bold transition-colors ${pathname === href ? 'text-[#1C2A59] bg-[#F0A500]' : 'text-gray-200 hover:bg-white/10'}`}>
+                                    {label}
+                                </Link>
+                            ))}
+                        </div>
+                        
+                        <div className="p-4 bg-black/20 m-3 rounded-xl space-y-3 border border-white/5">
                             {!user ? (
                                 <>
-                                    <Link href="/login" onClick={() => setMobileOpen(false)} className="block w-full text-center py-2 text-white border border-white/20 rounded font-semibold">Login</Link>
-                                    <Link href="/register" onClick={() => setMobileOpen(false)} className="block w-full text-center py-2 text-[#1C2A59] rounded font-semibold" style={{ backgroundColor: '#F0A500' }}>Register</Link>
+                                    <Link href="/login" onClick={() => setMobileOpen(false)} className="block w-full text-center py-3 text-white border border-white/20 rounded-xl font-bold hover:bg-white/5 transition-colors">Login</Link>
+                                    <Link href="/register" onClick={() => setMobileOpen(false)} className="block w-full text-center py-3 text-[#1C2A59] rounded-xl font-bold transform hover:scale-[1.02] transition-all" style={{ backgroundColor: '#F0A500' }}>Register</Link>
                                 </>
                             ) : (
                                 <>
-                                    {!isAdmin && <Link href="/user-dashboard" onClick={() => setMobileOpen(false)} className="block w-full text-center py-2 text-white border border-white/20 rounded font-semibold">Dashboard</Link>}
-                                    <button onClick={() => { logout(); setMobileOpen(false) }} className="block w-full py-2 bg-red-500/10 text-red-400 rounded font-semibold border border-red-500/20 text-center">Logout</button>
+                                    {!isAdmin && <Link href="/user-dashboard" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 w-full py-3 text-white border border-white/20 hover:bg-white/10 rounded-xl font-bold transition-colors"><LayoutDashboard size={18} /> Dashboard</Link>}
+                                    {!isAdmin && <Link href="/messages" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 w-full py-3 text-white border border-white/20 hover:bg-white/10 rounded-xl font-bold transition-colors"><Mail size={18} /> Messages</Link>}
+                                    {isAdmin && <Link href="/admin/messages" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 w-full py-3 text-white border border-white/20 hover:bg-white/10 rounded-xl font-bold transition-colors"><Mail size={18} /> Conversations</Link>}
+                                    <button onClick={() => { logout(); setMobileOpen(false) }} className="flex items-center justify-center gap-2 w-full py-3 bg-red-500/20 text-red-400 rounded-xl font-bold border border-red-500/30 hover:bg-red-500/30 transition-colors"><LogOut size={18} /> Sign Out</button>
                                 </>
                             )}
                         </div>
                     </div>
                 )}
             </nav>
-        </>
+        </div>
     )
 }

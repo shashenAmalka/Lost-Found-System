@@ -1,14 +1,13 @@
 'use client'
 import Link from 'next/link'
 import StatusBadge from './StatusBadge'
-import { MapPin, Calendar, Tag, Eye, Package, Lock, Pencil, Trash2, Clock } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { MapPin, Calendar, Tag, Eye, Package, Lock, Pencil, Trash2, Clock, ArrowUpRight } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { useRouter } from 'next/navigation'
 
 // ─── 10-Minute Edit Countdown ────────────────────────────────────────────────
 function EditCountdown({ createdAt, onExpire }) {
-    const WINDOW_MS = 10 * 60 * 1000 // 10 minutes
+    const WINDOW_MS = 10 * 60 * 1000
     const calc = () => {
         const elapsed = Date.now() - new Date(createdAt).getTime()
         return Math.max(0, Math.ceil((WINDOW_MS - elapsed) / 1000))
@@ -54,7 +53,6 @@ function EditCountdown({ createdAt, onExpire }) {
 // ─── Main ItemCard ────────────────────────────────────────────────────────────
 export default function ItemCard({ item, type = 'lost', onDeleted }) {
     const { user } = useAuth()
-    const router = useRouter()
     const href = `/${type === 'lost' ? 'lost-items' : 'found-items'}/${item._id}`
     const editHref = `/${type === 'lost' ? 'lost-items' : 'found-items'}/${item._id}/edit`
     const dateLabel = type === 'lost' ? 'Date Lost' : 'Date Found'
@@ -63,7 +61,6 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
     const imageUrl = type === 'lost' ? item.imageUrl : item.photoUrl
     const apiBase = type === 'lost' ? '/api/lost-items' : '/api/found-items'
 
-    // 10-minute ownership check
     const ownerId = item.submittedBy?.toString() || item.postedBy?.toString()
     const isOwner = user && ownerId === user.id
     const withinWindow = isOwner && item.createdAt
@@ -74,7 +71,6 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
     const [confirmDel, setConfirmDel] = useState(false)
     const [pendingClaimCount, setPendingClaimCount] = useState(0)
 
-    // For found items: fetch pending claim count for badge
     useEffect(() => {
         if (type === 'found' && item._id) {
             fetch(`/api/found-items/${item._id}/claim-count`)
@@ -95,58 +91,113 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
         setDeleting(false)
     }
 
-    return (
-        <div className={`bg-white rounded border border-gray-200 shadow-sm hover:shadow-md overflow-hidden group h-full flex flex-col relative transition-shadow duration-200`}
-            style={isOwner ? {
-                border: '1px solid #F0A500',
-                boxShadow: '0 0 0 1px rgba(240,165,0,0.1)',
-            } : {}}>
+    // Accent color based on type
+    const accent = type === 'lost' ? '#ef4444' : '#10b981'
+    const accentLight = type === 'lost' ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)'
+    const typeLabel = type === 'lost' ? '🔍 Lost' : '📦 Found'
 
-            {/* "Your Post" badge for owner */}
+    return (
+        <div
+            className="group relative h-full flex flex-col overflow-hidden transition-all duration-500 ease-out hover:-translate-y-2"
+            style={{
+                borderRadius: '1.25rem',
+                background: isOwner
+                    ? 'linear-gradient(145deg, rgba(240,165,0,0.04), #ffffff)'
+                    : '#ffffff',
+                border: isOwner ? '1.5px solid rgba(240,165,0,0.35)' : '1px solid rgba(0,0,0,0.06)',
+                boxShadow: isOwner
+                    ? '0 4px 24px rgba(240,165,0,0.08), 0 1px 3px rgba(0,0,0,0.04)'
+                    : '0 2px 16px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)',
+                transition: 'transform 0.5s cubic-bezier(0.23,1,0.32,1), box-shadow 0.5s cubic-bezier(0.23,1,0.32,1)',
+            }}
+            onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = isOwner
+                    ? '0 20px 60px rgba(240,165,0,0.12), 0 8px 24px rgba(0,0,0,0.06)'
+                    : '0 20px 60px rgba(28,42,89,0.08), 0 8px 24px rgba(0,0,0,0.05)'
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = isOwner
+                    ? '0 4px 24px rgba(240,165,0,0.08), 0 1px 3px rgba(0,0,0,0.04)'
+                    : '0 2px 16px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.03)'
+            }}
+        >
+            {/* Owner badge */}
             {isOwner && (
-                <div className="absolute top-3 right-3 z-20 flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded"
+                <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 text-[9px] font-extrabold uppercase tracking-[0.12em] px-3 py-1.5 rounded-full"
                     style={{
-                        backgroundColor: '#F0A500',
+                        background: 'linear-gradient(135deg, #F0A500, #D89200)',
                         color: '#1C2A59',
+                        boxShadow: '0 4px 12px rgba(240,165,0,0.3)',
                     }}>
                     ★ Your Post
                 </div>
             )}
 
-            {/* Image */}
-            <Link href={href}>
-                <div className="relative h-44 overflow-hidden bg-[#F4F5F7] border-b border-gray-100">
+            {/* Image Container */}
+            <Link href={href} className="block relative overflow-hidden" style={{ borderRadius: '1.25rem 1.25rem 0 0' }}>
+                <div className="relative h-48 overflow-hidden bg-gradient-to-br from-[#F4F5F7] to-[#e8eaed]">
                     {imageUrl ? (
-                        <img src={imageUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img
+                            src={imageUrl}
+                            alt={item.title}
+                            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                        />
                     ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                            <Package size={40} className="text-[#3E4A56]/30" />
-                            <span className="text-[#3E4A56]/50 text-xs font-semibold uppercase">{item.category}</span>
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center" 
+                                style={{ background: accentLight }}>
+                                <Package size={28} style={{ color: accent, opacity: 0.6 }} />
+                            </div>
+                            <span className="text-[#3E4A56]/40 text-[10px] font-bold uppercase tracking-[0.15em]">{item.category || 'No Image'}</span>
                         </div>
                     )}
-                    {/* Badges */}
-                    <div className={isOwner ? "absolute bottom-3 right-3" : "absolute top-3 right-3"}><StatusBadge status={item.status} /></div>
-                    {/* Claim count badge for found items */}
-                    {type === 'found' && pendingClaimCount > 0 && (
-                        <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded"
-                            style={{ backgroundColor: '#ef4444', color: 'white', border: '1px solid #dc2626' }}>
-                            🎯 {pendingClaimCount} Pending
-                        </div>
-                    )}
-                    <div className="absolute top-3 left-3 shadow-sm">
-                        <span className="text-xs px-2 py-1 rounded font-bold"
+
+                    {/* Gradient overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                    {/* Type badge — glassmorphism */}
+                    <div className="absolute top-3.5 left-3.5 z-20">
+                        <span className="text-[10px] px-3 py-1.5 rounded-full font-extrabold uppercase tracking-wider flex items-center gap-1"
                             style={{
-                                backgroundColor: type === 'lost' ? '#fee2e2' : '#d1fae5',
-                                color: type === 'lost' ? '#ef4444' : '#10b981',
-                                border: `1px solid ${type === 'lost' ? '#fca5a5' : '#6ee7b7'}`
+                                background: type === 'lost'
+                                    ? 'rgba(239,68,68,0.85)'
+                                    : 'rgba(16,185,129,0.85)',
+                                color: '#fff',
+                                backdropFilter: 'blur(12px)',
+                                WebkitBackdropFilter: 'blur(12px)',
+                                boxShadow: `0 4px 16px ${type === 'lost' ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)'}`,
                             }}>
-                            {type === 'lost' ? '🔍 Lost' : '📦 Found'}
+                            {typeLabel}
                         </span>
                     </div>
 
-                    {/* Privacy lock overlay for found items */}
+                    {/* Status badge — glassmorphism floating */}
+                    <div className={isOwner ? "absolute bottom-3.5 right-3.5 z-20" : "absolute top-3.5 right-3.5 z-20"}>
+                        <StatusBadge status={item.status} />
+                    </div>
+
+                    {/* Claim count badge */}
+                    {type === 'found' && pendingClaimCount > 0 && (
+                        <div className="absolute bottom-3.5 left-3.5 z-20 flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider px-3 py-1.5 rounded-full"
+                            style={{
+                                background: 'rgba(239,68,68,0.9)',
+                                color: 'white',
+                                backdropFilter: 'blur(12px)',
+                                boxShadow: '0 4px 16px rgba(239,68,68,0.25)',
+                            }}>
+                            🎯 {pendingClaimCount} Pending
+                        </div>
+                    )}
+
+                    {/* Privacy lock */}
                     {item.isPrivate && type === 'found' && (
-                        <div className="absolute bottom-3 right-3 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded bg-[#1C2A59] text-white shadow-sm">
+                        <div className="absolute bottom-3.5 right-3.5 z-20 flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1.5 rounded-full"
+                            style={{
+                                background: 'rgba(28,42,89,0.85)',
+                                color: 'white',
+                                backdropFilter: 'blur(12px)',
+                                boxShadow: '0 4px 12px rgba(28,42,89,0.2)',
+                            }}>
                             <Lock size={10} /> Hidden
                         </div>
                     )}
@@ -154,18 +205,22 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
             </Link>
 
             {/* Content */}
-            <div className="p-4 flex flex-col gap-3 flex-1">
-                {/* 10-min edit bar — only for owner within window */}
+            <div className="p-5 flex flex-col gap-3 flex-1">
+                {/* 10-min edit bar */}
                 {canEdit && isOwner && (
-                    <div className="flex items-center justify-between gap-2 p-2 rounded border bg-[#F0A500]/10 border-[#F0A500]/30 shadow-sm">
+                    <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(240,165,0,0.06), rgba(240,165,0,0.02))',
+                            borderColor: 'rgba(240,165,0,0.2)',
+                        }}>
                         <EditCountdown createdAt={item.createdAt} onExpire={() => setCanEdit(false)} />
                         <div className="flex items-center gap-1.5">
                             <Link href={editHref} onClick={e => e.stopPropagation()}
-                                className="flex items-center gap-1 text-[10px] font-bold px-2 py-1.5 rounded transition-all hover:bg-blue-50 text-blue-600 border border-blue-200 bg-white">
+                                className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:bg-blue-50 text-blue-600 border border-blue-200 bg-white">
                                 <Pencil size={10} /> Edit
                             </Link>
                             <button onClick={handleDelete} disabled={deleting}
-                                className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1.5 rounded transition-all hover:bg-red-50 text-red-600 border border-red-200 bg-white disabled:opacity-50 ${confirmDel ? 'bg-red-100' : ''}`}>
+                                className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:bg-red-50 text-red-600 border border-red-200 bg-white disabled:opacity-50 ${confirmDel ? 'bg-red-50' : ''}`}>
                                 <Trash2 size={10} /> {deleting ? '...' : confirmDel ? 'Confirm?' : 'Delete'}
                             </button>
                         </div>
@@ -173,53 +228,76 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
                 )}
 
                 <Link href={href} className="flex flex-col gap-3 flex-1">
+                    {/* Title & Description */}
                     <div>
-                        <h3 className="text-[#1C2A59] font-bold text-base mb-1 line-clamp-1 group-hover:text-[#008489] transition-colors">{item.title}</h3>
-                        {/* Description: hide for private found items */}
+                        <h3 className="text-[#1C2A59] font-extrabold text-[15px] leading-snug mb-1.5 line-clamp-1 group-hover:text-[#F0A500] transition-colors duration-300">
+                            {item.title}
+                        </h3>
                         {item.isPrivate && type === 'found' ? (
-                            <p className="text-gray-400 text-xs mt-1 italic flex items-center gap-1">
+                            <p className="text-gray-400 text-xs italic flex items-center gap-1.5">
                                 <Lock size={10} /> Description hidden for security
                             </p>
                         ) : (
                             item.description && (
-                                <p className="text-gray-600 text-sm line-clamp-2">{item.description}</p>
+                                <p className="text-[#3E4A56]/60 text-[13px] line-clamp-2 leading-relaxed font-medium">{item.description}</p>
                             )
                         )}
                     </div>
 
-                    <div className="space-y-2 flex-1 mt-1">
-                        {/* Location: hide for private found items */}
+                    {/* Metadata — Condensed premium row layout */}
+                    <div className="flex-1 mt-1 space-y-2.5">
+                        {/* Location */}
                         {item.isPrivate && type === 'found' ? (
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                                <MapPin size={12} className="shrink-0" />
-                                <span className="italic">Location hidden</span>
+                            <div className="flex items-center gap-2.5 text-xs text-gray-400">
+                                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-gray-50">
+                                    <MapPin size={12} />
+                                </div>
+                                <span className="italic text-xs">Location hidden</span>
                             </div>
                         ) : (
                             locationVal && (
-                                <div className="flex items-center gap-2 text-xs font-medium text-[#3E4A56]">
-                                    <MapPin size={12} className="shrink-0 text-[#008489]" />
-                                    <span className="truncate">{locationVal}</span>
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:bg-[#1C2A59]/10"
+                                        style={{ backgroundColor: 'rgba(28,42,89,0.05)' }}>
+                                        <MapPin size={12} className="text-[#1C2A59]/50 group-hover:text-[#1C2A59] transition-colors duration-300" />
+                                    </div>
+                                    <span className="text-[#3E4A56]/70 text-xs font-semibold truncate">{locationVal}</span>
                                 </div>
                             )
                         )}
-                        <div className="flex items-center gap-2 text-xs font-medium text-[#3E4A56]">
-                            <Calendar size={12} className="shrink-0 text-[#008489]" />
-                            <span>{dateVal ? new Date(dateVal).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
+
+                        {/* Date */}
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:bg-[#F0A500]/10"
+                                style={{ backgroundColor: 'rgba(240,165,0,0.05)' }}>
+                                <Calendar size={12} className="text-[#F0A500]/60 group-hover:text-[#F0A500] transition-colors duration-300" />
+                            </div>
+                            <span className="text-[#3E4A56]/70 text-xs font-semibold">
+                                {dateVal ? new Date(dateVal).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                            </span>
                         </div>
+
+                        {/* Category */}
                         {item.category && (
-                            <div className="flex items-center gap-2 text-xs font-medium text-[#3E4A56]">
-                                <Tag size={12} className="shrink-0 text-[#008489]" />
-                                <span>{item.category}</span>
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:bg-[#8b5cf6]/10"
+                                    style={{ backgroundColor: 'rgba(139,92,246,0.05)' }}>
+                                    <Tag size={12} className="text-[#8b5cf6]/50 group-hover:text-[#8b5cf6] transition-colors duration-300" />
+                                </div>
+                                <span className="text-[#3E4A56]/70 text-xs font-semibold">{item.category}</span>
                             </div>
                         )}
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100">
-                        <span className="text-gray-400 font-semibold text-xs flex items-center gap-1.5">
-                            <Eye size={12} /> {item.views || 0}
+                    {/* Footer — Views & CTA */}
+                    <div className="flex items-center justify-between pt-3.5 mt-auto"
+                        style={{ borderTop: '1px solid rgba(0,0,0,0.04)' }}>
+                        <span className="text-gray-400/80 font-bold text-[11px] flex items-center gap-1.5">
+                            <Eye size={12} /> {item.views || 0} views
                         </span>
-                        <span className="text-[#008489] text-xs font-bold group-hover:text-[#1C2A59] transition-colors">
-                            View Details &rarr;
+                        <span className="text-[#1C2A59] text-[11px] font-extrabold flex items-center gap-1 group-hover:text-[#F0A500] transition-colors duration-300 group-hover:gap-2">
+                            View Details
+                            <ArrowUpRight size={12} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                         </span>
                     </div>
                 </Link>

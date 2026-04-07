@@ -53,7 +53,7 @@ export async function POST(request) {
 
         const body = await request.json()
         const { lostItemId, foundItemId, ownershipExplanation, hiddenDetails,
-            exactColorBrand, dateLost, proofUrl, pickupPreference } = body
+            exactColorBrand, dateLost, timeLost, locationLost, proofUrl, pickupPreference } = body
 
         if (!foundItemId || !ownershipExplanation) {
             return NextResponse.json({ error: 'Found item and ownership explanation are required' }, { status: 400 })
@@ -105,6 +105,8 @@ export async function POST(request) {
             hiddenDetails: hiddenDetails || '',
             exactColorBrand: exactColorBrand || '',
             dateLost: dateLost ? new Date(dateLost) : undefined,
+            timeLost: timeLost || '',
+            locationLost: locationLost || '',
             proofUrl: proofUrl || '',
             pickupPreference: pickupPreference || 'Campus Lost & Found Office',
             trackingHistory: [

@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 import ItemCard from '@/components/ui/ItemCard'
-import { Search, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Plus, X, ChevronLeft, ChevronRight, Send, CheckCircle, MapPin, HelpCircle, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 
@@ -38,84 +39,154 @@ export default function FoundItemsPage() {
     const clearFilters = () => { setFilters({ q: '', category: '', location: '' }); setPage(1) }
 
     return (
-        <div className="min-h-screen bg-[#F4F5F7] font-sans pb-20 pt-20">
+        <div className="min-h-screen bg-[#F4F5F7] font-sans flex flex-col">
             <Navbar />
 
-            <div className="max-w-7xl mx-auto px-4 lg:px-8 mt-4">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b-2 border-gray-200 pb-4">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-[#1C2A59] flex items-center gap-3">
-                            <span className="w-2 h-8 bg-[#1C2A59] inline-block rounded-sm"></span>
-                            Found Items Directory
-                        </h1>
-                        <p className="text-[#3E4A56] font-medium mt-2">{total} item{total !== 1 ? 's' : ''} currently turned in</p>
-                    </div>
-                    {user && (
-                        <Link href="/found-items/new" className="flex items-center gap-2 px-6 py-3 rounded text-sm font-bold shadow-sm transition-all hover:bg-[#1a254d]"
-                            style={{ backgroundColor: '#1C2A59', color: '#FFFFFF' }}>
-                            <Plus size={18} /> Report Found Item
-                        </Link>
-                    )}
+            {/* Page Header Banner */}
+            <div className="bg-[#1C2A59] pt-28 pb-16 px-4 lg:px-8 relative overflow-hidden">
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #F0A500, transparent)' }} />
+                    <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #1C2A59, transparent)' }} />
                 </div>
-
-                {/* Filters */}
-                <div className="bg-white p-5 rounded border border-gray-200 shadow-sm mb-8 flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 relative">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input className="w-full pl-10 pr-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" 
-                            placeholder="Search by keyword..." value={filters.q} onChange={setFilter('q')} />
+                <div className="max-w-7xl mx-auto relative z-10">
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                        <div>
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 mb-4">
+                                <CheckCircle size={12} className="text-blue-300" />
+                                <span className="text-blue-200 text-xs font-bold uppercase tracking-wider">Found Items</span>
+                            </div>
+                            <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2">
+                                Found Items Directory
+                            </h1>
+                            <p className="text-white/70 font-medium">
+                                {total} item{total !== 1 ? 's' : ''} turned in and awaiting their owners
+                            </p>
+                        </div>
+                        {user && (
+                            <Link href="/found-items/new" className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl shrink-0 bg-[#1C2A59] text-white">
+                                <Plus size={18} /> Report Found Item
+                            </Link>
+                        )}
                     </div>
-                    <select className="w-full md:w-56 px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] focus:outline-none focus:border-[#F0A500] transition-colors appearance-none" 
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 lg:px-8 -mt-6 relative z-20 flex-1 w-full">
+                {/* Filters */}
+                <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-lg mb-8 flex flex-col md:flex-row gap-4">
+                    <div className="flex-1 relative flex">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <input className="flex-1 pl-10 pr-12 py-3 bg-[#F4F5F7] border border-gray-200 rounded-l-xl text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#1C2A59] focus:ring-1 focus:ring-[#1C2A59] transition-colors"
+                            placeholder="Search by keyword..." value={filters.q} onChange={setFilter('q')} />
+                        <button
+                            onClick={() => { }}
+                            className="px-4 py-3 bg-[#1C2A59] text-white rounded-r-xl font-bold text-sm hover:bg-[#152044] transition-colors flex items-center justify-center shrink-0"
+                            title="Search for found items"
+                        >
+                            <Send size={16} />
+                        </button>
+                    </div>
+                    <select className="w-full md:w-56 px-4 py-3 bg-[#F4F5F7] border border-gray-200 rounded-xl text-sm font-medium text-[#1C2A59] focus:outline-none focus:border-[#1C2A59] transition-colors appearance-none"
                         value={filters.category} onChange={setFilter('category')}>
                         <option value="">All Categories</option>
                         {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <div className="relative w-full md:w-56">
-                        <input className="w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" 
-                            placeholder="Location..." value={filters.location} onChange={setFilter('location')} />
+                        <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <input className="w-full pl-9 pr-4 py-3 bg-[#F4F5F7] border border-gray-200 rounded-xl text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#1C2A59] focus:ring-1 focus:ring-[#1C2A59] transition-colors"
+                            placeholder="Filter by location..." value={filters.location} onChange={setFilter('location')} />
                     </div>
                     {(filters.q || filters.category || filters.location) && (
-                        <button onClick={clearFilters} className="text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded flex items-center gap-1.5 shrink-0 transition-colors border border-transparent hover:border-red-200">
-                            <X size={16} /> Clear Filters
+                        <button onClick={clearFilters} className="text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-xl flex items-center gap-1.5 shrink-0 transition-colors border border-transparent hover:border-red-200">
+                            <X size={16} /> Clear
                         </button>
                     )}
                 </div>
+
+                {/* How to claim info box */}
+                {!loading && items.length > 0 && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-8">
+                        <div className="flex items-start gap-3">
+                            <CheckCircle size={18} className="text-blue-600 shrink-0 mt-0.5" />
+                            <div>
+                                <h3 className="text-blue-800 font-bold text-sm mb-1">See your lost item here?</h3>
+                                <p className="text-blue-700 text-sm leading-relaxed">
+                                    Click on the item card and submit a claim with proof of ownership. Provide details like brand, color, identifying marks, or serial numbers to verify you are the rightful owner.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Empty state tip */}
+                {!loading && items.length === 0 && !filters.q && !filters.category && !filters.location && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-8">
+                        <div className="flex items-start gap-3">
+                            <HelpCircle size={20} className="text-blue-500 shrink-0 mt-0.5" />
+                            <div>
+                                <h3 className="text-blue-800 font-bold text-sm mb-1">No found items reported yet</h3>
+                                <p className="text-blue-600 text-sm leading-relaxed">
+                                    Found something on campus? Be a campus hero! Click "Report Found Item" to submit your find and help a fellow student recover their belonging.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Grid */}
                 {loading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {[...Array(8)].map((_, i) => (
-                            <div key={i} className="bg-white rounded border border-gray-100 h-80 animate-pulse shadow-sm" />
+                            <div key={i} className="bg-white rounded-2xl border border-gray-100 h-80 animate-pulse shadow-sm" />
                         ))}
                     </div>
-                ) : items.length === 0 ? (
-                    <div className="bg-white rounded border border-gray-200 p-16 text-center shadow-sm">
-                        <div className="text-5xl mb-4 text-[#008489]">📦</div>
-                        <h3 className="text-[#1C2A59] font-bold text-xl mb-2">No found items yet</h3>
-                        <p className="text-gray-500 text-sm">Be the first to report a found item on campus!</p>
+                ) : items.length === 0 && (filters.q || filters.category || filters.location) ? (
+                    <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center shadow-sm">
+                        <div className="text-5xl mb-4 text-[#1C2A59]">📦</div>
+                        <h3 className="text-[#1C2A59] font-bold text-xl mb-2">No items match your filters</h3>
+                        <p className="text-gray-500 text-sm mb-4">Try adjusting your search criteria or clear the filters to see all items.</p>
+                        <button onClick={clearFilters} className="text-sm font-bold text-[#1C2A59] hover:underline">Clear all filters</button>
                     </div>
-                ) : (
+                ) : items.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {items.map(item => <ItemCard key={item._id} item={item} type="found" onDeleted={handleDeleted} />)}
                     </div>
-                )}
+                ) : null}
 
                 {/* Pagination */}
                 {pages > 1 && (
-                    <div className="flex items-center justify-center gap-4 mt-12 bg-white inline-flex mx-auto p-2 rounded shadow-sm border border-gray-200">
-                        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                            className="p-2 rounded hover:bg-[#F4F5F7] text-[#1C2A59] disabled:opacity-30 transition-colors">
-                            <ChevronLeft size={20} />
-                        </button>
-                        <span className="text-[#3E4A56] font-bold text-sm px-4">Page {page} of {pages}</span>
-                        <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages}
-                            className="p-2 rounded hover:bg-[#F4F5F7] text-[#1C2A59] disabled:opacity-30 transition-colors">
-                            <ChevronRight size={20} />
-                        </button>
+                    <div className="flex items-center justify-center gap-4 mt-12 mb-8">
+                        <div className="bg-white inline-flex items-center p-1.5 rounded-2xl shadow-sm border border-gray-200">
+                            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                                className="p-2.5 rounded-xl hover:bg-[#F4F5F7] text-[#1C2A59] disabled:opacity-30 transition-colors">
+                                <ChevronLeft size={20} />
+                            </button>
+                            <span className="text-[#3E4A56] font-bold text-sm px-5">Page {page} of {pages}</span>
+                            <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages}
+                                className="p-2.5 rounded-xl hover:bg-[#F4F5F7] text-[#1C2A59] disabled:opacity-30 transition-colors">
+                                <ChevronRight size={20} />
+                            </button>
+                        </div>
                     </div>
                 )}
+
+                {/* Cross-link to Lost Items */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm my-8">
+                    <h3 className="text-[#1C2A59] font-bold mb-3 flex items-center gap-2">
+                        <HelpCircle size={18} className="text-[#F0A500]" />
+                        Lost something recently?
+                    </h3>
+                    <p className="text-gray-500 text-sm leading-relaxed mb-4">
+                        If you've lost an item on campus, submit a report in the Lost Items directory. Our AI will continuously scan for matching found items and notify you instantly when a potential match is found.
+                    </p>
+                    <Link href="/lost-items" className="inline-flex items-center gap-1.5 text-sm font-bold text-[#1C2A59] hover:text-[#F0A500] transition-colors group">
+                        Browse Lost Items
+                        <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                </div>
             </div>
+
+            <Footer />
         </div>
     )
 }

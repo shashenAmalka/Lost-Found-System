@@ -2,10 +2,16 @@ import mongoose from 'mongoose'
 
 const UserAppealSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    warningId: { type: mongoose.Schema.Types.ObjectId, ref: 'UserWarning', default: null },
     appealMessage: { type: String, required: true },
     supportingExplanation: { type: String, default: '' },
     evidenceUrl: { type: String, default: '' },
     acknowledgedPolicy: { type: Boolean, default: false },
+    appealType: {
+        type: String,
+        enum: ['ACCOUNT_RESTRICTION', 'WARNING_REMOVAL'],
+        default: 'ACCOUNT_RESTRICTION',
+    },
     status: {
         type: String,
         enum: ['PENDING', 'APPROVED', 'REJECTED'],
