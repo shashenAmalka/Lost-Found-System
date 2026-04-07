@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { MessageCircle, Loader2, PlusCircle } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import Navbar from '@/components/Navbar'
+import SidebarNav from '@/components/user-dashboard/SidebarNav'
 import ChatWindow from '@/components/ChatWindow'
 
 export default function UserMessagesPage() {
@@ -122,8 +123,15 @@ export default function UserMessagesPage() {
 
     return (
         <div className="min-h-screen bg-[#F4F5F7]">
-            <Navbar />
-            <div className="max-w-6xl mx-auto px-4 pt-24 pb-10">
+            <div className="md:hidden">
+                <Navbar />
+            </div>
+
+            <div className="md:flex">
+                <SidebarNav />
+
+                <div className="w-full md:ml-64">
+                    <div className="max-w-6xl mx-auto px-4 pt-24 pb-10 md:pt-8">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center">
                         <MessageCircle size={18} className="text-[#F0A500]" />
@@ -262,6 +270,8 @@ export default function UserMessagesPage() {
                         </div>
                     </div>
                 )}
+                    </div>
+                </div>
             </div>
         </div>
     )
