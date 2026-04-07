@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Star, Bell, Settings, LogOut, Mail } from 'lucide-react';
+import { Home, Search, Star, Settings, LogOut, Mail, Globe, ArrowUpRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function SidebarNav() {
@@ -20,19 +20,19 @@ export default function SidebarNav() {
         <aside className="fixed left-0 top-0 h-screen w-64 flex flex-col justify-between hidden md:flex z-50 bg-white border-r border-gray-200 shadow-[2px_0_8px_rgba(0,0,0,0.05)]">
             {/* Top Section */}
             <div>
-                {/* Logo Area */}
-                <div className="p-6 pb-8 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-[1rem] flex items-center justify-center text-2xl shrink-0 shadow-sm border border-gray-100 bg-white">
+                {/* Clickable Logo Area - Standard intuitive way to go home */}
+                <Link href="/" className="p-6 pb-8 flex items-center gap-4 group cursor-pointer hover:bg-gray-50/50 transition-colors">
+                    <div className="w-12 h-12 rounded-[1rem] flex items-center justify-center text-2xl shrink-0 shadow-sm border border-gray-100 bg-white group-hover:scale-105 transition-transform duration-300 group-hover:border-gray-200">
                         🎓
                     </div>
                     <div className="flex flex-col leading-none">
-                        <span className="text-[#1C2A59] font-extrabold text-lg tracking-tight">Smart Campus</span>
+                        <span className="text-[#1C2A59] font-extrabold text-lg tracking-tight group-hover:text-[#F0A500] transition-colors">Smart Campus</span>
                         <span className="text-[#008489] text-xs font-bold tracking-wider mt-1">LOST & FOUND</span>
                     </div>
-                </div>
+                </Link>
 
                 {/* Navigation Links */}
-                <nav className="px-4 space-y-2 mt-4">
+                <nav className="px-4 space-y-2 mt-2">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
                         const Icon = item.icon;
@@ -60,8 +60,20 @@ export default function SidebarNav() {
                 </nav>
             </div>
 
-            {/* Bottom Section - User Profile */}
-            <div className="p-4 mb-4">
+            {/* Bottom Section - Exit & User Profile */}
+            <div className="px-4 mb-4 space-y-3">
+                {/* Elegant escape hatch to the main site */}
+                <Link 
+                    href="/" 
+                    className="flex items-center justify-between w-full px-4 py-3 rounded-2xl border border-gray-200 border-dashed text-gray-500 hover:text-[#1C2A59] hover:bg-gray-50 hover:border-gray-300 transition-all group"
+                >
+                    <div className="flex items-center gap-2.5">
+                        <Globe size={16} className="text-gray-400 group-hover:text-[#008489] transition-colors" />
+                        <span className="text-xs font-bold uppercase tracking-wider">Public Website</span>
+                    </div>
+                    <ArrowUpRight size={14} className="opacity-50 group-hover:opacity-100 group-hover:text-[#008489] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                </Link>
+
                 <div className="p-4 rounded-2xl flex flex-col gap-4 transition-all duration-300 bg-[#F4F5F7] border border-gray-200">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-[#1C2A59]">
