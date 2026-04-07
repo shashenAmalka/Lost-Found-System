@@ -24,21 +24,21 @@ export default function AdminMessagesPage() {
             const claimsData = await claimsRes.json()
             const contactsData = await contactsRes.json()
 
-            const approvedClaims = claimsRes.ok
-                ? (claimsData.claims || []).filter((c) => c.status === 'approved')
+            const activeClaimChats = claimsRes.ok
+                ? (claimsData.claims || []).filter((c) => !['rejected', 'withdrawn', 'completed'].includes(c.status))
                 : []
             const supportContacts = contactsRes.ok ? (contactsData.contacts || []) : []
 
-            setClaims(approvedClaims)
+            setClaims(activeClaimChats)
             setContacts(supportContacts)
 
             if (!selectedId) {
                 if (supportContacts.length > 0) {
                     setSelectedType('contact')
                     setSelectedId(supportContacts[0]._id)
-                } else if (approvedClaims.length > 0) {
+                } else if (activeClaimChats.length > 0) {
                     setSelectedType('claim')
-                    setSelectedId(approvedClaims[0]._id)
+                    setSelectedId(activeClaimChats[0]._id)
                 }
             }
         } catch (err) {
@@ -157,7 +157,7 @@ export default function AdminMessagesPage() {
                             {claims.length > 0 && (
                                 <>
                                     <div className="px-4 py-2 bg-gray-50 border-y border-gray-100">
-                                        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Approved Claim Chats</p>
+                                        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Claim Chats</p>
                                     </div>
                                     {claims.map((claim) => {
                                         const active = selectedType === 'claim' && claim._id === selectedId
@@ -173,7 +173,7 @@ export default function AdminMessagesPage() {
                                                     {claim.claimantName || 'User'}
                                                 </p>
                                                 <p className="text-xs text-gray-500 mt-0.5">
-                                                    {claim.foundItemId?.title || 'Approved Claim'}
+                                                    {claim.foundItemId?.title || 'Claim'} · {String(claim.status || 'under_review').replace('_', ' ')}
                                                 </p>
                                             </button>
                                         )

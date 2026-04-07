@@ -10,6 +10,7 @@ export default function ChatWindow({
     contactId,
     isAdmin,
     recipientName,
+    messageType = 'chat',
     disabled = false,
     disabledMessage = 'Chat is currently unavailable.',
 }) {
@@ -69,6 +70,7 @@ export default function ChatWindow({
                 body: JSON.stringify({
                     ...(claimId && { claimId }),
                     ...(contactId && { contactId }),
+                    ...(claimId && { messageType }),
                     message: newMessage,
                 }),
                 credentials: 'include',

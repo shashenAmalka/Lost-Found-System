@@ -9,7 +9,32 @@ import Notification from '@/models/Notification'
 import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
 import { computeMatchScore } from '@/lib/aiEngine'
+import { analyzeImageFromUrl, mergeKeywordLists } from '@/lib/imageAI'
 import { isDbConnectionError } from '@/lib/mongodb'
+
+const ALLOWED_CATEGORIES = new Set(['Electronics', 'Books', 'Clothing', 'Keys', 'ID Card', 'Bag', 'Jewelry', 'Sports', 'Other'])
+
+function sanitizePrivateAiFields(doc) {
+    const raw = doc && typeof doc.toObject === 'function' ? doc.toObject() : { ...(doc || {}) }
+    delete raw.aiGeneratedDescription
+    delete raw.aiProfile
+    return raw
+}
+
+function getMatchThresholdByCategory(category) {
+    switch (category) {
+        case 'Electronics':
+            return 82
+        case 'ID Card':
+        case 'Keys':
+            return 74
+        case 'Bag':
+        case 'Jewelry':
+            return 76
+        default:
+            return 78
+    }
+}
 
 export async function GET(request) {
     try {
@@ -45,7 +70,9 @@ export async function GET(request) {
             .limit(limit)
             .lean()
 
-        return NextResponse.json({ items, total, page, pages: Math.ceil(total / limit) })
+        const safeItems = items.map(sanitizePrivateAiFields)
+
+        return NextResponse.json({ items: safeItems, total, page, pages: Math.ceil(total / limit) })
     } catch (err) {
         console.error(err)
         if (isDbConnectionError(err)) {
@@ -74,19 +101,72 @@ export async function POST(request) {
         }
 
         const body = await request.json()
-        const { title, category, description, keywords, color, brand, uniqueIdentifier,
-            dateLost, timeRange, possibleLocation, imageUrl, contactPreference, categoryFields } = body
+        const {
+            title,
+            category,
+            description,
+            keywords,
+            color,
+            brand,
+            uniqueIdentifier,
+            dateLost,
+            timeRange,
+            possibleLocation,
+            imageUrl,
+            contactPreference,
+            categoryFields,
+            ai,
+            smartMode,
+        } = body
 
-        if (!title || !category || !description || !dateLost || !possibleLocation) {
-            return NextResponse.json({ error: 'Required fields missing' }, { status: 400 })
+        if (!imageUrl) {
+            return NextResponse.json({ error: 'Image upload is required' }, { status: 400 })
+        }
+
+        let aiData = null
+        try {
+            // Always run server-side scan so full AI description is generated and stored privately.
+            aiData = await analyzeImageFromUrl(imageUrl)
+        } catch (aiErr) {
+            console.warn('[Lost Item AI Fallback]', aiErr.message)
+            aiData = ai || null
+        }
+
+        const resolvedCategory = ALLOWED_CATEGORIES.has(category)
+            ? category
+            : (ALLOWED_CATEGORIES.has(aiData?.category) ? aiData.category : 'Other')
+
+        const resolvedTitle = String(title || aiData?.title || 'Unidentified Item').trim()
+        const resolvedDescription = String(description || aiData?.description || 'Auto-generated item report from uploaded image.').trim()
+        const resolvedLocation = String(possibleLocation || 'Not specified').trim()
+        const resolvedColor = String(color || aiData?.color || '').trim()
+        const resolvedDateLost = dateLost ? new Date(dateLost) : new Date()
+        const resolvedKeywords = mergeKeywordLists(keywords, aiData?.keywords, aiData?.labels)
+
+        if (!resolvedTitle || !resolvedDescription || !resolvedLocation) {
+            return NextResponse.json({ error: 'Unable to generate enough item details from the image. Please add title or description.' }, { status: 400 })
         }
 
         const item = await LostItem.create({
-            title, category, description,
-            keywords: Array.isArray(keywords) ? keywords : (keywords || '').split(',').map(k => k.trim()).filter(Boolean),
-            color: color || '', brand: brand || '', uniqueIdentifier: uniqueIdentifier || '',
-            dateLost: new Date(dateLost), timeRange: timeRange || '',
-            possibleLocation, imageUrl: imageUrl || '',
+            title: resolvedTitle,
+            category: resolvedCategory,
+            description: resolvedDescription,
+            keywords: resolvedKeywords,
+            color: resolvedColor,
+            brand: brand || '',
+            uniqueIdentifier: uniqueIdentifier || '',
+            dateLost: resolvedDateLost,
+            timeRange: timeRange || '',
+            possibleLocation: resolvedLocation,
+            imageUrl: imageUrl || '',
+            aiGeneratedDescription: aiData?.fullScanDescription || aiData?.description || '',
+            aiLabels: aiData?.labels || [],
+            aiCategory: aiData?.category || '',
+            aiColor: aiData?.color || '',
+            aiConfidence: Number(aiData?.confidence || 0),
+            aiProfile: aiData?.aiProfile || {},
+            aiSource: aiData ? 'huggingface' : '',
+            smartMode: Boolean(smartMode),
             contactPreference: contactPreference || 'platform',
             postedBy: decoded.id,
             postedByName: decoded.name || '',
@@ -106,17 +186,27 @@ export async function POST(request) {
         // === AI Auto-Scan: Find matching found items ===
         let matches = []
         try {
-            const unclaimedFound = await FoundItem.find({ status: 'unclaimed' }).lean()
-            const MATCH_THRESHOLD = 75
+            const foundFilter = { status: 'unclaimed' }
+            if (resolvedCategory && resolvedCategory !== 'Other') {
+                foundFilter.category = resolvedCategory
+            }
+
+            const unclaimedFound = await FoundItem.find(foundFilter).lean()
+            const MATCH_THRESHOLD = getMatchThresholdByCategory(resolvedCategory)
 
             for (const foundItem of unclaimedFound) {
                 // Do not match against items the user submitted themselves
                 if (foundItem.submittedBy?.toString() === decoded.id) continue;
 
                 const result = await computeMatchScore(item.toObject(), foundItem, {})
-                if (result.matchScore >= MATCH_THRESHOLD) {
+                const meetsQualityGate =
+                    result.breakdown.descriptionScore >= 45 ||
+                    result.breakdown.keywordScore >= 40 ||
+                    result.breakdown.objectTypeScore >= 65
+
+                if (result.matchScore >= MATCH_THRESHOLD && meetsQualityGate) {
                     matches.push({
-                        foundItem,
+                        foundItem: sanitizePrivateAiFields(foundItem),
                         matchScore: result.matchScore,
                         breakdown: result.breakdown,
                     })
@@ -153,6 +243,10 @@ export async function POST(request) {
                 }
             }
 
+            matches = matches
+                .sort((a, b) => b.matchScore - a.matchScore)
+                .slice(0, 5)
+
             // Update lost item status if strong match found
             if (matches.some(m => m.matchScore >= 60)) {
                 await LostItem.findByIdAndUpdate(item._id, { status: 'matched' })
@@ -162,7 +256,7 @@ export async function POST(request) {
             // Don't fail the request if scanning fails
         }
 
-        return NextResponse.json({ item, matches }, { status: 201 })
+        return NextResponse.json({ item: sanitizePrivateAiFields(item), matches }, { status: 201 })
     } catch (err) {
         console.error(err)
         if (isDbConnectionError(err)) {

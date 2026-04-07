@@ -5,6 +5,13 @@ import connectDB from '@/lib/mongodb'
 import LostItem from '@/models/LostItem'
 import { verifyToken } from '@/lib/auth'
 
+function sanitizePrivateAiFields(doc) {
+    const raw = doc && typeof doc.toObject === 'function' ? doc.toObject() : { ...(doc || {}) }
+    delete raw.aiGeneratedDescription
+    delete raw.aiProfile
+    return raw
+}
+
 export async function GET(request, { params }) {
     try {
         await connectDB()
@@ -12,7 +19,7 @@ export async function GET(request, { params }) {
         if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
         // Increment views
         await LostItem.findByIdAndUpdate(params.id, { $inc: { views: 1 } })
-        return NextResponse.json({ item })
+        return NextResponse.json({ item: sanitizePrivateAiFields(item) })
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }
@@ -33,7 +40,7 @@ export async function PUT(request, { params }) {
 
         const body = await request.json()
         const updated = await LostItem.findByIdAndUpdate(params.id, body, { new: true })
-        return NextResponse.json({ item: updated })
+        return NextResponse.json({ item: sanitizePrivateAiFields(updated) })
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }

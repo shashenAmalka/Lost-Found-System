@@ -17,6 +17,10 @@ export default function NewLostItemPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
+    const [smartMode, setSmartMode] = useState(false)
+    const [analyzingImage, setAnalyzingImage] = useState(false)
+    const [aiSuggestion, setAiSuggestion] = useState(null)
+    const [touched, setTouched] = useState({})
     const [form, setForm] = useState({
         title: '', category: '', description: '', keywords: '',
         color: '', brand: '', uniqueIdentifier: '',
@@ -30,7 +34,11 @@ export default function NewLostItemPage() {
         setCategoryFields({})
     }, [form.category])
 
-    const change = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+    const change = (k) => (e) => {
+        const value = e.target.value
+        setTouched(prev => ({ ...prev, [k]: true }))
+        setForm(f => ({ ...f, [k]: value }))
+    }
 
     const today = new Date().toISOString().split('T')[0]
 
@@ -50,10 +58,55 @@ export default function NewLostItemPage() {
         setForm(f => ({ ...f, timeRange: val }))
     }
 
+    const applyAiSuggestion = (ai) => {
+        if (!ai) return
+        setAiSuggestion(ai)
+
+        setForm((prev) => {
+            const next = { ...prev }
+            if (!touched.title && !next.title) next.title = ai.title || ''
+            if (!touched.description && !next.description) next.description = ai.description || ''
+            if (!touched.category && !next.category) next.category = ai.category || ''
+            if (!touched.color && !next.color) next.color = ai.color || ''
+            if (!touched.keywords && !next.keywords) next.keywords = (ai.keywords || []).join(', ')
+            if (smartMode && !next.dateLost) next.dateLost = today
+            if (smartMode && !next.possibleLocation) next.possibleLocation = 'Not specified'
+            return next
+        })
+    }
+
+    const analyzeImage = async (url) => {
+        if (!url) {
+            setAiSuggestion(null)
+            return
+        }
+
+        setAnalyzingImage(true)
+        try {
+            const res = await fetch('/api/ai/describe-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ imageUrl: url, itemType: 'lost' }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Image analysis failed')
+            applyAiSuggestion(data.ai)
+        } catch (err) {
+            setError(err.message || 'Unable to analyze the uploaded image')
+        } finally {
+            setAnalyzingImage(false)
+        }
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
-        if (form.dateLost > today) {
+        if (!form.imageUrl) {
+            setError('Please upload an image.')
+            return
+        }
+        if (form.dateLost && form.dateLost > today) {
             setError('Date Lost cannot be a future date.')
             return
         }
@@ -62,7 +115,7 @@ export default function NewLostItemPage() {
             const res = await fetch('/api/lost-items', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...form, categoryFields }),
+                body: JSON.stringify({ ...form, categoryFields, ai: aiSuggestion, smartMode }),
                 credentials: 'include',
             })
             const data = await res.json()
@@ -124,6 +177,20 @@ export default function NewLostItemPage() {
                     </div>
                 </div>
 
+                <div className="mb-4 p-4 bg-[#f8fafc] border border-gray-200 rounded flex items-center justify-between gap-4">
+                    <div>
+                        <p className="text-sm font-bold text-[#1C2A59]">AI Smart Mode (Image only)</p>
+                        <p className="text-xs text-gray-500">Upload an image and let AI auto-fill title, description, category, and color.</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setSmartMode(v => !v)}
+                        className={`px-3 py-2 text-xs font-bold rounded border ${smartMode ? 'bg-[#1C2A59] text-white border-[#1C2A59]' : 'bg-white text-[#1C2A59] border-gray-300'}`}
+                    >
+                        {smartMode ? 'Smart Mode ON' : 'Smart Mode OFF'}
+                    </button>
+                </div>
+
                 <div className="bg-white rounded border border-gray-200 p-8 shadow-sm">
                     <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -136,12 +203,12 @@ export default function NewLostItemPage() {
                         {/* Title & Category */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
-                                <label className={labelClass}>Item Title <span className="text-red-500">*</span></label>
-                                <input className={inputClass} placeholder="e.g. Blue iPhone 14 Pro" value={form.title} onChange={change('title')} required />
+                                <label className={labelClass}>Item Title {!smartMode && <span className="text-red-500">*</span>}</label>
+                                <input className={inputClass} placeholder="e.g. Blue iPhone 14 Pro" value={form.title} onChange={change('title')} required={!smartMode} />
                             </div>
                             <div>
-                                <label className={labelClass}>Category <span className="text-red-500">*</span></label>
-                                <select className={inputClass} value={form.category} onChange={change('category')} required>
+                                <label className={labelClass}>Category {!smartMode && <span className="text-red-500">*</span>}</label>
+                                <select className={inputClass} value={form.category} onChange={change('category')} required={!smartMode}>
                                     <option value="">Select category</option>
                                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
@@ -150,11 +217,12 @@ export default function NewLostItemPage() {
 
                         {/* Description */}
                         <div>
-                            <label className={labelClass}>Description <span className="text-red-500">*</span></label>
-                            <textarea className={`${inputClass} min-h-[100px] resize-y`} placeholder="Describe your item in detail — color, brand, distinguishing marks, contents..." value={form.description} onChange={change('description')} required />
+                            <label className={labelClass}>Description {!smartMode && <span className="text-red-500">*</span>}</label>
+                            <textarea className={`${inputClass} min-h-[100px] resize-y`} placeholder="Describe your item in detail — color, brand, distinguishing marks, contents..." value={form.description} onChange={change('description')} required={!smartMode} />
                             <p className="text-[10px] flex items-center gap-1 text-gray-400 mt-1.5 font-medium">
                                 <Sparkles size={12} className="text-[#F0A500]" /> Detailed descriptions help our AI find better matches
                             </p>
+                            {analyzingImage && <p className="text-[10px] text-[#1C2A59] mt-1.5 font-semibold">Analyzing image with Hugging Face AI...</p>}
                         </div>
 
                         {/* Keywords */}
@@ -204,8 +272,8 @@ export default function NewLostItemPage() {
                             {/* Date & Time */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                 <div>
-                                    <label className={labelClass}>Date Lost <span className="text-red-500">*</span></label>
-                                    <input type="date" className={inputClass} value={form.dateLost} onChange={change('dateLost')} max={today} required />
+                                    <label className={labelClass}>Date Lost {!smartMode && <span className="text-red-500">*</span>}</label>
+                                    <input type="date" className={inputClass} value={form.dateLost} onChange={change('dateLost')} max={today} required={!smartMode} />
                                 </div>
                                 <div>
                                     <label className={labelClass}>Approximate Time Lost</label>
@@ -217,8 +285,8 @@ export default function NewLostItemPage() {
 
                             {/* Location */}
                             <div className="mt-5">
-                                <label className={labelClass}>Possible Location <span className="text-red-500">*</span></label>
-                                <input className={inputClass} placeholder="e.g. Library 2nd floor, Building A Lecture Hall" value={form.possibleLocation} onChange={change('possibleLocation')} required />
+                                <label className={labelClass}>Possible Location {!smartMode && <span className="text-red-500">*</span>}</label>
+                                <input className={inputClass} placeholder="e.g. Library 2nd floor, Building A Lecture Hall" value={form.possibleLocation} onChange={change('possibleLocation')} required={!smartMode} />
                             </div>
                         </div>
 
@@ -231,14 +299,25 @@ export default function NewLostItemPage() {
 
                             {/* Image URL */}
                             <div>
-                                <label className={labelClass}>Actual Photo (optional)</label>
+                                <label className={labelClass}>Actual Photo <span className="text-red-500">*</span></label>
                                 <div className="bg-[#F4F5F7] p-4 rounded border border-gray-200">
                                     <ImageUpload
                                         value={form.imageUrl}
-                                        onChange={(url) => setForm(f => ({ ...f, imageUrl: url }))}
+                                        onChange={(url) => {
+                                            setForm(f => ({ ...f, imageUrl: url }))
+                                            analyzeImage(url)
+                                        }}
                                     />
                                 </div>
                             </div>
+
+                            {aiSuggestion && (
+                                <div className="mt-5 p-4 rounded border border-[#fde68a] bg-[#fffbeb]">
+                                    <p className="text-xs font-black uppercase tracking-wider text-[#92400e] mb-1">AI Suggestions</p>
+                                    <p className="text-sm text-[#1C2A59] font-semibold">{aiSuggestion.description}</p>
+                                    <p className="text-xs text-[#92400e] mt-2">Labels: {(aiSuggestion.labels || []).slice(0, 8).join(', ') || 'N/A'}</p>
+                                </div>
+                            )}
 
                             {/* Contact Preference */}
                             <div className="mt-5">

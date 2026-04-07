@@ -8,6 +8,7 @@ import FoundItem from '@/models/FoundItem'
 import User from '@/models/User'
 import AuditLog from '@/models/AuditLog'
 import Notification from '@/models/Notification'
+import Message from '@/models/Message'
 import { verifyToken } from '@/lib/auth'
 
 // ── GET /api/admin/claims ─────────────────────────────────────────────────────
@@ -238,7 +239,18 @@ export async function PATCH(request) {
         } else if (action === 'request_info') {
             claim.status = 'admin_review'
             claim.adminNote = noteText
+            claim.adminId = decoded.id
+            claim.reviewedAt = new Date()
             claim.trackingHistory.push({ status: 'Admin Review', note: noteText, updatedBy: decoded.name })
+
+            await Message.create({
+                claimId: claim._id,
+                senderId: decoded.id,
+                senderRole: 'admin',
+                senderName: decoded.name || 'Admin',
+                recipientId: claim.claimantId?._id || claim.claimantId,
+                message: noteText,
+            })
 
             await Notification.create({
                 userId: claim.claimantId?._id || claim.claimantId,

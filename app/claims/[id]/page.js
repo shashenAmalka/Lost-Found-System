@@ -135,8 +135,8 @@ export default function ClaimDetailPage() {
                         </div>
                     )}
 
-                    {/* Chat Window - User can chat after approval, admin can always chat. */}
-                    {(user?.role === 'admin' || claim.status === 'approved') && (
+                    {/* Chat Window - User can chat when approved or when admin requested more info; admin can always chat. */}
+                    {(user?.role === 'admin' || ['approved', 'admin_review'].includes(claim.status)) && (
                         <ChatWindow
                             claimId={id}
                             isAdmin={user?.role === 'admin'}

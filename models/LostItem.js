@@ -16,6 +16,14 @@ const LostItemSchema = new mongoose.Schema({
     timeRange: { type: String, default: '' }, // e.g. "Morning (8AM-12PM)"
     possibleLocation: { type: String, required: true },
     imageUrl: { type: String, default: '' },
+    aiGeneratedDescription: { type: String, default: '' },
+    aiLabels: [{ type: String }],
+    aiCategory: { type: String, default: '' },
+    aiColor: { type: String, default: '' },
+    aiConfidence: { type: Number, default: 0 },
+    aiProfile: { type: mongoose.Schema.Types.Mixed, default: {} },
+    aiSource: { type: String, default: '' },
+    smartMode: { type: Boolean, default: false },
     contactPreference: {
         type: String,
         enum: ['email', 'phone', 'platform'],
