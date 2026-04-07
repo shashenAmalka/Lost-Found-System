@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Navbar from '@/components/Navbar'
 import ItemCard from '@/components/ui/ItemCard'
-import { Search, Filter, X, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Filter, X, Plus, ChevronLeft, ChevronRight, Send } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 
@@ -61,10 +61,17 @@ export default function LostItemsPage() {
 
                 {/* Filters */}
                 <div className="bg-white p-5 rounded border border-gray-200 shadow-sm mb-8 flex flex-col md:flex-row gap-4">
-                    <div className="flex-1 relative">
-                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input className="w-full pl-10 pr-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" 
+                    <div className="flex-1 relative flex">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <input className="flex-1 pl-10 pr-12 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded-l text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors" 
                             placeholder="Search by keyword..." value={filters.q} onChange={setFilter('q')} />
+                        <button 
+                            onClick={() => { /* Search is already triggered by onChange */ }}
+                            className="px-4 py-2.5 bg-[#F0A500] text-white rounded-r font-bold text-sm hover:bg-[#d69300] transition-colors flex items-center justify-center shrink-0"
+                            title="Search for lost items"
+                        >
+                            <Send size={16} />
+                        </button>
                     </div>
                     <select className="w-full md:w-56 px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] focus:outline-none focus:border-[#F0A500] transition-colors appearance-none" 
                         value={filters.category} onChange={setFilter('category')}>

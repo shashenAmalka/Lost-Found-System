@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
 import { verifyToken } from '@/lib/auth'
+import { isDbConnectionError } from '@/lib/mongodb'
 
 export async function GET(request) {
     try {
@@ -36,6 +37,12 @@ export async function GET(request) {
             }
         })
     } catch (err) {
+        if (isDbConnectionError(err)) {
+            return NextResponse.json({
+                error: 'Database connection unavailable. Check network/DNS or MongoDB access settings.'
+            }, { status: 503 })
+        }
+
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }
 }

@@ -3,12 +3,13 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
     LayoutDashboard, FileText, ShieldAlert, Activity,
-    LogOut
+    LogOut, MessageCircle
 } from 'lucide-react'
 
 const NAV_ITEMS = [
     { name: 'Overview', icon: LayoutDashboard, href: '/admin/dashboard' },
     { name: 'Claim Management', icon: FileText, href: '/admin/claims' },
+    { name: 'Conversations', icon: MessageCircle, href: '/admin/messages' },
     { name: 'User Moderation', icon: ShieldAlert, href: '/admin/users' },
     { name: 'Analytics Data', icon: Activity, href: '/admin/audit' },
 ]

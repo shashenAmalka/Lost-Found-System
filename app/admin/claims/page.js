@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import ChatWindow from '@/components/ChatWindow'
 import Link from 'next/link'
 import {
     FileText, ShieldAlert,
@@ -253,6 +254,7 @@ function ClaimCard({ claim, onAction, actionLoading }) {
     const [infoNote, setInfoNote] = useState('')
     const [infoError, setInfoError] = useState('')
     const [confirmAction, setConfirmAction] = useState(null)
+    const [showChat, setShowChat] = useState(false)
     const isDone = ['approved', 'rejected', 'completed'].includes(claim.status)
 
     const handleInfoSubmit = () => {
@@ -395,6 +397,10 @@ function ClaimCard({ claim, onAction, actionLoading }) {
                                         className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-gray-100 disabled:opacity-50 bg-gray-50 text-gray-600 border border-gray-200">
                                         <MessageCircle size={14} /> Request Info
                                     </button>
+                                    <button onClick={() => setShowChat(!showChat)} disabled={actionLoading === claim._id}
+                                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-blue-100 disabled:opacity-50 bg-blue-50 text-blue-600 border border-blue-200">
+                                        <Send size={14} /> Chat
+                                    </button>
                                 </div>
 
                                 {/* Inline request info form */}
@@ -419,6 +425,17 @@ function ClaimCard({ claim, onAction, actionLoading }) {
                                                 Cancel
                                             </button>
                                         </div>
+                                    </div>
+                                )}
+
+                                {/* Chat Window */}
+                                {showChat && (
+                                    <div className="mt-4">
+                                        <ChatWindow 
+                                            claimId={claim._id}
+                                            isAdmin={true}
+                                            recipientName={claim.claimantId?.name || claim.claimantName || 'User'}
+                                        />
                                     </div>
                                 )}
                             </div>

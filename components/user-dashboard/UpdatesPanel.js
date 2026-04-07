@@ -1,6 +1,7 @@
 'use client';
-import { Bell, CheckCircle2, Sparkles, AlertCircle, AlertTriangle, ShieldAlert, XCircle, Unlock, MailQuestion, Info, ChevronRight } from 'lucide-react';
+import { Bell, CheckCircle2, Sparkles, AlertCircle, AlertTriangle, ShieldAlert, XCircle, Unlock, MailQuestion, Info, ChevronRight, Mail } from 'lucide-react';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 function timeAgo(dateStr) {
     if (!dateStr) return '';
@@ -33,6 +34,26 @@ function getUpdateIcon(type) {
 
 export default function UpdatesPanel({ updates = [] }) {
     const unreadCount = updates.filter(u => !u.read).length;
+    const [unreadMessages, setUnreadMessages] = useState(0);
+
+    useEffect(() => {
+        const fetchUnreadMessages = async () => {
+            try {
+                const res = await fetch('/api/admin-contacts', { credentials: 'include' });
+                const data = await res.json();
+                if (data.contacts) {
+                    const unread = data.contacts.reduce((count, contact) => {
+                        return count + (contact.unreadCount || 0);
+                    }, 0);
+                    setUnreadMessages(unread);
+                }
+            } catch (err) {
+                console.error('Failed to fetch unread messages:', err);
+            }
+        };
+
+        fetchUnreadMessages();
+    }, []);
 
     return (
         <div className="flex flex-col gap-6">
@@ -127,6 +148,27 @@ export default function UpdatesPanel({ updates = [] }) {
                     </Link>
                 </div>
             </div>
+
+            {/* Messages Card */}
+            <Link href="/messages"
+                className="group rounded-3xl p-6 shadow-sm border border-gray-200 bg-white hover:shadow-md transition-all duration-300 cursor-pointer">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#F4F5F7] border border-gray-200 group-hover:bg-[#F0A500]/10 group-hover:border-[#F0A500]/30 transition-colors">
+                            <Mail size={18} className="text-[#F0A500]" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-sm text-[#1C2A59]">Messages</h3>
+                            <p className="text-[11px] text-gray-500">Chat with admin about your claims</p>
+                        </div>
+                    </div>
+                    {unreadMessages > 0 && (
+                        <span className="text-[10px] uppercase font-extrabold tracking-widest px-2 py-1 rounded-full bg-[#FEE2E2] text-[#DC2626] border border-[#FECACA]">
+                            {unreadMessages}
+                        </span>
+                    )}
+                </div>
+            </Link>
 
             {/* Need Help Card */}
             <div className="rounded-3xl p-6 border relative overflow-hidden bg-white border-gray-200 shadow-sm">

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Star, Bell, Settings, LogOut } from 'lucide-react';
+import { Home, Search, Star, Bell, Settings, LogOut, Mail } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function SidebarNav() {
@@ -12,6 +12,7 @@ export default function SidebarNav() {
         { name: 'Dashboard', href: '/user-dashboard', icon: Home },
         { name: 'My Claims', href: '/user-dashboard/claims', icon: Search },
         { name: 'Potential Matches', href: '/matches', icon: Star },
+        { name: 'Messages', href: '/messages', icon: Mail },
         { name: 'Settings', href: '/user-dashboard/settings', icon: Settings },
     ];
 

@@ -23,6 +23,7 @@ export async function GET(request) {
         const typeMap = {
             claims: ['claim_update', 'claim_approved', 'claim_rejected', 'claim_info_requested'],
             ai_matches: ['ai_match'],
+            messages: ['chat_message'],
             warnings: ['warning', 'restriction', 'unrestricted'],
             system: ['system', 'system_update', 'important_alert', 'action_required', 'appeal_approved', 'appeal_rejected'],
         }
@@ -44,16 +45,17 @@ export async function GET(request) {
         })
 
         // Category counts for filter tabs
-        const [claimsCount, aiCount, warningsCount, systemCount] = await Promise.all([
+        const [claimsCount, aiCount, messagesCount, warningsCount, systemCount] = await Promise.all([
             Notification.countDocuments({ ...baseFilter, type: { $in: typeMap.claims } }),
             Notification.countDocuments({ ...baseFilter, type: { $in: typeMap.ai_matches } }),
+            Notification.countDocuments({ ...baseFilter, type: { $in: typeMap.messages } }),
             Notification.countDocuments({ ...baseFilter, type: { $in: typeMap.warnings } }),
             Notification.countDocuments({ ...baseFilter, type: { $in: typeMap.system } }),
         ])
 
         return NextResponse.json({
             notifications, unreadCount,
-            counts: { claims: claimsCount, ai_matches: aiCount, warnings: warningsCount, system: systemCount, all: notifications.length },
+            counts: { claims: claimsCount, ai_matches: aiCount, messages: messagesCount, warnings: warningsCount, system: systemCount, all: notifications.length },
         })
     } catch (err) {
         console.error('[Notifications GET]', err)
