@@ -17,6 +17,9 @@ const UserAppealSchema = new mongoose.Schema({
         enum: ['PENDING', 'APPROVED', 'REJECTED'],
         default: 'PENDING',
     },
+    openedAt: { type: Date, default: null },
+    openedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    openedByName: { type: String, default: '' },
     reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     reviewedByName: { type: String, default: '' },
     reviewedAt: { type: Date, default: null },
@@ -24,6 +27,7 @@ const UserAppealSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 UserAppealSchema.index({ userId: 1, status: 1, createdAt: -1 })
+UserAppealSchema.index({ userId: 1, warningId: 1, status: 1 })
 
 const UserAppeal = mongoose.models.UserAppeal || mongoose.model('UserAppeal', UserAppealSchema)
 export default UserAppeal

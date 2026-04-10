@@ -1,10 +1,31 @@
 'use client'
 import { useState } from 'react'
-import { CheckCircle, XCircle, Loader2, FileText, Clock, User as UserIcon, AlertTriangle } from 'lucide-react'
+import { CheckCircle, XCircle, Loader2, FileText, Clock, User as UserIcon, AlertTriangle, Lock } from 'lucide-react'
 
 export default function AppealReviewCard({ appeal, onDecision }) {
     const [loading, setLoading] = useState(false)
     const [adminResponse, setAdminResponse] = useState('')
+    const [opened, setOpened] = useState(!!appeal.openedAt)
+
+    const handleOpen = async () => {
+        setLoading(true)
+        try {
+            const res = await fetch('/api/admin/appeals', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ appealId: appeal._id, action: 'open' }),
+                credentials: 'include',
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Failed')
+            setOpened(true)
+            onDecision?.(data)
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const handleDecision = async (decision) => {
         setLoading(true)
@@ -64,6 +85,15 @@ export default function AppealReviewCard({ appeal, onDecision }) {
                 </div>
             )}
 
+            {(opened || appeal.openedAt) && (
+                <div className="mb-3 px-3 py-1.5 rounded-lg bg-sky-50 border border-sky-200 flex items-center gap-2">
+                    <Lock size={12} className="text-sky-600" />
+                    <span className="text-[9px] font-bold text-sky-600 uppercase">
+                        Opened for Review by {appeal.openedByName || 'Admin'}
+                    </span>
+                </div>
+            )}
+
             {/* Warning details (if warning removal appeal) */}
             {isWarningAppeal && warning && (
                 <div className="mb-3 p-3 rounded-lg" style={{ background: severityStyle.bg + '20', border: `1px solid ${severityStyle.bg}` }}>
@@ -95,6 +125,16 @@ export default function AppealReviewCard({ appeal, onDecision }) {
                 {appeal.evidenceUrl && (
                     <a href={appeal.evidenceUrl} target="_blank" rel="noopener"
                         className="text-[10px] text-indigo-400 hover:underline mt-1 inline-block">View Evidence →</a>
+                )}
+            </div>
+
+            <div className="mb-3 flex gap-2 flex-wrap">
+                {!opened && !appeal.openedAt && (
+                    <button onClick={handleOpen} disabled={loading}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all hover:scale-[1.02]"
+                        style={{ background: 'rgba(14,165,233,0.12)', border: '1px solid rgba(14,165,233,0.2)', color: '#0284c7' }}>
+                        {loading ? <Loader2 size={11} className="animate-spin" /> : <Lock size={11} />} Open & Lock
+                    </button>
                 )}
             </div>
 

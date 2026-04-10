@@ -17,25 +17,31 @@ export async function GET(request) {
         if (!decoded || decoded.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
         await connectDB()
-        const users = await User.find({}).select('-password').sort({ createdAt: -1 }).lean()
+        const users = await User.find({ isDeleted: { $ne: true } }).select('-password').sort({ createdAt: -1 }).lean()
 
         // Enrich with warning counts and pending appeal status
         const userIds = users.map(u => u._id)
-        const [warningCounts, pendingAppeals] = await Promise.all([
+        const [warningCounts, pendingAppeals, appealCounts] = await Promise.all([
             UserWarning.aggregate([
                 { $match: { userId: { $in: userIds }, status: 'ACTIVE' } },
                 { $group: { _id: '$userId', count: { $sum: 1 } } },
             ]),
             UserAppeal.find({ userId: { $in: userIds }, status: 'PENDING' }).select('userId').lean(),
+            UserAppeal.aggregate([
+                { $match: { userId: { $in: userIds } } },
+                { $group: { _id: '$userId', count: { $sum: 1 } } },
+            ]),
         ])
 
         const warningMap = Object.fromEntries(warningCounts.map(w => [w._id.toString(), w.count]))
         const appealSet = new Set(pendingAppeals.map(a => a.userId.toString()))
+        const appealCountMap = Object.fromEntries(appealCounts.map(a => [a._id.toString(), a.count]))
 
         const enriched = users.map(u => ({
             ...u,
             activeWarnings: warningMap[u._id.toString()] || 0,
             hasPendingAppeal: appealSet.has(u._id.toString()),
+            appealCount: appealCountMap[u._id.toString()] || 0,
         }))
 
         return NextResponse.json({ users: enriched })
