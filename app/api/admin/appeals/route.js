@@ -49,14 +49,37 @@ export async function PATCH(request) {
         }
 
         await connectDB()
-        const { appealId, decision, adminResponse, reviewNotes } = await request.json()
+        const { appealId, decision, adminResponse, reviewNotes, action } = await request.json()
 
         if (!appealId || !decision) {
-            return NextResponse.json({ error: 'appealId and decision are required' }, { status: 400 })
+            if (action !== 'open') {
+                return NextResponse.json({ error: 'appealId and decision are required' }, { status: 400 })
+            }
         }
 
         const appeal = await UserAppeal.findById(appealId).populate('warningId')
         if (!appeal) return NextResponse.json({ error: 'Appeal not found' }, { status: 404 })
+
+        if (action === 'open') {
+            if (!appeal.openedAt) {
+                appeal.openedAt = new Date()
+                appeal.openedBy = decoded.id
+                appeal.openedByName = decoded.name || 'Admin'
+                await appeal.save()
+            }
+
+            return NextResponse.json({ appeal })
+        }
+
+        if (appeal.status !== 'PENDING') {
+            return NextResponse.json({ error: 'Appeal has already been reviewed' }, { status: 409 })
+        }
+
+        if (!appeal.openedAt) {
+            appeal.openedAt = new Date()
+            appeal.openedBy = decoded.id
+            appeal.openedByName = decoded.name || 'Admin'
+        }
 
         appeal.status = decision === 'approve' ? 'APPROVED' : 'REJECTED'
         appeal.reviewedBy = decoded.id
@@ -69,10 +92,9 @@ export async function PATCH(request) {
         if (decision === 'approve') {
             // If this is a warning removal appeal
             if (appeal.appealType === 'WARNING_REMOVAL' && appeal.warningId) {
-                // Revoke the specific warning
                 const warning = appeal.warningId
-                warning.status = 'REVOKED'
-                await warning.save()
+                const warningId = warning._id || warning
+                await UserWarning.deleteOne({ _id: warningId })
 
                 // Recalculate active warnings
                 const activeWarnings = await UserWarning.countDocuments({
@@ -84,8 +106,8 @@ export async function PATCH(request) {
                 if (user) {
                     user.warningCount = activeWarnings
 
-                    // If warnings drop below 3 and user was only LIMITED (not FULL) restricted, auto-unrestrict
-                    if (activeWarnings < 3 && user.restrictionLevel === 'LIMITED') {
+                    // If warnings drop below 3, clear warning-driven restrictions.
+                    if (activeWarnings < 3 && user.restrictionLevel !== 'NONE') {
                         user.status = 'active'
                         user.restrictionLevel = 'NONE'
                         user.restrictionReason = ''
@@ -102,7 +124,7 @@ export async function PATCH(request) {
                     message: `Your appeal to remove the warning for "${warning.reason}" has been approved!${activeWarnings < 3 ? ' Your account restriction has been lifted.' : ''}${adminResponse ? ` Admin note: "${adminResponse}"` : ''}`,
                 })
             } else {
-                // General account restriction appeal - revoke all warnings and unrestrict
+                // General account restriction appeal - remove all warnings and unrestrict
                 const user = await User.findById(appeal.userId)
                 if (user) {
                     user.status = 'active'
@@ -112,11 +134,8 @@ export async function PATCH(request) {
                     user.warningCount = 0
                     await user.save()
 
-                    // Revoke all active warnings
-                    await UserWarning.updateMany(
-                        { userId: appeal.userId, status: 'ACTIVE' },
-                        { status: 'REVOKED' }
-                    )
+                    // Remove warnings so moderation no longer lists them.
+                    await UserWarning.deleteMany({ userId: appeal.userId })
                 }
 
                 // Notify user about appeal decision
@@ -140,14 +159,22 @@ export async function PATCH(request) {
 
         // Audit log
         await AuditLog.create({
+            adminId: decoded.id,
             adminName: decoded.name || 'Admin',
             action: decision === 'approve' ? 'APPROVE_APPEAL' : 'REJECT_APPEAL',
-            targetType: 'User',
-            targetId: appeal.userId,
+            targetType: 'UserAppeal',
+            targetId: appeal._id,
             details: `${appeal.appealType} appeal ${decision}d. ${adminResponse || ''}`,
         })
 
-        return NextResponse.json({ appeal })
+        if (decision === 'approve') {
+            const userId = String(appeal.userId)
+            const deletedAppealId = String(appeal._id)
+            await UserAppeal.deleteOne({ _id: appeal._id })
+            return NextResponse.json({ message: 'Appeal approved and removed', userId, deletedAppealId })
+        }
+
+        return NextResponse.json({ appeal, userId: String(appeal.userId) })
     } catch (err) {
         console.error(err)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
