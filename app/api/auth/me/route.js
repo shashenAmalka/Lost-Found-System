@@ -18,6 +18,12 @@ export async function GET(request) {
         const user = await User.findById(decoded.id).select('-password')
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
+        if (user.isDeleted) {
+            const response = NextResponse.json({ error: 'Account deleted' }, { status: 403 })
+            response.cookies.set('auth_token', '', { maxAge: 0, path: '/' })
+            return response
+        }
+
         return NextResponse.json({
             user: {
                 id: user._id,
