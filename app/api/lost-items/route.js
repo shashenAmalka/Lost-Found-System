@@ -9,7 +9,8 @@ import Notification from '@/models/Notification'
 import AuditLog from '@/models/AuditLog'
 import { verifyToken } from '@/lib/auth'
 import { computeMatchScore } from '@/lib/aiEngine'
-import { analyzeImageFromUrl, mergeKeywordLists } from '@/lib/imageAI'
+import { mergeKeywordLists } from '@/lib/imageAI'
+import { analyzeItemImageWithGroq } from '@/lib/groqItemAI'
 import { isDbConnectionError } from '@/lib/mongodb'
 
 const ALLOWED_CATEGORIES = new Set(['Electronics', 'Books', 'Clothing', 'Keys', 'ID Card', 'Bag', 'Jewelry', 'Sports', 'Other'])
@@ -33,6 +34,143 @@ function getMatchThresholdByCategory(category) {
             return 76
         default:
             return 78
+    }
+}
+
+function normalizeText(value) {
+    return String(value || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+}
+
+function toKeywordList(...values) {
+    const out = new Set()
+    for (const value of values) {
+        if (!value) continue
+        const parts = Array.isArray(value) ? value : String(value).split(',')
+        for (const part of parts) {
+            const normalized = normalizeText(part)
+            if (!normalized) continue
+            for (const token of normalized.split(' ')) {
+                if (token.length > 2) out.add(token)
+            }
+        }
+    }
+    return [...out]
+}
+
+function overlapScore(leftValues, rightValues) {
+    const left = new Set(toKeywordList(leftValues))
+    const right = new Set(toKeywordList(rightValues))
+    if (!left.size && !right.size) return 1
+    if (!left.size || !right.size) return 0
+
+    let intersection = 0
+    for (const token of left) {
+        if (right.has(token)) intersection += 1
+    }
+    const union = left.size + right.size - intersection
+    return union ? (intersection / union) : 0
+}
+
+function compareUserAndAiDetails(userInput, aiInput) {
+    const userCategory = String(userInput.category || '').trim().toLowerCase()
+    const aiCategory = String(aiInput.category || '').trim().toLowerCase()
+    const userColor = String(userInput.color || '').trim().toLowerCase()
+    const aiColor = String(aiInput.color || '').trim().toLowerCase()
+
+    const categoryScore = !userCategory && !aiCategory ? 1 : (userCategory && aiCategory && userCategory === aiCategory ? 1 : 0)
+    const colorScore = !userColor && !aiColor ? 1 : (userColor && aiColor && userColor === aiColor ? 1 : 0)
+    const titleScore = overlapScore(userInput.title, aiInput.title)
+    const descriptionScore = overlapScore(userInput.description, aiInput.description)
+    const keywordScore = overlapScore(userInput.keywords || [], aiInput.keywords || [])
+
+    const overallScore = Math.round((
+        titleScore * 0.2 +
+        descriptionScore * 0.35 +
+        keywordScore * 0.25 +
+        categoryScore * 0.1 +
+        colorScore * 0.1
+    ) * 100)
+
+    return {
+        overallScore,
+        titleScore: Math.round(titleScore * 100),
+        descriptionScore: Math.round(descriptionScore * 100),
+        keywordScore: Math.round(keywordScore * 100),
+        categoryScore: Math.round(categoryScore * 100),
+        colorScore: Math.round(colorScore * 100),
+    }
+}
+
+function buildFallbackAiData(userInput) {
+    const fallbackTitle = String(userInput.title || '').trim() || 'Unidentified Item'
+    const fallbackDescription = String(userInput.description || '').trim() || 'User-provided item details (AI unavailable).'
+    const fallbackCategory = ALLOWED_CATEGORIES.has(userInput.category) ? userInput.category : 'Other'
+    const fallbackColor = String(userInput.color || '').trim()
+    const fallbackLabels = mergeKeywordLists(
+        userInput.keywords,
+        toKeywordList(userInput.title, userInput.description, userInput.brand, userInput.color)
+    ).slice(0, 16)
+
+    return {
+        title: fallbackTitle,
+        description: fallbackDescription,
+        fullScanDescription: fallbackDescription,
+        category: fallbackCategory,
+        color: fallbackColor,
+        labels: fallbackLabels,
+        keywords: fallbackLabels,
+        confidence: fallbackLabels.length ? 35 : 20,
+        aiProfile: {
+            userInputFallback: true,
+            objectType: fallbackLabels[0] || 'item',
+            subType: fallbackLabels[0] || 'item',
+            visualFingerprint: fallbackLabels.slice(0, 8).join(' | '),
+        },
+    }
+}
+
+function hydrateAiData(aiData, userInput) {
+    const fallback = buildFallbackAiData(userInput)
+    const base = aiData && typeof aiData === 'object' ? aiData : {}
+    const baseTitle = String(base.title || base.itemTitle || '').trim()
+    const baseDescription = String(base.description || base.fullScanDescription || '').trim()
+    const baseCategory = String(base.category || '').trim()
+    const baseColor = String(base.color || '').trim()
+    const baseConfidenceRaw = Number(base.confidencePercent ?? base.confidence ?? fallback.confidence)
+    const baseConfidence = Number.isFinite(baseConfidenceRaw)
+        ? (baseConfidenceRaw <= 1 ? Math.round(baseConfidenceRaw * 100) : baseConfidenceRaw)
+        : fallback.confidence
+    const labels = mergeKeywordLists(
+        base.labels,
+        base.aiLabels,
+        base.keywords,
+        userInput.keywords,
+        toKeywordList(userInput.title, userInput.description)
+    ).slice(0, 16)
+
+    const category = ALLOWED_CATEGORIES.has(baseCategory) ? baseCategory : fallback.category
+
+    return {
+        ...fallback,
+        ...base,
+        title: String(baseTitle || fallback.title).trim(),
+        itemTitle: String(baseTitle || fallback.title).trim(),
+        description: String(baseDescription || fallback.description).trim(),
+        fullScanDescription: String(base.fullScanDescription || baseDescription || fallback.fullScanDescription).trim(),
+        category,
+        color: String(baseColor || fallback.color).trim(),
+        labels,
+        aiLabels: mergeKeywordLists(base.aiLabels, labels).slice(0, 3),
+        keywords: mergeKeywordLists(base.keywords, labels),
+        confidence: Number(baseConfidence || fallback.confidence || 0),
+        aiProfile: {
+            ...(fallback.aiProfile || {}),
+            ...(base.aiProfile || {}),
+        },
     }
 }
 
@@ -123,25 +261,55 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Image upload is required' }, { status: 400 })
         }
 
+        const userInputSnapshot = {
+            title: String(title || '').trim(),
+            category: String(category || '').trim(),
+            description: String(description || '').trim(),
+            keywords: mergeKeywordLists(keywords),
+            color: String(color || '').trim(),
+            brand: String(brand || '').trim(),
+            possibleLocation: String(possibleLocation || '').trim(),
+        }
+
         let aiData = null
+        let aiSourceLabel = ''
         try {
             // Always run server-side scan so full AI description is generated and stored privately.
-            aiData = await analyzeImageFromUrl(imageUrl)
+            aiData = await analyzeItemImageWithGroq(imageUrl, { itemType: 'lost' })
+                aiSourceLabel = String(aiData?.source || aiData?.aiSource || 'groq')
         } catch (aiErr) {
             console.warn('[Lost Item AI Fallback]', aiErr.message)
             aiData = ai || null
         }
 
+        aiData = hydrateAiData(aiData, userInputSnapshot)
+        if (!aiSourceLabel) {
+            aiSourceLabel = aiData?.aiProfile?.userInputFallback ? 'user_fallback' : (ai ? 'client_ai' : '')
+        }
+
+        const aiInputSnapshot = {
+            title: aiData?.title || aiData?.itemTitle || '',
+            category: aiData?.category || '',
+            description: aiData?.description || aiData?.fullScanDescription || '',
+            keywords: mergeKeywordLists(aiData?.keywords, aiData?.labels, aiData?.aiLabels),
+            color: aiData?.color || '',
+        }
+        const userVsAiComparison = compareUserAndAiDetails(userInputSnapshot, aiInputSnapshot)
+
         const resolvedCategory = ALLOWED_CATEGORIES.has(category)
             ? category
             : (ALLOWED_CATEGORIES.has(aiData?.category) ? aiData.category : 'Other')
 
-        const resolvedTitle = String(title || aiData?.title || 'Unidentified Item').trim()
+        const resolvedTitle = String(title || aiData?.title || aiData?.itemTitle || 'Unidentified Item').trim()
         const resolvedDescription = String(description || aiData?.description || 'Auto-generated item report from uploaded image.').trim()
         const resolvedLocation = String(possibleLocation || 'Not specified').trim()
         const resolvedColor = String(color || aiData?.color || '').trim()
         const resolvedDateLost = dateLost ? new Date(dateLost) : new Date()
-        const resolvedKeywords = mergeKeywordLists(keywords, aiData?.keywords, aiData?.labels)
+        const resolvedKeywords = mergeKeywordLists(keywords, aiData?.keywords, aiData?.labels, aiData?.aiLabels)
+        const aiConfidenceRaw = Number(aiData?.confidencePercent ?? aiData?.confidence ?? 0)
+        const aiConfidenceResolved = Number.isFinite(aiConfidenceRaw)
+            ? (aiConfidenceRaw <= 1 ? Math.round(aiConfidenceRaw * 100) : aiConfidenceRaw)
+            : 0
 
         if (!resolvedTitle || !resolvedDescription || !resolvedLocation) {
             return NextResponse.json({ error: 'Unable to generate enough item details from the image. Please add title or description.' }, { status: 400 })
@@ -160,12 +328,17 @@ export async function POST(request) {
             possibleLocation: resolvedLocation,
             imageUrl: imageUrl || '',
             aiGeneratedDescription: aiData?.fullScanDescription || aiData?.description || '',
-            aiLabels: aiData?.labels || [],
+            aiLabels: mergeKeywordLists(aiData?.aiLabels, aiData?.labels).slice(0, 16),
             aiCategory: aiData?.category || '',
             aiColor: aiData?.color || '',
-            aiConfidence: Number(aiData?.confidence || 0),
-            aiProfile: aiData?.aiProfile || {},
-            aiSource: aiData ? 'huggingface' : '',
+            aiConfidence: aiConfidenceResolved,
+            aiProfile: {
+                ...(aiData?.aiProfile || {}),
+                userInputComparison: userVsAiComparison,
+                userInputSnapshot,
+                imageAnalysisSnapshot: aiInputSnapshot,
+            },
+            aiSource: aiSourceLabel,
             smartMode: Boolean(smartMode),
             contactPreference: contactPreference || 'platform',
             postedBy: decoded.id,
@@ -205,9 +378,11 @@ export async function POST(request) {
                     result.breakdown.objectTypeScore >= 65
 
                 if (result.matchScore >= MATCH_THRESHOLD && meetsQualityGate) {
+                    const suggestionScore = Math.round((result.matchScore * 0.75) + (userVsAiComparison.overallScore * 0.25))
                     matches.push({
                         foundItem: sanitizePrivateAiFields(foundItem),
                         matchScore: result.matchScore,
+                        suggestionScore,
                         breakdown: result.breakdown,
                     })
 
@@ -223,7 +398,7 @@ export async function POST(request) {
                             userId: decoded.id,
                             type: 'ai_match',
                             title: 'AI Match Found!',
-                            message: `Your "${item.title}" has a ${result.matchScore}% match with "${foundItem.title}" found at ${foundItem.locationFound}`,
+                            message: `Your "${item.title}" has a ${result.matchScore}% match with "${foundItem.title}" found at ${foundItem.locationFound} (suggestion score ${suggestionScore}%, detail consistency ${userVsAiComparison.overallScore}%).`,
                             lostItemId: item._id,
                             foundItemId: foundItem._id,
                             matchScore: result.matchScore,

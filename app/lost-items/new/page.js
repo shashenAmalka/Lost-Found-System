@@ -64,11 +64,18 @@ export default function NewLostItemPage() {
 
         setForm((prev) => {
             const next = { ...prev }
+            const suggestedKeywords = Array.isArray(ai.keywords)
+                ? ai.keywords
+                : Array.isArray(ai.labels)
+                    ? ai.labels
+                    : []
             if (!touched.title && !next.title) next.title = ai.title || ''
             if (!touched.description && !next.description) next.description = ai.description || ''
             if (!touched.category && !next.category) next.category = ai.category || ''
             if (!touched.color && !next.color) next.color = ai.color || ''
-            if (!touched.keywords && !next.keywords) next.keywords = (ai.keywords || []).join(', ')
+            if (!touched.brand && !next.brand) next.brand = ai.brand || ''
+            if (!touched.uniqueIdentifier && !next.uniqueIdentifier) next.uniqueIdentifier = ai.uniqueIdentifier || ''
+            if (!touched.keywords && !next.keywords) next.keywords = suggestedKeywords.join(', ')
             if (smartMode && !next.dateLost) next.dateLost = today
             if (smartMode && !next.possibleLocation) next.possibleLocation = 'Not specified'
             return next
@@ -222,7 +229,7 @@ export default function NewLostItemPage() {
                             <p className="text-[10px] flex items-center gap-1 text-gray-400 mt-1.5 font-medium">
                                 <Sparkles size={12} className="text-[#F0A500]" /> Detailed descriptions help our AI find better matches
                             </p>
-                            {analyzingImage && <p className="text-[10px] text-[#1C2A59] mt-1.5 font-semibold">Analyzing image with Hugging Face AI...</p>}
+                            {analyzingImage && <p className="text-[10px] text-[#1C2A59] mt-1.5 font-semibold">Analyzing image with Groq Vision AI...</p>}
                         </div>
 
                         {/* Keywords */}
@@ -315,7 +322,8 @@ export default function NewLostItemPage() {
                                 <div className="mt-5 p-4 rounded border border-[#fde68a] bg-[#fffbeb]">
                                     <p className="text-xs font-black uppercase tracking-wider text-[#92400e] mb-1">AI Suggestions</p>
                                     <p className="text-sm text-[#1C2A59] font-semibold">{aiSuggestion.description}</p>
-                                    <p className="text-xs text-[#92400e] mt-2">Labels: {(aiSuggestion.labels || []).slice(0, 8).join(', ') || 'N/A'}</p>
+                                    <p className="text-xs text-[#92400e] mt-2">Labels: {(aiSuggestion.labels || aiSuggestion.aiLabels || []).slice(0, 8).join(', ') || 'N/A'}</p>
+                                    <p className="text-xs text-[#92400e] mt-1">Brand: {aiSuggestion.brand || 'N/A'} | Confidence: {aiSuggestion.confidence ?? aiSuggestion.aiConfidence ?? 'N/A'}%</p>
                                 </div>
                             )}
 

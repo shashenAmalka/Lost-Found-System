@@ -55,11 +55,18 @@ export default function NewFoundItemPage() {
 
         setForm((prev) => {
             const next = { ...prev }
+            const suggestedKeywords = Array.isArray(ai.keywords)
+                ? ai.keywords
+                : Array.isArray(ai.labels)
+                    ? ai.labels
+                    : []
             if (!touched.title && !next.title) next.title = ai.title || ''
             if (!touched.description && !next.description) next.description = ai.description || ''
             if (!touched.category && !next.category) next.category = ai.category || ''
             if (!touched.color && !next.color) next.color = ai.color || ''
-            if (!touched.keywords && !next.keywords) next.keywords = (ai.keywords || []).join(', ')
+            if (!touched.brand && !next.brand) next.brand = ai.brand || ''
+            if (!touched.condition && !next.condition) next.condition = ai.condition || 'Good'
+            if (!touched.keywords && !next.keywords) next.keywords = suggestedKeywords.join(', ')
             if (smartMode && !next.dateFound) next.dateFound = today
             if (smartMode && !next.locationFound) next.locationFound = 'Not specified'
             return next
@@ -192,7 +199,7 @@ export default function NewFoundItemPage() {
                         <div>
                             <label className={labelClass}>Description {!smartMode && <span className="text-red-500">*</span>}</label>
                             <textarea className={`${inputClass} min-h-[100px] resize-y`} placeholder="Describe the item in detail..." value={form.description} onChange={change('description')} required={!smartMode} />
-                            {analyzingImage && <p className="text-[10px] text-[#1C2A59] mt-1.5 font-semibold">Analyzing image with Hugging Face AI...</p>}
+                            {analyzingImage && <p className="text-[10px] text-[#1C2A59] mt-1.5 font-semibold">Analyzing image with Groq Vision AI...</p>}
                         </div>
 
                         <div>
@@ -251,7 +258,8 @@ export default function NewFoundItemPage() {
                             <div className="p-4 rounded border border-[#bfdbfe] bg-[#eff6ff]">
                                 <p className="text-xs font-black uppercase tracking-wider text-[#1d4ed8] mb-1">AI Suggestions</p>
                                 <p className="text-sm text-[#1C2A59] font-semibold">{aiSuggestion.description}</p>
-                                <p className="text-xs text-[#1d4ed8] mt-2">Labels: {(aiSuggestion.labels || []).slice(0, 8).join(', ') || 'N/A'}</p>
+                                <p className="text-xs text-[#1d4ed8] mt-2">Labels: {(aiSuggestion.labels || aiSuggestion.aiLabels || []).slice(0, 8).join(', ') || 'N/A'}</p>
+                                <p className="text-xs text-[#1d4ed8] mt-1">Brand: {aiSuggestion.brand || 'N/A'} | Condition: {aiSuggestion.condition || 'Good'}</p>
                             </div>
                         )}
 
