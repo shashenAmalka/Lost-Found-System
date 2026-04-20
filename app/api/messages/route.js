@@ -93,7 +93,7 @@ export async function POST(request) {
         if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         await connectDB()
-        const { claimId, contactId, message } = await request.json()
+        const { claimId, contactId, message, messageType } = await request.json()
 
         if (!message?.trim() || (!claimId && !contactId)) {
             return NextResponse.json(
@@ -181,7 +181,7 @@ export async function POST(request) {
         if (claimId) {
             const claim = await ClaimRequest.findById(claimId)
                 .populate('claimantId', 'name email')
-                .populate('foundItemId', 'submittedBy')
+                .populate('foundItemId', 'submittedBy title')
 
             if (!claim) return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
 
@@ -207,23 +207,48 @@ export async function POST(request) {
 
             const newMessage = await Message.create(messageData)
 
-            // Create notification for recipient
-            const notificationTitle = isAdmin
-                ? `💬 Message from Admin`
-                : `💬 Message from ${sender.name}`
+            const isRequestInfo = isAdmin && messageType === 'request_info'
+            if (isRequestInfo) {
+                const foundTitle = claim.foundItemId?.title || 'your claimed item'
+                claim.status = 'admin_review'
+                claim.adminNote = message.trim()
+                claim.adminId = decoded.id
+                claim.reviewedAt = new Date()
+                claim.trackingHistory.push({
+                    status: 'Admin Review',
+                    note: message.trim(),
+                    updatedBy: sender.name || 'Admin',
+                })
+                await claim.save()
 
-            const notificationMessage = isAdmin
-                ? `Admin: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`
-                : `"${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`
+                await Notification.create({
+                    userId: recipientId,
+                    type: 'claim_info_requested',
+                    title: '📋 More Information Requested',
+                    message: `Admin has requested more details about your claim for "${foundTitle}": ${message.trim()}`,
+                    claimId,
+                    foundItemId: claim.foundItemId?._id || claim.foundItemId,
+                    messageId: newMessage._id,
+                })
+            } else {
+                // Create standard chat notification for recipient
+                const notificationTitle = isAdmin
+                    ? '💬 Message from Admin'
+                    : `💬 Message from ${sender.name}`
 
-            await Notification.create({
-                userId: recipientId,
-                type: 'chat_message',
-                title: notificationTitle,
-                message: notificationMessage,
-                claimId,
-                messageId: newMessage._id,
-            })
+                const notificationMessage = isAdmin
+                    ? `Admin: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`
+                    : `"${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`
+
+                await Notification.create({
+                    userId: recipientId,
+                    type: 'chat_message',
+                    title: notificationTitle,
+                    message: notificationMessage,
+                    claimId,
+                    messageId: newMessage._id,
+                })
+            }
 
             const populatedMessage = await Message.findById(newMessage._id)
                 .populate('senderId', 'name email role')

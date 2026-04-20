@@ -250,20 +250,9 @@ function FoundItemPanel({ item, onClose }) {
 // ─── Claim Card ───────────────────────────────────────────────────────────────
 function ClaimCard({ claim, onAction, actionLoading }) {
     const [expanded, setExpanded] = useState(false)
-    const [infoMode, setInfoMode] = useState(false)
-    const [infoNote, setInfoNote] = useState('')
-    const [infoError, setInfoError] = useState('')
     const [confirmAction, setConfirmAction] = useState(null)
     const [showChat, setShowChat] = useState(false)
     const isDone = ['approved', 'rejected', 'completed'].includes(claim.status)
-
-    const handleInfoSubmit = () => {
-        if (!infoNote.trim()) { setInfoError('Message cannot be empty.'); return }
-        setInfoError('')
-        onAction(claim._id, 'request_info', infoNote)
-        setInfoNote('')
-        setInfoMode(false)
-    }
 
     return (
         <>
@@ -393,40 +382,11 @@ function ClaimCard({ claim, onAction, actionLoading }) {
                                         className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-red-600 disabled:opacity-50 bg-red-500 text-white shadow-sm">
                                         <X size={14} /> Reject
                                     </button>
-                                    <button onClick={() => setInfoMode(m => !m)} disabled={actionLoading === claim._id}
+                                    <button onClick={() => setShowChat(s => !s)} disabled={actionLoading === claim._id}
                                         className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-gray-100 disabled:opacity-50 bg-gray-50 text-gray-600 border border-gray-200">
                                         <MessageCircle size={14} /> Request Info
                                     </button>
-                                    <button onClick={() => setShowChat(!showChat)} disabled={actionLoading === claim._id}
-                                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all hover:bg-blue-100 disabled:opacity-50 bg-blue-50 text-blue-600 border border-blue-200">
-                                        <Send size={14} /> Chat
-                                    </button>
                                 </div>
-
-                                {/* Inline request info form */}
-                                {infoMode && (
-                                    <div className="space-y-2 mt-4">
-                                        <textarea
-                                            className="w-full px-4 py-3 rounded-xl text-sm border outline-none resize-none min-h-[72px] transition-colors bg-white text-[#1C2A59]"
-                                            style={{ borderColor: infoError ? '#ef4444' : '#e5e7eb' }}
-                                            placeholder="Type your message to the student..."
-                                            value={infoNote}
-                                            onChange={e => { setInfoNote(e.target.value); setInfoError('') }}
-                                            autoFocus
-                                        />
-                                        {infoError && <p className="text-xs font-semibold text-red-500">{infoError}</p>}
-                                        <div className="flex gap-2">
-                                            <button onClick={handleInfoSubmit} disabled={actionLoading === claim._id}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold disabled:opacity-50 bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 transition-colors">
-                                                <Send size={12} /> Send Message
-                                            </button>
-                                            <button onClick={() => { setInfoMode(false); setInfoNote(''); setInfoError('') }}
-                                                className="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors">
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
 
                                 {/* Chat Window */}
                                 {showChat && (
@@ -435,6 +395,7 @@ function ClaimCard({ claim, onAction, actionLoading }) {
                                             claimId={claim._id}
                                             isAdmin={true}
                                             recipientName={claim.claimantId?.name || claim.claimantName || 'User'}
+                                            messageType="request_info"
                                         />
                                     </div>
                                 )}

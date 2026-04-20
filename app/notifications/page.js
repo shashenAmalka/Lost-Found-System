@@ -127,10 +127,10 @@ function NotificationCard({ notif, onMarkRead, onDismiss, onWarningAppeal }) {
         )
     } else if (notif.type === 'claim_info_requested') {
         actionBtn = (
-            <Link href={foundItem ? `/claims/new?foundItemId=${foundItem._id}` : '/user-dashboard'}
+            <Link href={notif.claimId ? `/claims/${notif.claimId}` : '/user-dashboard/claims'}
                 className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl border transition-all hover:shadow-sm"
                 style={{ background: '#ffedd5', color: '#c2410c', borderColor: '#fed7aa' }}>
-                <MailQuestion size={12} /> Reply to Admin
+                <MailQuestion size={12} /> Open Conversation
             </Link>
         )
     } else if (notif.type === 'chat_message' && notif.claimId) {

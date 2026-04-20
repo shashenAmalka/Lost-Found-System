@@ -5,6 +5,13 @@ import connectDB from '@/lib/mongodb'
 import FoundItem from '@/models/FoundItem'
 import { verifyToken } from '@/lib/auth'
 
+function sanitizePrivateAiFields(doc) {
+    const raw = doc && typeof doc.toObject === 'function' ? doc.toObject() : { ...(doc || {}) }
+    delete raw.aiGeneratedDescription
+    delete raw.aiProfile
+    return raw
+}
+
 export async function GET(request, { params }) {
     try {
         await connectDB()
@@ -19,11 +26,11 @@ export async function GET(request, { params }) {
         const isAdmin = decoded && decoded.role === 'admin'
 
         if (isOwner || isAdmin) {
-            return NextResponse.json({ item })
+            return NextResponse.json({ item: sanitizePrivateAiFields(item) })
         }
 
         // Public view: hide sensitive details to prevent fake claims
-        const { keywords, color, brand, condition, submittedByEmail, submittedBy, locationFound, description, ...publicItem } = item
+        const { keywords, color, brand, condition, submittedByEmail, submittedBy, locationFound, description, aiGeneratedDescription, aiProfile, ...publicItem } = item
         return NextResponse.json({
             item: {
                 ...publicItem,
@@ -51,7 +58,7 @@ export async function PUT(request, { params }) {
         }
         const body = await request.json()
         const updated = await FoundItem.findByIdAndUpdate(params.id, body, { new: true })
-        return NextResponse.json({ item: updated })
+        return NextResponse.json({ item: sanitizePrivateAiFields(updated) })
     } catch {
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }
