@@ -109,8 +109,8 @@ export default function NewLostItemPage() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
-        if (!form.imageUrl) {
-            setError('Please upload an image.')
+        if (smartMode && !form.imageUrl) {
+            setError('Please upload an image when Smart Mode is ON.')
             return
         }
         if (form.dateLost && form.dateLost > today) {
@@ -306,7 +306,7 @@ export default function NewLostItemPage() {
 
                             {/* Image URL */}
                             <div>
-                                <label className={labelClass}>Actual Photo <span className="text-red-500">*</span></label>
+                                <label className={labelClass}>Actual Photo {smartMode && <span className="text-red-500">*</span>}</label>
                                 <div className="bg-[#F4F5F7] p-4 rounded border border-gray-200">
                                     <ImageUpload
                                         value={form.imageUrl}
