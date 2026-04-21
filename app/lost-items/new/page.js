@@ -137,10 +137,20 @@ export default function NewLostItemPage() {
         }
         setLoading(true)
         try {
+            const finalImageUrl = editedImageUrl || form.imageUrl
+            const resolvedLocation = composeReportLocation({ location, subLocation, otherLocation }) || form.possibleLocation
+
             const res = await fetch('/api/lost-items', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...form, imageUrl: finalImageUrl, possibleLocation, categoryFields, ai: aiSuggestion, smartMode }),
+                body: JSON.stringify({
+                    ...form,
+                    imageUrl: finalImageUrl,
+                    possibleLocation: resolvedLocation,
+                    categoryFields,
+                    ai: aiSuggestion,
+                    smartMode,
+                }),
                 credentials: 'include',
             })
             const data = await res.json()

@@ -133,10 +133,19 @@ export default function NewFoundItemPage() {
         }
         setLoading(true)
         try {
+            const finalPhotoUrl = editedImageUrl || form.photoUrl
+            const resolvedLocation = composeReportLocation({ location, subLocation, otherLocation }) || form.locationFound
+
             const res = await fetch('/api/found-items', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...form, photoUrl: finalPhotoUrl, locationFound, ai: aiSuggestion, smartMode }),
+                body: JSON.stringify({
+                    ...form,
+                    photoUrl: finalPhotoUrl,
+                    locationFound: resolvedLocation,
+                    ai: aiSuggestion,
+                    smartMode,
+                }),
                 credentials: 'include',
             })
             const data = await res.json()
