@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import CategoryFields from '@/components/forms/CategoryFields'
 import { useAuth } from '@/context/AuthContext'
@@ -13,8 +13,10 @@ const TIME_RANGES = ['Morning (6AM-12PM)', 'Afternoon (12PM-5PM)', 'Evening (5PM
 
 export default function EditLostItemPage() {
     const { id } = useParams()
+    const searchParams = useSearchParams()
     const { user, loading: authLoading } = useAuth()
     const router = useRouter()
+    const returnTo = searchParams.get('returnTo') || '/lost-items'
     const [fetching, setFetching] = useState(true)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -73,7 +75,7 @@ export default function EditLostItemPage() {
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || 'Failed to update')
             setSuccess(true)
-            setTimeout(() => router.push('/lost-items'), 1500)
+            setTimeout(() => router.push(returnTo), 1500)
         } catch (err) {
             setError(err.message)
         } finally {

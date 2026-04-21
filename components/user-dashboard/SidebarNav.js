@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Star, Settings, LogOut, Mail, Globe, ArrowUpRight } from 'lucide-react';
+import { Home, Search, Star, Settings, LogOut, Mail, Globe, ArrowUpRight, FileText, Package, Shield } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function SidebarNav() {
@@ -11,6 +11,9 @@ export default function SidebarNav() {
     const navItems = [
         { name: 'Dashboard', href: '/user-dashboard', icon: Home },
         { name: 'My Claims', href: '/user-dashboard/claims', icon: Search },
+        { name: 'My Lost Items', href: '/my-lost-items', icon: FileText },
+        { name: 'My Found Items', href: '/my-found-items', icon: Package },
+        { name: 'Valuable Items', href: '/user-dashboard/valuable-items', icon: Shield },
         { name: 'Potential Matches', href: '/matches', icon: Star },
         { name: 'Messages', href: '/messages', icon: Mail },
         { name: 'Settings', href: '/user-dashboard/settings', icon: Settings },
