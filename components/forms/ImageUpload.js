@@ -1,10 +1,11 @@
 'use client'
 import { useState, useRef } from 'react'
-import { X, Loader2, UploadCloud } from 'lucide-react'
+import { X, Loader2, UploadCloud, Eye } from 'lucide-react'
 
 export default function ImageUpload({ value, onChange }) {
     const [uploading, setUploading] = useState(false)
     const [error, setError] = useState('')
+    const [showPreview, setShowPreview] = useState(false)
     const fileInputRef = useRef(null)
 
     const handleFileChange = async (e) => {
@@ -55,19 +56,48 @@ export default function ImageUpload({ value, onChange }) {
     // If an image is already uploaded/set
     if (value) {
         return (
-            <div className="relative w-full h-40 rounded-xl overflow-hidden border border-gray-200 group bg-white">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={value} alt="Uploaded" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button
-                        type="button"
-                        onClick={() => onChange('')}
-                        className="p-2.5 bg-white rounded-full text-red-500 hover:bg-red-50 shadow-md transition-colors"
-                    >
-                        <X size={18} />
-                    </button>
+            <>
+                <div className="relative w-full h-56 rounded-xl overflow-hidden border border-gray-200 group bg-white">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={value} alt="Uploaded" className="w-full h-full object-contain bg-[#F8FAFC]" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <button
+                            type="button"
+                            onClick={() => setShowPreview(true)}
+                            className="px-3 py-2 bg-white rounded-lg text-[#1C2A59] hover:bg-gray-100 shadow-md transition-colors inline-flex items-center gap-2 text-xs font-bold"
+                        >
+                            <Eye size={14} /> Full Preview
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onChange('')}
+                            className="p-2.5 bg-white rounded-full text-red-500 hover:bg-red-50 shadow-md transition-colors"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
                 </div>
-            </div>
+
+                {showPreview && (
+                    <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
+                        <div className="relative w-full max-w-5xl max-h-[90vh] bg-[#111827] rounded-xl border border-gray-700 p-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowPreview(false)}
+                                className="absolute top-3 right-3 p-2 bg-white rounded-full text-[#1C2A59] hover:bg-gray-100 transition-colors"
+                            >
+                                <X size={16} />
+                            </button>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={value}
+                                alt="Full preview"
+                                className="w-full max-h-[82vh] object-contain rounded"
+                            />
+                        </div>
+                    </div>
+                )}
+            </>
         )
     }
 

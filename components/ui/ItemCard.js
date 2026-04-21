@@ -51,7 +51,7 @@ function EditCountdown({ createdAt, onExpire }) {
 }
 
 // ─── Main ItemCard ────────────────────────────────────────────────────────────
-export default function ItemCard({ item, type = 'lost', onDeleted }) {
+export default function ItemCard({ item, type = 'lost', onDeleted, showEditCountdown = true }) {
     const { user } = useAuth()
     const href = `/${type === 'lost' ? 'lost-items' : 'found-items'}/${item._id}`
     const editHref = `/${type === 'lost' ? 'lost-items' : 'found-items'}/${item._id}/edit`
@@ -207,7 +207,7 @@ export default function ItemCard({ item, type = 'lost', onDeleted }) {
             {/* Content */}
             <div className="p-5 flex flex-col gap-3 flex-1">
                 {/* 10-min edit bar */}
-                {canEdit && isOwner && (
+                {showEditCountdown && canEdit && isOwner && (
                     <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl border"
                         style={{
                             background: 'linear-gradient(135deg, rgba(240,165,0,0.06), rgba(240,165,0,0.02))',

@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { useAuth } from '@/context/AuthContext'
 import { Save, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react'
@@ -12,8 +12,10 @@ const CONDITIONS = ['Excellent', 'Good', 'Fair', 'Poor']
 
 export default function EditFoundItemPage() {
     const { id } = useParams()
+    const searchParams = useSearchParams()
     const { user, loading: authLoading } = useAuth()
     const router = useRouter()
+    const returnTo = searchParams.get('returnTo') || '/found-items'
     const [fetching, setFetching] = useState(true)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
@@ -67,7 +69,7 @@ export default function EditFoundItemPage() {
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || 'Failed to update')
             setSuccess(true)
-            setTimeout(() => router.push('/found-items'), 1500)
+            setTimeout(() => router.push(returnTo), 1500)
         } catch (err) {
             setError(err.message)
         } finally {

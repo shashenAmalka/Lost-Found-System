@@ -4,9 +4,10 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import CategoryFields from '@/components/forms/CategoryFields'
 import { useAuth } from '@/context/AuthContext'
-import { Send, ArrowLeft, Sparkles, AlertCircle } from 'lucide-react'
+import { Send, ArrowLeft, Sparkles, AlertCircle, Wand2, RotateCcw } from 'lucide-react'
 import Link from 'next/link'
 import ImageUpload from '@/components/forms/ImageUpload'
+import { REPORT_LOCATIONS, LOCATION_SUB_LOCATIONS, composeReportLocation } from '@/lib/reportLocations'
 
 const CATEGORIES = ['Electronics', 'Books', 'Clothing', 'Keys', 'ID Card', 'Bag', 'Jewelry', 'Sports', 'Other']
 const TIME_RANGES = ['Morning (6AM-12PM)', 'Afternoon (12PM-5PM)', 'Evening (5PM-9PM)', 'Night (9PM-6AM)', 'Not Sure']
@@ -19,6 +20,7 @@ export default function NewLostItemPage() {
     const [success, setSuccess] = useState(false)
     const [smartMode, setSmartMode] = useState(false)
     const [analyzingImage, setAnalyzingImage] = useState(false)
+    const [editingImage, setEditingImage] = useState(false)
     const [aiSuggestion, setAiSuggestion] = useState(null)
     const [touched, setTouched] = useState({})
     const [form, setForm] = useState({
@@ -28,11 +30,27 @@ export default function NewLostItemPage() {
         imageUrl: '', contactPreference: 'platform',
     })
     const [categoryFields, setCategoryFields] = useState({})
+    const [location, setLocation] = useState('')
+    const [subLocation, setSubLocation] = useState('')
+    const [otherLocation, setOtherLocation] = useState('')
+    const [originalImageUrl, setOriginalImageUrl] = useState('')
+    const [editedImageUrl, setEditedImageUrl] = useState('')
+    const [isImageEdited, setIsImageEdited] = useState(false)
 
     // Reset category-specific fields when category changes
     useEffect(() => {
         setCategoryFields({})
     }, [form.category])
+
+    useEffect(() => {
+        setSubLocation('')
+        setOtherLocation('')
+    }, [location])
+
+    useEffect(() => {
+        const composedLocation = composeReportLocation({ location, subLocation, otherLocation })
+        setForm(f => ({ ...f, possibleLocation: composedLocation }))
+    }, [location, subLocation, otherLocation])
 
     const change = (k) => (e) => {
         const value = e.target.value
@@ -109,7 +127,15 @@ export default function NewLostItemPage() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
-        if (!form.imageUrl) {
+        const possibleLocation = composeReportLocation({ location, subLocation, otherLocation }) || (smartMode ? 'Not specified' : '')
+        const finalImageUrl = editedImageUrl || form.imageUrl
+
+        if (!smartMode && !possibleLocation) {
+            setError('Please select a location.')
+            return
+        }
+
+        if (!finalImageUrl) {
             setError('Please upload an image.')
             return
         }
@@ -122,7 +148,7 @@ export default function NewLostItemPage() {
             const res = await fetch('/api/lost-items', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...form, categoryFields, ai: aiSuggestion, smartMode }),
+                body: JSON.stringify({ ...form, imageUrl: finalImageUrl, possibleLocation, categoryFields, ai: aiSuggestion, smartMode }),
                 credentials: 'include',
             })
             const data = await res.json()
@@ -134,6 +160,52 @@ export default function NewLostItemPage() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleEditImage = async () => {
+        if (!form.imageUrl && !editedImageUrl) {
+            setError('Please upload an image first.')
+            return
+        }
+
+        setError('')
+        setEditingImage(true)
+
+        try {
+            const sourceImageUrl = originalImageUrl || form.imageUrl || editedImageUrl
+            if (!sourceImageUrl) throw new Error('Image source is missing')
+
+            const res = await fetch('/api/ai/edit-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ imageUrl: sourceImageUrl }),
+            })
+
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Image edit failed')
+
+            if (!originalImageUrl) {
+                setOriginalImageUrl(sourceImageUrl)
+            }
+
+            setEditedImageUrl(data.editedImageUrl)
+            setIsImageEdited(true)
+            setForm(f => ({ ...f, imageUrl: data.editedImageUrl }))
+            analyzeImage(data.editedImageUrl)
+        } catch (err) {
+            setError(err.message || 'Unable to edit image')
+        } finally {
+            setEditingImage(false)
+        }
+    }
+
+    const handleRevertImage = () => {
+        if (!originalImageUrl) return
+        setForm(f => ({ ...f, imageUrl: originalImageUrl }))
+        setEditedImageUrl('')
+        setIsImageEdited(false)
+        analyzeImage(originalImageUrl)
     }
 
     if (authLoading) return <div className="min-h-screen bg-[#F4F5F7] font-sans pb-20 pt-20"><Navbar /></div>
@@ -170,6 +242,7 @@ export default function NewLostItemPage() {
 
     const inputClass = "w-full px-4 py-2.5 bg-[#F4F5F7] border border-gray-200 rounded text-sm font-medium text-[#1C2A59] placeholder-gray-400 focus:outline-none focus:border-[#F0A500] focus:ring-1 focus:ring-[#F0A500] transition-colors"
     const labelClass = "text-[10px] font-bold text-gray-400 tracking-wider uppercase mb-1 block"
+    const currentSubLocationOptions = LOCATION_SUB_LOCATIONS[location] || []
 
     return (
         <div className="min-h-screen bg-[#F4F5F7] font-sans pb-20 pt-20">
@@ -293,7 +366,43 @@ export default function NewLostItemPage() {
                             {/* Location */}
                             <div className="mt-5">
                                 <label className={labelClass}>Possible Location {!smartMode && <span className="text-red-500">*</span>}</label>
-                                <input className={inputClass} placeholder="e.g. Library 2nd floor, Building A Lecture Hall" value={form.possibleLocation} onChange={change('possibleLocation')} required={!smartMode} />
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <select
+                                        className={inputClass}
+                                        value={location}
+                                        onChange={(e) => setLocation(e.target.value)}
+                                        required={!smartMode}
+                                    >
+                                        <option value="">Select location</option>
+                                        {REPORT_LOCATIONS.map((loc) => (
+                                            <option key={loc} value={loc}>{loc}</option>
+                                        ))}
+                                    </select>
+
+                                    {location === 'Other' && (
+                                        <input
+                                            className={inputClass}
+                                            placeholder="Type custom location"
+                                            value={otherLocation}
+                                            onChange={(e) => setOtherLocation(e.target.value)}
+                                            required={!smartMode}
+                                        />
+                                    )}
+
+                                    {currentSubLocationOptions.length > 0 && location !== 'Other' && (
+                                        <select
+                                            className={inputClass}
+                                            value={subLocation}
+                                            onChange={(e) => setSubLocation(e.target.value)}
+                                            required={!smartMode}
+                                        >
+                                            <option value="">Select sub-location</option>
+                                            {currentSubLocationOptions.map((option) => (
+                                                <option key={option} value={option}>{option}</option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -312,10 +421,35 @@ export default function NewLostItemPage() {
                                         value={form.imageUrl}
                                         onChange={(url) => {
                                             setForm(f => ({ ...f, imageUrl: url }))
+                                            setOriginalImageUrl('')
+                                            setEditedImageUrl('')
+                                            setIsImageEdited(false)
                                             analyzeImage(url)
                                         }}
                                     />
                                 </div>
+                                {form.imageUrl && (
+                                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                                        <button
+                                            type="button"
+                                            onClick={handleEditImage}
+                                            disabled={editingImage}
+                                            className="inline-flex items-center gap-2 px-3 py-2 rounded border border-[#F0A500] text-[#1C2A59] bg-[#fffbeb] text-xs font-bold hover:bg-[#fef3c7] disabled:opacity-60 disabled:cursor-not-allowed"
+                                        >
+                                            <Wand2 size={14} /> {editingImage ? 'Editing...' : 'Edit Image'}
+                                        </button>
+
+                                        {isImageEdited && (
+                                            <button
+                                                type="button"
+                                                onClick={handleRevertImage}
+                                                className="inline-flex items-center gap-2 px-3 py-2 rounded border border-gray-300 text-[#1C2A59] bg-white text-xs font-bold hover:bg-gray-50"
+                                            >
+                                                <RotateCcw size={14} /> Revert
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             {aiSuggestion && (

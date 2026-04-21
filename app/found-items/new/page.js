@@ -3,9 +3,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { useAuth } from '@/context/AuthContext'
-import { Send, ArrowLeft } from 'lucide-react'
+import { Send, ArrowLeft, Wand2, RotateCcw } from 'lucide-react'
 import Link from 'next/link'
 import ImageUpload from '@/components/forms/ImageUpload'
+import { REPORT_LOCATIONS, LOCATION_SUB_LOCATIONS, composeReportLocation } from '@/lib/reportLocations'
 
 const CATEGORIES = ['Electronics', 'Books', 'Clothing', 'Keys', 'ID Card', 'Bag', 'Jewelry', 'Sports', 'Other']
 const CONDITIONS = ['Excellent', 'Good', 'Fair', 'Poor']
@@ -17,6 +18,7 @@ export default function NewFoundItemPage() {
     const [error, setError] = useState('')
     const [smartMode, setSmartMode] = useState(false)
     const [analyzingImage, setAnalyzingImage] = useState(false)
+    const [editingImage, setEditingImage] = useState(false)
     const [aiSuggestion, setAiSuggestion] = useState(null)
     const [touched, setTouched] = useState({})
     const [form, setForm] = useState({
@@ -24,11 +26,25 @@ export default function NewFoundItemPage() {
         color: '', brand: '', condition: 'Good',
         dateFound: '', timeFound: '', locationFound: '', photoUrl: '',
     })
+    const [location, setLocation] = useState('')
+    const [subLocation, setSubLocation] = useState('')
+    const [otherLocation, setOtherLocation] = useState('')
+    const [originalImageUrl, setOriginalImageUrl] = useState('')
+    const [editedImageUrl, setEditedImageUrl] = useState('')
+    const [isImageEdited, setIsImageEdited] = useState(false)
+
+    const currentSubLocationOptions = LOCATION_SUB_LOCATIONS[location] || []
 
     const change = (k) => (e) => {
         const value = e.target.value
         setTouched(prev => ({ ...prev, [k]: true }))
         setForm(f => ({ ...f, [k]: value }))
+    }
+
+    const handleLocationChange = (value) => {
+        setLocation(value)
+        setSubLocation('')
+        setOtherLocation('')
     }
 
     const today = new Date().toISOString().split('T')[0]
@@ -100,7 +116,15 @@ export default function NewFoundItemPage() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
-        if (!form.photoUrl) {
+        const locationFound = composeReportLocation({ location, subLocation, otherLocation }) || (smartMode ? 'Not specified' : '')
+        const finalPhotoUrl = editedImageUrl || form.photoUrl
+
+        if (!smartMode && !locationFound) {
+            setError('Please select a location.')
+            return
+        }
+
+        if (!finalPhotoUrl) {
             setError('Please upload an image.')
             return
         }
@@ -120,7 +144,7 @@ export default function NewFoundItemPage() {
             const res = await fetch('/api/found-items', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...form, ai: aiSuggestion, smartMode }),
+                body: JSON.stringify({ ...form, photoUrl: finalPhotoUrl, locationFound, ai: aiSuggestion, smartMode }),
                 credentials: 'include',
             })
             const data = await res.json()
@@ -131,6 +155,52 @@ export default function NewFoundItemPage() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleEditImage = async () => {
+        if (!form.photoUrl && !editedImageUrl) {
+            setError('Please upload an image first.')
+            return
+        }
+
+        setError('')
+        setEditingImage(true)
+
+        try {
+            const sourceImageUrl = originalImageUrl || form.photoUrl || editedImageUrl
+            if (!sourceImageUrl) throw new Error('Image source is missing')
+
+            const res = await fetch('/api/ai/edit-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ imageUrl: sourceImageUrl }),
+            })
+
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Image edit failed')
+
+            if (!originalImageUrl) {
+                setOriginalImageUrl(sourceImageUrl)
+            }
+
+            setEditedImageUrl(data.editedImageUrl)
+            setIsImageEdited(true)
+            setForm(f => ({ ...f, photoUrl: data.editedImageUrl }))
+            analyzeImage(data.editedImageUrl)
+        } catch (err) {
+            setError(err.message || 'Unable to edit image')
+        } finally {
+            setEditingImage(false)
+        }
+    }
+
+    const handleRevertImage = () => {
+        if (!originalImageUrl) return
+        setForm(f => ({ ...f, photoUrl: originalImageUrl }))
+        setEditedImageUrl('')
+        setIsImageEdited(false)
+        analyzeImage(originalImageUrl)
     }
 
     if (authLoading) return <div className="min-h-screen bg-[#F4F5F7] font-sans pb-20 pt-20"><Navbar /></div>
@@ -236,9 +306,53 @@ export default function NewFoundItemPage() {
                             </div>
                             <div>
                                 <label className={labelClass}>Location Found {!smartMode && <span className="text-red-500">*</span>}</label>
-                                <input className={inputClass} placeholder="e.g. Cafeteria B" value={form.locationFound} onChange={change('locationFound')} required={!smartMode} />
+                                <select
+                                    className={inputClass}
+                                    value={location}
+                                    onChange={(e) => handleLocationChange(e.target.value)}
+                                    required={!smartMode}
+                                >
+                                    <option value="">Select location</option>
+                                    {REPORT_LOCATIONS.map((loc) => (
+                                        <option key={loc} value={loc}>{loc}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
+
+                        {(location === 'Other' || currentSubLocationOptions.length > 0) && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                {location === 'Other' && (
+                                    <div>
+                                        <label className={labelClass}>Custom Location {!smartMode && <span className="text-red-500">*</span>}</label>
+                                        <input
+                                            className={inputClass}
+                                            placeholder="Type custom location"
+                                            value={otherLocation}
+                                            onChange={(e) => setOtherLocation(e.target.value)}
+                                            required={!smartMode}
+                                        />
+                                    </div>
+                                )}
+
+                                {currentSubLocationOptions.length > 0 && location !== 'Other' && (
+                                    <div>
+                                        <label className={labelClass}>Sub-location {!smartMode && <span className="text-red-500">*</span>}</label>
+                                        <select
+                                            className={inputClass}
+                                            value={subLocation}
+                                            onChange={(e) => setSubLocation(e.target.value)}
+                                            required={!smartMode}
+                                        >
+                                            <option value="">Select sub-location</option>
+                                            {currentSubLocationOptions.map((option) => (
+                                                <option key={option} value={option}>{option}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
 
                         <div>
@@ -248,10 +362,35 @@ export default function NewFoundItemPage() {
                                     value={form.photoUrl}
                                     onChange={(url) => {
                                         setForm(f => ({ ...f, photoUrl: url }))
+                                        setOriginalImageUrl('')
+                                        setEditedImageUrl('')
+                                        setIsImageEdited(false)
                                         analyzeImage(url)
                                     }}
                                 />
                             </div>
+                            {form.photoUrl && (
+                                <div className="flex flex-wrap items-center gap-2 mt-3">
+                                    <button
+                                        type="button"
+                                        onClick={handleEditImage}
+                                        disabled={editingImage}
+                                        className="inline-flex items-center gap-2 px-3 py-2 rounded border border-[#F0A500] text-[#1C2A59] bg-[#fffbeb] text-xs font-bold hover:bg-[#fef3c7] disabled:opacity-60 disabled:cursor-not-allowed"
+                                    >
+                                        <Wand2 size={14} /> {editingImage ? 'Editing...' : 'Edit Image'}
+                                    </button>
+
+                                    {isImageEdited && (
+                                        <button
+                                            type="button"
+                                            onClick={handleRevertImage}
+                                            className="inline-flex items-center gap-2 px-3 py-2 rounded border border-gray-300 text-[#1C2A59] bg-white text-xs font-bold hover:bg-gray-50"
+                                        >
+                                            <RotateCcw size={14} /> Revert
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {aiSuggestion && (
