@@ -257,8 +257,8 @@ export async function POST(request) {
             smartMode,
         } = body
 
-        if (!imageUrl) {
-            return NextResponse.json({ error: 'Image upload is required' }, { status: 400 })
+        if (smartMode && !imageUrl) {
+            return NextResponse.json({ error: 'Image upload is required when Smart Mode is ON' }, { status: 400 })
         }
 
         const userInputSnapshot = {
@@ -274,9 +274,11 @@ export async function POST(request) {
         let aiData = null
         let aiSourceLabel = ''
         try {
-            // Always run server-side scan so full AI description is generated and stored privately.
-            aiData = await analyzeItemImageWithGroq(imageUrl, { itemType: 'lost' })
+            if (imageUrl) {
+                // Always run server-side scan when an image is present so full AI description is generated and stored privately.
+                aiData = await analyzeItemImageWithGroq(imageUrl, { itemType: 'lost' })
                 aiSourceLabel = String(aiData?.source || aiData?.aiSource || 'groq')
+            }
         } catch (aiErr) {
             console.warn('[Lost Item AI Fallback]', aiErr.message)
             aiData = ai || null

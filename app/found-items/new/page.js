@@ -100,8 +100,8 @@ export default function NewFoundItemPage() {
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
-        if (!form.photoUrl) {
-            setError('Please upload an image.')
+        if (smartMode && !form.photoUrl) {
+            setError('Please upload an image when Smart Mode is ON.')
             return
         }
         const now = new Date()
@@ -242,7 +242,7 @@ export default function NewFoundItemPage() {
 
 
                         <div>
-                            <label className={labelClass}>Actual Photo <span className="text-red-500">*</span></label>
+                            <label className={labelClass}>Actual Photo {smartMode && <span className="text-red-500">*</span>}</label>
                             <div className="bg-[#F4F5F7] p-4 rounded border border-gray-200">
                                 <ImageUpload
                                     value={form.photoUrl}
