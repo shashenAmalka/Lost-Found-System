@@ -99,7 +99,7 @@ export async function POST(request) {
 
         // Check for existing user
         const existing = await User.findOne({ $or: [{ email: email.trim() }, { campusId: studentId.trim() }] })
-        if (existing) {
+        if (existing && !existing.isDeleted) {
             if (existing.email === email.trim()) {
                 return NextResponse.json({ error: 'Email is already registered' }, { status: 409 })
             }
@@ -109,19 +109,41 @@ export async function POST(request) {
         // Hash password
         const hashed = await bcrypt.hash(password, 12)
 
-        // Create user with validated data
+        // Create user with validated data or reactivate a deleted one
         // Map studentId to campusId in the database
-        const user = await User.create({
-            name: name.trim(),
-            email: email.trim(),
-            campusId: studentId.trim(),
-            studentId: studentId.trim(),
-            password: hashed,
-            faculty: faculty.trim(),
-            department: faculty.trim(), // Keep for backward compatibility
-            phone: phone ? phone.replace(/\D/g, '') : '',
-            role: 'student',
-        })
+        let user
+        if (existing && existing.isDeleted) {
+            existing.name = name.trim()
+            existing.email = email.trim()
+            existing.campusId = studentId.trim()
+            existing.studentId = studentId.trim()
+            existing.password = hashed
+            existing.faculty = faculty.trim()
+            existing.department = faculty.trim() // Keep for backward compatibility
+            existing.phone = phone ? phone.replace(/\D/g, '') : ''
+            existing.role = 'student'
+            existing.status = 'active'
+            existing.restrictionLevel = 'NONE'
+            existing.restrictionReason = ''
+            existing.restrictedAt = null
+            existing.warningCount = 0
+            existing.isDeleted = false
+            existing.deletedAt = null
+            existing.deleteReason = ''
+            user = await existing.save()
+        } else {
+            user = await User.create({
+                name: name.trim(),
+                email: email.trim(),
+                campusId: studentId.trim(),
+                studentId: studentId.trim(),
+                password: hashed,
+                faculty: faculty.trim(),
+                department: faculty.trim(), // Keep for backward compatibility
+                phone: phone ? phone.replace(/\D/g, '') : '',
+                role: 'student',
+            })
+        }
 
         // Sign token
         const token = signToken({ id: user._id.toString(), role: user.role, campusId: user.campusId, name: user.name })

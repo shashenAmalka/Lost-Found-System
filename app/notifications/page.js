@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import WarningAppealModal from '@/components/WarningAppealModal'
+import AppealModal from '@/components/user-dashboard/AppealModal'
 import Link from 'next/link'
 import {
     Bell, CheckCircle2, Sparkles, AlertCircle, AlertTriangle,
@@ -110,7 +111,7 @@ function MatchScoreBadge({ score }) {
     )
 }
 
-function NotificationCard({ notif, onMarkRead, onDismiss, onWarningAppeal }) {
+function NotificationCard({ notif, onMarkRead, onDismiss, onWarningAppeal, onRestrictionAppeal }) {
     const config = getNotifConfig(notif.type)
     const Icon = config.icon
     const foundItem = notif.foundItemId && typeof notif.foundItemId === 'object' ? notif.foundItemId : null
@@ -155,6 +156,14 @@ function NotificationCard({ notif, onMarkRead, onDismiss, onWarningAppeal }) {
                 className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl border transition-all hover:shadow-sm"
                 style={{ background: '#fef3c7', color: '#b45309', borderColor: '#fde68a' }}>
                 <AlertTriangle size={12} /> Request Removal
+            </button>
+        )
+    } else if (notif.type === 'restriction') {
+        actionBtn = (
+            <button onClick={() => onRestrictionAppeal?.(notif)}
+                className="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl border transition-all hover:shadow-sm"
+                style={{ background: '#fee2e2', color: '#dc2626', borderColor: '#fecaca' }}>
+                <ShieldAlert size={12} /> Submit Appeal
             </button>
         )
     }
@@ -224,7 +233,11 @@ export default function NotificationsPage() {
     const [markingAll, setMarkingAll] = useState(false)
     const [selectedWarning, setSelectedWarning] = useState(null)
     const [warningDetails, setWarningDetails] = useState(null)
+    const [warningAppeal, setWarningAppeal] = useState(null)
+    const [showRestrictionAppeal, setShowRestrictionAppeal] = useState(false)
+    const [restrictionAppeal, setRestrictionAppeal] = useState(null)
     const [loadingWarning, setLoadingWarning] = useState(false)
+    const [loadingRestriction, setLoadingRestriction] = useState(false)
 
     const TABS = [
         { key: '', label: 'All', icon: Bell },
@@ -290,18 +303,38 @@ export default function NotificationsPage() {
         setSelectedWarning(notif)
         setLoadingWarning(true)
         try {
-            // Fetch the user's active warnings to find the one that matches this notification
             const res = await fetch('/api/appeals', { credentials: 'include' })
             const data = await res.json()
             if (res.ok && data.warnings && data.warnings.length > 0) {
-                // Try to find warning based on notification message or just use the first active warning
                 const warning = data.warnings.find(w => w.reason && notif.message?.includes(w.reason)) || data.warnings[0]
                 setWarningDetails(warning)
+                const existingAppeal = (data.appeals || []).find(a =>
+                    String(a.warningId?._id || a.warningId) === String(warning._id) &&
+                    a.appealType === 'WARNING_REMOVAL'
+                ) || null
+                setWarningAppeal(existingAppeal)
             }
         } catch (err) {
             console.error('Failed to fetch warning details:', err)
         } finally {
             setLoadingWarning(false)
+        }
+    }
+
+    const handleRestrictionAppeal = async () => {
+        setLoadingRestriction(true)
+        try {
+            const res = await fetch('/api/appeals', { credentials: 'include' })
+            const data = await res.json()
+            if (res.ok) {
+                const existingAppeal = (data.appeals || []).find(a => a.appealType === 'ACCOUNT_RESTRICTION' && !a.warningId) || null
+                setRestrictionAppeal(existingAppeal)
+                setShowRestrictionAppeal(true)
+            }
+        } catch (err) {
+            console.error('Failed to fetch restriction appeal:', err)
+        } finally {
+            setLoadingRestriction(false)
         }
     }
 
@@ -385,6 +418,7 @@ export default function NotificationsPage() {
                                 onMarkRead={handleMarkRead}
                                 onDismiss={handleDismiss}
                                 onWarningAppeal={handleWarningAppeal}
+                                onRestrictionAppeal={handleRestrictionAppeal}
                             />
                         ))}
                     </div>
@@ -408,9 +442,24 @@ export default function NotificationsPage() {
                 {selectedWarning && warningDetails && (
                     <WarningAppealModal
                         warning={warningDetails}
+                        existingAppeal={warningAppeal}
                         onClose={() => {
                             setSelectedWarning(null)
                             setWarningDetails(null)
+                            setWarningAppeal(null)
+                        }}
+                        onSuccess={() => {
+                            fetchNotifications()
+                        }}
+                    />
+                )}
+
+                {showRestrictionAppeal && (
+                    <AppealModal
+                        existingAppeal={restrictionAppeal}
+                        onClose={() => {
+                            setShowRestrictionAppeal(false)
+                            setRestrictionAppeal(null)
                         }}
                         onSuccess={() => {
                             fetchNotifications()

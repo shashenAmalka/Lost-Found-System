@@ -14,6 +14,9 @@ export default function ProfileForm({ user }) {
         phone: user?.phone || '',
     });
     const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleteReason, setDeleteReason] = useState('');
     const [toast, setToast] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
 
@@ -99,6 +102,37 @@ export default function ProfileForm({ user }) {
             showToast('error', err.message);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!deletePassword.trim()) {
+            showToast('error', 'Please enter your password to confirm account deletion.');
+            return;
+        }
+
+        if (!window.confirm('Are you sure? This will disable your account and log you out immediately.')) {
+            return;
+        }
+
+        setDeleting(true);
+        try {
+            const res = await fetch('/api/auth/delete-account', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    password: deletePassword,
+                    reason: deleteReason,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to delete account');
+                window.location.replace('/login');
+        } catch (err) {
+            showToast('error', err.message);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -214,6 +248,42 @@ export default function ProfileForm({ user }) {
                 <p className="text-xs text-blue-800 leading-relaxed">
                     <strong>Protected Fields:</strong> Your faculty and student ID are protected and cannot be changed after registration. This ensures data integrity and security. If you need to update these fields, please contact the administration office.
                 </p>
+            </fieldset>
+
+            {/* Danger Zone */}
+            <fieldset className="p-6 rounded-[20px] space-y-4 bg-red-50 border border-red-200 shadow-sm">
+                <legend className="text-xs font-bold uppercase tracking-[0.2em] px-2 text-red-700">
+                    Danger Zone
+                </legend>
+                <p className="text-xs text-red-700 leading-relaxed">
+                    Deleting your account disables login and access immediately. This action is irreversible from your side.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                        type="password"
+                        className={inputClass}
+                        placeholder="Enter password to confirm"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                    />
+                    <input
+                        type="text"
+                        className={inputClass}
+                        placeholder="Reason (optional)"
+                        value={deleteReason}
+                        onChange={(e) => setDeleteReason(e.target.value)}
+                    />
+                </div>
+                <div className="flex justify-end">
+                    <button
+                        type="button"
+                        onClick={handleDeleteAccount}
+                        disabled={deleting}
+                        className="px-6 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {deleting ? 'Deleting Account...' : 'Delete My Account'}
+                    </button>
+                </div>
             </fieldset>
 
             {/* Save Button */}

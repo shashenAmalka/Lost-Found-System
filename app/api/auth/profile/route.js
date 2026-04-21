@@ -55,6 +55,12 @@ export async function PUT(request) {
 
         await connectDB()
 
+        const currentUser = await User.findById(decoded.id).select('isDeleted')
+        if (!currentUser) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        if (currentUser.isDeleted) {
+            return NextResponse.json({ error: 'Account is deleted' }, { status: 403 })
+        }
+
         // Check email uniqueness if changed
         const existingEmail = await User.findOne({ email: email.trim(), _id: { $ne: decoded.id } })
         if (existingEmail) return NextResponse.json({ error: 'Email is already in use' }, { status: 409 })

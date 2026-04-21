@@ -21,6 +21,12 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Invalid Campus ID or password' }, { status: 401 })
         }
 
+        if (user.isDeleted) {
+            return NextResponse.json({
+                error: 'This account was deleted. Please contact admin if this is a mistake.',
+            }, { status: 403 })
+        }
+
         const match = await bcrypt.compare(password, user.password)
         if (!match) {
             return NextResponse.json({ error: 'Invalid Campus ID or password' }, { status: 401 })

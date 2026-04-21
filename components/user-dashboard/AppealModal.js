@@ -1,17 +1,38 @@
 'use client'
-import { useState } from 'react'
-import { X, Send, Loader2, CheckCircle2, FileText, AlertTriangle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { X, Send, Loader2, CheckCircle2, FileText, AlertTriangle, Trash2, Lock } from 'lucide-react'
+
+const EMPTY_FORM = {
+    appealMessage: '',
+    supportingExplanation: '',
+    evidenceUrl: '',
+    acknowledgedPolicy: false,
+}
 
 export default function AppealModal({ onClose, onSuccess, existingAppeal }) {
     const [loading, setLoading] = useState(false)
+    const [deleting, setDeleting] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
-    const [form, setForm] = useState({
-        appealMessage: '',
-        supportingExplanation: '',
-        evidenceUrl: '',
-        acknowledgedPolicy: false,
-    })
+    const [form, setForm] = useState(EMPTY_FORM)
+
+    useEffect(() => {
+        if (existingAppeal) {
+            setForm({
+                appealMessage: existingAppeal.appealMessage || '',
+                supportingExplanation: existingAppeal.supportingExplanation || '',
+                evidenceUrl: existingAppeal.evidenceUrl || '',
+                acknowledgedPolicy: !!existingAppeal.acknowledgedPolicy,
+            })
+        } else {
+            setForm(EMPTY_FORM)
+        }
+        setError('')
+        setSuccess(false)
+    }, [existingAppeal])
+
+    const isLocked = !!existingAppeal && (existingAppeal.status !== 'PENDING' || existingAppeal.openedAt)
+    const isEditing = !!existingAppeal && !isLocked
 
     const change = (k) => (e) => setForm(f => ({
         ...f,
@@ -24,23 +45,58 @@ export default function AppealModal({ onClose, onSuccess, existingAppeal }) {
             setError('You must acknowledge the platform usage policy.')
             return
         }
+        if (!form.appealMessage.trim()) {
+            setError('Reason for appeal is required.')
+            return
+        }
+
         setError('')
         setLoading(true)
         try {
-            const res = await fetch('/api/appeals', {
-                method: 'POST',
+            const res = await fetch(isEditing ? `/api/appeals/${existingAppeal._id}` : '/api/appeals', {
+                method: isEditing ? 'PATCH' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
+                body: JSON.stringify(isEditing ? {
+                    appealMessage: form.appealMessage.trim(),
+                    supportingExplanation: form.supportingExplanation.trim(),
+                    evidenceUrl: form.evidenceUrl || '',
+                    acknowledgedPolicy: form.acknowledgedPolicy,
+                } : form),
                 credentials: 'include',
             })
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || 'Failed to submit appeal')
             setSuccess(true)
-            onSuccess?.()
+            setTimeout(() => {
+                onSuccess?.()
+                onClose?.()
+            }, 1200)
         } catch (err) {
             setError(err.message)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleDelete = async () => {
+        if (!existingAppeal || isLocked) return
+        if (typeof window !== 'undefined' && !window.confirm('Delete this appeal? This cannot be undone.')) return
+
+        setDeleting(true)
+        setError('')
+        try {
+            const res = await fetch(`/api/appeals/${existingAppeal._id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Failed to delete appeal')
+            onSuccess?.()
+            onClose?.()
+        } catch (err) {
+            setError(err.message)
+        } finally {
+            setDeleting(false)
         }
     }
 
@@ -50,58 +106,93 @@ export default function AppealModal({ onClose, onSuccess, existingAppeal }) {
         REJECTED: { bg: '#FEE2E2', color: '#DC2626', label: 'Rejected' },
     }
 
+    const statusStyle = STATUS_PILL[existingAppeal?.status] || STATUS_PILL.PENDING
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
             <div className="w-full max-w-lg rounded-2xl overflow-hidden animate-slide-up bg-white shadow-xl border border-gray-200">
-
-                {/* Header */}
                 <div className="p-5 flex items-center justify-between border-b border-gray-100">
                     <div className="flex items-center gap-2">
                         <FileText size={18} className="text-[#F0A500]" />
-                        <h2 className="text-[#1C2A59] font-extrabold text-sm">Submit Account Appeal</h2>
+                        <h2 className="text-[#1C2A59] font-extrabold text-sm">
+                            {isEditing ? 'Edit Account Appeal' : 'Submit Account Appeal'}
+                        </h2>
                     </div>
                     <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
                         <X size={16} />
                     </button>
                 </div>
 
-                {/* If existing appeal exists, show its status */}
-                {existingAppeal ? (
+                {success ? (
+                    <div className="p-8 text-center space-y-3">
+                        <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center bg-green-50 border border-green-200">
+                            <CheckCircle2 size={32} className="text-green-500" />
+                        </div>
+                        <h3 className="text-[#1C2A59] font-extrabold text-lg">
+                            {isEditing ? 'Appeal Updated!' : 'Appeal Submitted!'}
+                        </h3>
+                        <p className="text-sm text-gray-500 font-medium">Admin will review your appeal. Check back later.</p>
+                    </div>
+                ) : isLocked ? (
                     <div className="p-6 space-y-4">
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border border-transparent"
-                                style={{
-                                    ...STATUS_PILL[existingAppeal.status] && {
-                                        background: STATUS_PILL[existingAppeal.status].bg,
-                                        color: STATUS_PILL[existingAppeal.status].color,
-                                    }
-                                }}>
-                                {STATUS_PILL[existingAppeal.status]?.label || existingAppeal.status}
+                                style={{ background: statusStyle.bg, color: statusStyle.color }}>
+                                {statusStyle.label}
                             </span>
                             <span className="text-[10px] text-gray-500 font-bold">
                                 Submitted {new Date(existingAppeal.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </span>
                         </div>
+
+                        <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-gray-100">
+                                    <Lock size={18} className="text-gray-500" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-500">
+                                        Locked by Admin Review
+                                    </p>
+                                    <p className="text-sm font-medium text-gray-700">
+                                        This appeal has already been opened by admin. It can no longer be updated or deleted.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="p-3 rounded-xl bg-[#F4F5F7] border border-gray-200">
                             <p className="text-xs text-[#3E4A56] leading-relaxed font-medium">{existingAppeal.appealMessage}</p>
+                            {existingAppeal.supportingExplanation && (
+                                <p className="text-[10px] text-gray-500 mt-2">{existingAppeal.supportingExplanation}</p>
+                            )}
+                            {existingAppeal.adminResponse && (
+                                <div className="mt-4 p-3 rounded-xl bg-indigo-50 border border-indigo-100">
+                                    <p className="text-[10px] font-extrabold text-indigo-600 uppercase mb-1 tracking-wider">Admin Response</p>
+                                    <p className="text-xs text-[#3E4A56] font-medium">{existingAppeal.adminResponse}</p>
+                                </div>
+                            )}
                         </div>
-                        {existingAppeal.adminResponse && (
-                            <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100">
-                                <p className="text-[10px] font-extrabold text-indigo-600 uppercase mb-1 tracking-wider">Admin Response</p>
-                                <p className="text-xs text-[#3E4A56] font-medium">{existingAppeal.adminResponse}</p>
-                            </div>
-                        )}
-                    </div>
-                ) : success ? (
-                    <div className="p-8 text-center space-y-3">
-                        <div className="w-16 h-16 rounded-full mx-auto flex items-center justify-center bg-green-50 border border-green-200">
-                            <CheckCircle2 size={32} className="text-green-500" />
-                        </div>
-                        <h3 className="text-[#1C2A59] font-extrabold text-lg">Appeal Submitted!</h3>
-                        <p className="text-sm text-gray-500 font-medium">Admin will review your appeal. Check back later.</p>
+
+                        <button type="button" onClick={onClose}
+                            className="w-full justify-center py-2.5 text-xs font-bold text-[#3E4A56] bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+                            Close
+                        </button>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="p-5 space-y-4">
+                        {existingAppeal && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border border-transparent"
+                                    style={{ background: statusStyle.bg, color: statusStyle.color }}>
+                                    {statusStyle.label}
+                                </span>
+                                <span className="text-[10px] text-gray-500 font-bold">
+                                    Submitted {new Date(existingAppeal.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </span>
+                            </div>
+                        )}
+
                         <div className="space-y-1.5">
                             <label className="text-[10px] text-[#1C2A59] uppercase font-bold tracking-wider">Reason for Appeal <span className="text-red-500">*</span></label>
                             <textarea className="w-full px-3 py-2.5 rounded-xl border border-gray-300 bg-white text-sm text-[#1C2A59] focus:outline-none focus:ring-2 focus:ring-[#008489]/50 focus:border-[#008489] transition-all min-h-[100px] resize-y"
@@ -121,7 +212,6 @@ export default function AppealModal({ onClose, onSuccess, existingAppeal }) {
                                 value={form.evidenceUrl} onChange={change('evidenceUrl')} />
                         </div>
 
-                        {/* Policy checkbox */}
                         <label className="flex items-start gap-2.5 cursor-pointer group">
                             <input type="checkbox" checked={form.acknowledgedPolicy} onChange={change('acknowledgedPolicy')}
                                 className="mt-0.5 accent-[#008489]" />
@@ -139,11 +229,24 @@ export default function AppealModal({ onClose, onSuccess, existingAppeal }) {
                         <div className="flex gap-3 pt-2">
                             <button type="button" onClick={onClose}
                                 className="flex-1 justify-center py-2.5 text-xs font-bold text-[#3E4A56] bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Cancel</button>
-                            <button type="submit" disabled={loading}
+
+                            {isEditing && (
+                                <button
+                                    type="button"
+                                    onClick={handleDelete}
+                                    disabled={loading || deleting}
+                                    className="px-4 py-2.5 rounded-xl border border-red-200 text-red-600 font-bold text-xs hover:bg-red-50 transition-colors flex items-center justify-center gap-1.5"
+                                >
+                                    {deleting ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                                    Delete
+                                </button>
+                            )}
+
+                            <button type="submit" disabled={loading || deleting}
                                 className="flex-[2] flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.02] bg-[#1C2A59] hover:bg-[#1a254d] shadow-sm disabled:opacity-50"
                             >
                                 {loading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-                                {loading ? 'Submitting...' : 'Submit Appeal'}
+                                {loading ? 'Saving...' : isEditing ? 'Save Changes' : 'Submit Appeal'}
                             </button>
                         </div>
                     </form>

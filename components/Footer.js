@@ -37,11 +37,11 @@ export default function Footer() {
                         <p className="text-gray-300 text-sm leading-relaxed mb-6">
                             The Smart Campus Lost & Found System — an AI-powered platform helping SLIIT students recover their belongings quickly and safely.
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                        {/* <div className="flex items-center gap-2 text-xs text-gray-400">
                             <span>Made with</span>
                             <Heart size={12} className="text-red-400 fill-red-400" />
                             <span>by SLIIT Students</span>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Quick Links */}
